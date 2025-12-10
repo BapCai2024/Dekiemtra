@@ -5,95 +5,97 @@ from docx import Document
 import io
 
 # --- CẤU HÌNH TRANG ---
-st.set_page_config(page_title="Hệ Thống Ra Đề Tiểu Học (Pro)", page_icon="🏫", layout="wide")
+st.set_page_config(page_title="Hệ Thống Ra Đề Tiểu Học (Theo Mức Độ)", page_icon="📝", layout="wide")
 
-# --- CSS TÙY CHỈNH ---
+# --- CSS TÙY CHỈNH GIAO DIỆN ---
 st.markdown("""
 <style>
-    .main-header {font-size: 24px; font-weight: bold; color: #0066cc; text-align: center; margin-bottom: 20px;}
-    .section-header {font-size: 16px; font-weight: bold; color: #d9534f; margin-top: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
-    .info-box {background-color: #f0f8ff; padding: 10px; border-radius: 5px; font-size: 14px;}
+    .main-header {font-size: 22px; font-weight: bold; color: #004085; text-align: center; margin-bottom: 20px;}
+    .sub-header {font-size: 16px; font-weight: bold; color: #c82333; margin-top: 10px; border-bottom: 2px solid #ddd; padding-bottom: 5px;}
+    .level-label {font-weight: bold; color: #333;}
+    .score-display {font-size: 18px; font-weight: bold; color: #28a745; text-align: center; background: #e8f5e9; padding: 10px; border-radius: 8px;}
 </style>
 """, unsafe_allow_html=True)
 
 # --- SIDEBAR: API KEY ---
 with st.sidebar:
-    st.header("🔑 Cấu hình kết nối")
-    api_key = st.text_input("Google API Key:", type="password")
-    st.info("Hệ thống tuân thủ Thông tư 27 & Chương trình GDPT 2018.")
+    st.header("🔑 Cài đặt")
+    api_key = st.text_input("Dán Google API Key vào đây:", type="password")
+    st.info("Hướng dẫn: Vào aistudio.google.com -> Get API Key -> Create -> Copy và dán vào đây.")
+    st.markdown("---")
+    st.warning("Lưu ý: Tổng điểm toàn bài nên là 10.")
 
-# --- HÀM ĐỌC FILE (Word/Text/Excel) ---
+# --- HÀM ĐỌC FILE ---
 def read_file_content(uploaded_file):
-    """Hàm đa năng đọc nội dung từ file Word, Text hoặc Excel"""
     try:
         if uploaded_file.name.endswith('.docx'):
             doc = Document(uploaded_file)
             text = "\n".join([para.text for para in doc.paragraphs])
-            # Đọc thêm bảng trong Word nếu có
             for table in doc.tables:
                 for row in table.rows:
                     row_text = [cell.text for cell in row.cells]
                     text += "\n| " + " | ".join(row_text) + " |"
             return text
-            
         elif uploaded_file.name.endswith('.txt'):
             return uploaded_file.read().decode("utf-8")
-            
         elif uploaded_file.name.endswith(('.xlsx', '.xls', '.csv')):
             if uploaded_file.name.endswith('.csv'):
                 df = pd.read_csv(uploaded_file)
             else:
                 df = pd.read_excel(uploaded_file)
             return df.to_string()
-            
     except Exception as e:
-        return f"Lỗi đọc file: {str(e)}"
+        return f"Lỗi: {str(e)}"
     return ""
 
 # --- HÀM GỌI AI ---
-def generate_exam_advanced(api_key, subject_plan, matrix_content, config_mcq, config_essay, grade, subject):
+def generate_exam_levels(api_key, subject_plan, matrix_content, levels_config, grade, subject):
     if not api_key:
-        return "⚠️ Vui lòng nhập API Key."
+        return "⚠️ Vui lòng nhập API Key trước."
     
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
 
-    # Tính toán tổng điểm để nhắc AI
-    total_score = (config_mcq['count'] * config_mcq['point']) + (config_essay['count'] * config_essay['point'])
-
+    # Trích xuất cấu hình để đưa vào prompt
+    mcq = levels_config['mcq']
+    essay = levels_config['essay']
+    
     prompt = f"""
-    Đóng vai Trưởng bộ môn {subject} Tiểu học. Hãy soạn ĐỀ KIỂM TRA LỚP {grade}.
+    Đóng vai Giáo viên cốt cán môn {subject} Tiểu học. Hãy soạn ĐỀ KIỂM TRA LỚP {grade}.
     
     =========================================
-    1. CẤU TRÚC ĐỀ BẮT BUỘC (TUÂN THỦ TUYỆT ĐỐI):
-    - Tổng điểm toàn bài: {total_score} điểm.
+    1. CẤU TRÚC ĐỀ BẮT BUỘC (PHÂN HÓA THEO MỨC ĐỘ NHẬN THỨC):
     
-    A. PHẦN TRẮC NGHIỆM:
-    - Số lượng câu: {config_mcq['count']} câu.
-    - Điểm số: {config_mcq['point']} điểm/câu.
-    - Các dạng cho phép: {', '.join(config_mcq['types'])}.
+    A. PHẦN TRẮC NGHIỆM (Điểm mỗi câu: {mcq['point']}):
+    - Mức 1 (Nhận biết): {mcq['L1']} câu.
+    - Mức 2 (Thông hiểu): {mcq['L2']} câu.
+    - Mức 3 (Vận dụng): {mcq['L3']} câu.
+    => Tổng số câu TN: {mcq['L1'] + mcq['L2'] + mcq['L3']} câu.
     
-    B. PHẦN TỰ LUẬN:
-    - Số lượng câu: {config_essay['count']} câu.
-    - Điểm số: {config_essay['point']} điểm/câu (hoặc phân bổ linh hoạt sao cho tổng phần tự luận là {config_essay['count'] * config_essay['point']} điểm).
+    B. PHẦN TỰ LUẬN (Điểm mỗi câu: {essay['point']}):
+    - Mức 1 (Nhận biết): {essay['L1']} câu.
+    - Mức 2 (Thông hiểu): {essay['L2']} câu.
+    - Mức 3 (Vận dụng): {essay['L3']} câu.
+    => Tổng số câu TL: {essay['L1'] + essay['L2'] + essay['L3']} câu.
+    
+    *Lưu ý: Nếu mức độ nào là 0 câu thì không soạn.*
     
     =========================================
-    2. NỘI DUNG KIẾN THỨC (CĂN CỨ ĐỂ RA ĐỀ):
+    2. NỘI DUNG KIẾN THỨC CẦN KIỂM TRA (Dựa vào file giáo viên cung cấp):
     {subject_plan}
 
     =========================================
-    3. MA TRẬN MỨC ĐỘ NHẬN THỨC (THAM KHẢO PHÂN BỔ KHÓ/DỄ):
-    (Hãy cố gắng phân bổ các câu hỏi trên vào các mức Biết/Hiểu/Vận dụng tương ứng với ma trận này)
+    3. THAM KHẢO MA TRẬN CHI TIẾT (Để lấy chủ đề tương ứng):
     {matrix_content}
 
     =========================================
     4. YÊU CẦU ĐẦU RA:
-    - Trình bày đề rõ ràng, phân chia Phần I (Trắc nghiệm) và Phần II (Tự luận).
-    - Cuối đề phải có: HƯỚNG DẪN CHẤM VÀ ĐÁP ÁN CHI TIẾT.
+    - Trình bày đề thi rõ ràng.
+    - Có phần II: ĐÁP ÁN VÀ HƯỚNG DẪN CHẤM (Ghi rõ mỗi câu thuộc mức độ nào bên cạnh đáp án).
     - Ngôn ngữ phù hợp học sinh Lớp {grade}.
     """
 
-    with st.spinner('Đang thiết lập cấu trúc và biên soạn câu hỏi...'):
+    with st.spinner('Đang phân tích mức độ kiến thức và soạn đề...'):
         try:
             response = model.generate_content(prompt)
             return response.text
@@ -101,81 +103,85 @@ def generate_exam_advanced(api_key, subject_plan, matrix_content, config_mcq, co
             return f"Lỗi AI: {str(e)}"
 
 # --- GIAO DIỆN CHÍNH ---
-st.markdown('<div class="main-header">📝 HỆ THỐNG RA ĐỀ TIỂU HỌC (TÙY BIẾN CAO)</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">📝 HỆ THỐNG RA ĐỀ THEO MA TRẬN & MỨC ĐỘ NHẬN THỨC</div>', unsafe_allow_html=True)
 
-col_input, col_config = st.columns([1, 1])
+col_left, col_right = st.columns([1, 1.2])
 
-# --- CỘT 1: DỮ LIỆU ĐẦU VÀO ---
-with col_input:
-    st.markdown('<div class="section-header">1. DỮ LIỆU NGUỒN (INPUT)</div>', unsafe_allow_html=True)
+# === CỘT TRÁI: ĐẦU VÀO ===
+with col_left:
+    st.markdown('<div class="sub-header">1. Dữ liệu nguồn</div>', unsafe_allow_html=True)
     
-    # Chọn môn và lớp
     c1, c2 = st.columns(2)
-    with c1:
-        subject = st.selectbox("Môn học", ["Tin học", "Công nghệ", "Toán", "Tiếng Việt", "Khoa học", "Lịch sử & Địa lí"])
-    with c2:
-        grade = st.selectbox("Khối lớp", ["Lớp 3", "Lớp 4", "Lớp 5"])
-
-    # Upload Nội dung kiến thức (Thay cho text area cũ)
-    st.markdown("---")
-    st.write("📂 **Nội dung/Kế hoạch dạy học:**")
-    file_plan = st.file_uploader("Tải file bài học (.docx, .txt)", type=['docx', 'txt'], key="plan")
+    with c1: subject = st.selectbox("Môn học", ["Tin học", "Công nghệ", "Toán", "Tiếng Việt", "Khoa học", "LS&ĐL"])
+    with c2: grade = st.selectbox("Khối lớp", ["Lớp 3", "Lớp 4", "Lớp 5"])
     
-    plan_content = ""
-    if file_plan:
-        plan_content = read_file_content(file_plan)
-        st.success(f"✅ Đã đọc nội dung bài học: {len(plan_content)} ký tự.")
-    else:
-        st.warning("⚠️ Hãy tải file nội dung bài học lên.")
+    st.write("📂 **Kế hoạch bài dạy (Nội dung):**")
+    file_plan = st.file_uploader("Tải file Word/Text bài học", type=['docx', 'txt'], key="plan")
+    plan_text = read_file_content(file_plan) if file_plan else ""
+    if plan_text: st.success("✅ Đã nhận nội dung.")
 
-    # Upload Ma trận
-    st.markdown("---")
-    st.write("📊 **Ma trận đề (Khung chuẩn):**")
-    file_matrix = st.file_uploader("Tải file Ma trận (.xlsx, .csv)", type=['xlsx', 'xls', 'csv'], key="matrix")
-    
-    matrix_content = ""
-    if file_matrix:
-        matrix_content = read_file_content(file_matrix)
-        st.success("✅ Đã nhận diện Ma trận.")
+    st.write("📊 **Ma trận đề (Tham khảo chủ đề):**")
+    file_matrix = st.file_uploader("Tải file Ma trận (Excel/Word/CSV)", type=['xlsx', 'docx', 'csv'], key="matrix")
+    matrix_text = read_file_content(file_matrix) if file_matrix else ""
+    if matrix_text: st.success("✅ Đã nhận ma trận.")
 
-# --- CỘT 2: CẤU HÌNH ĐỀ THI ---
-with col_config:
-    st.markdown('<div class="section-header">2. CẤU HÌNH ĐỀ THI (OUTPUT)</div>', unsafe_allow_html=True)
+# === CỘT PHẢI: CẤU HÌNH MỨC ĐỘ ===
+with col_right:
+    st.markdown('<div class="sub-header">2. Cấu hình số lượng câu hỏi</div>', unsafe_allow_html=True)
     
-    st.markdown("#### 🅰️ Phần Trắc Nghiệm")
-    col_tn1, col_tn2 = st.columns(2)
+    # --- Cấu hình Trắc Nghiệm ---
+    st.markdown("##### 🅰️ Phần Trắc Nghiệm")
+    col_tn_pt, col_tn1, col_tn2, col_tn3 = st.columns([1.5, 1, 1, 1])
+    with col_tn_pt:
+        mcq_point = st.number_input("Điểm/câu TN:", 0.1, 2.0, 0.5, step=0.1)
     with col_tn1:
-        num_mcq = st.number_input("Số câu Trắc nghiệm:", min_value=0, value=8, step=1)
+        mcq_l1 = st.number_input("Mức 1 (Biết)", 0, 10, 4, key="m1")
     with col_tn2:
-        point_mcq = st.number_input("Điểm mỗi câu TN:", min_value=0.1, value=0.5, step=0.1, format="%.1f")
+        mcq_l2 = st.number_input("Mức 2 (Hiểu)", 0, 10, 3, key="m2")
+    with col_tn3:
+        mcq_l3 = st.number_input("Mức 3 (Vận dụng)", 0, 10, 1, key="m3")
     
-    type_mcq = st.multiselect(
-        "Dạng câu hỏi TN cho phép:",
-        ["Chọn đáp án A,B,C,D", "Đúng/Sai", "Nối cột", "Điền từ"],
-        default=["Chọn đáp án A,B,C,D", "Đúng/Sai"]
-    )
-    
-    st.markdown("---")
-    st.markdown("#### 🅱️ Phần Tự Luận")
-    col_tl1, col_tl2 = st.columns(2)
+    # --- Cấu hình Tự Luận ---
+    st.markdown("##### 🅱️ Phần Tự Luận")
+    col_tl_pt, col_tl1, col_tl2, col_tl3 = st.columns([1.5, 1, 1, 1])
+    with col_tl_pt:
+        essay_point = st.number_input("Điểm/câu TL:", 0.5, 5.0, 1.0, step=0.5)
     with col_tl1:
-        num_essay = st.number_input("Số câu Tự luận:", min_value=0, value=2, step=1)
+        essay_l1 = st.number_input("Mức 1 (Biết)", 0, 5, 0, key="e1")
     with col_tl2:
-        point_essay = st.number_input("Điểm trung bình/câu:", min_value=0.5, value=3.0, step=0.5, format="%.1f")
-    
-    st.info(f"🧮 **Tổng điểm dự kiến:** {num_mcq * point_mcq + num_essay * point_essay} điểm")
+        essay_l2 = st.number_input("Mức 2 (Hiểu)", 0, 5, 1, key="e2")
+    with col_tl3:
+        essay_l3 = st.number_input("Mức 3 (Vận dụng)", 0, 5, 1, key="e3")
 
+    # --- Tính toán tổng điểm ---
+    total_mcq_count = mcq_l1 + mcq_l2 + mcq_l3
+    total_essay_count = essay_l1 + essay_l2 + essay_l3
+    total_score = (total_mcq_count * mcq_point) + (total_essay_count * essay_point)
+    
+    st.markdown(f"""
+    <div class="score-display">
+        Tổng số câu: {total_mcq_count} TN + {total_essay_count} TL<br>
+        TỔNG ĐIỂM DỰ KIẾN: {total_score} ĐIỂM
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if total_score != 10:
+        st.warning("⚠️ Tổng điểm đang khác 10. Hãy điều chỉnh số lượng câu hoặc điểm số.")
+
+    # --- Nút tạo đề ---
     st.markdown("---")
-    if st.button("🚀 KHỞI TẠO ĐỀ THI", type="primary", use_container_width=True):
-        if not plan_content or not matrix_content:
-            st.error("Vui lòng tải đủ 2 file: Nội dung bài học và Ma trận.")
+    if st.button("🚀 TẠO ĐỀ NGAY", type="primary", use_container_width=True):
+        if not plan_text or not matrix_text:
+            st.error("Vui lòng tải đủ 2 file: Nội dung và Ma trận.")
         else:
-            # Gom cấu hình lại để gửi cho hàm xử lý
-            config_mcq = {"count": num_mcq, "point": point_mcq, "types": type_mcq}
-            config_essay = {"count": num_essay, "point": point_essay}
+            # Gom cấu hình
+            levels_config = {
+                "mcq": {"point": mcq_point, "L1": mcq_l1, "L2": mcq_l2, "L3": mcq_l3},
+                "essay": {"point": essay_point, "L1": essay_l1, "L2": essay_l2, "L3": essay_l3}
+            }
             
-            result = generate_exam_advanced(api_key, plan_content, matrix_content, config_mcq, config_essay, grade, subject)
+            result = generate_exam_levels(api_key, plan_text, matrix_text, levels_config, grade, subject)
             
-            st.markdown("### 📄 KẾT QUẢ ĐỀ THI:")
+            st.markdown("### 📄 KẾT QUẢ:")
             st.markdown(result)
             st.download_button("📥 Tải Đề về máy (.txt)", result, file_name=f"DeThi_{subject}_{grade}.txt")
