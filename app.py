@@ -1,7 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 import pandas as pd
-from io import StringIO
+from docx import Document # Thư viện xử lý Word
+import io
 
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(page_title="Tạo Đề Kiểm Tra Tiểu Học (Chuẩn TT27)", page_icon="🏫", layout="wide")
@@ -22,10 +23,49 @@ with st.sidebar:
     st.info("Lấy API Key miễn phí tại: aistudio.google.com")
     st.markdown("---")
     st.markdown("**Quy định áp dụng:**")
-    st.success("✅ Thông tư 27/2020/TT-BGDĐT (Đánh giá Tiểu học)")
+    st.success("✅ Thông tư 27/2020/TT-BGDĐT")
     st.success("✅ Chương trình GDPT 2018")
 
-# --- HÀM XỬ LÝ AI ---
+# --- HÀM XỬ LÝ ĐỌC FILE MA TRẬN (EXCEL/WORD) ---
+def get_matrix_content(uploaded_file):
+    """Hàm đọc nội dung từ file Excel hoặc Word và chuyển thành dạng Text cho AI hiểu"""
+    content_text = ""
+    preview_data = None # Dùng để hiện bảng xem trước cho đẹp
+
+    try:
+        # 1. Xử lý file Excel
+        if uploaded_file.name.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(uploaded_file)
+            # Chuyển toàn bộ bảng Excel thành chuỗi văn bản
+            content_text = df.to_string() 
+            preview_data = df.head(10) # Lấy 10 dòng đầu để xem trước
+
+        # 2. Xử lý file Word
+        elif uploaded_file.name.endswith('.docx'):
+            doc = Document(uploaded_file)
+            full_text = []
+            # Duyệt qua tất cả các bảng trong file Word
+            for table in doc.tables:
+                for row in table.rows:
+                    # Nối các ô trong hàng bằng dấu gạch đứng |
+                    row_text = [cell.text.strip() for cell in row.cells]
+                    full_text.append(" | ".join(row_text))
+            
+            content_text = "\n".join(full_text)
+            preview_data = "Đã trích xuất dữ liệu từ bảng trong file Word."
+
+        # 3. Xử lý file CSV (giữ lại code cũ phòng hờ)
+        elif uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
+            content_text = df.to_string()
+            preview_data = df.head(10)
+
+    except Exception as e:
+        return None, f"Lỗi đọc file: {str(e)}"
+
+    return content_text, preview_data
+
+# --- HÀM GỌI AI ---
 def generate_exam(api_key, subject_plan, matrix_content, question_types, grade, subject):
     if not api_key:
         return "⚠️ Vui lòng nhập API Key để tiếp tục."
@@ -33,48 +73,35 @@ def generate_exam(api_key, subject_plan, matrix_content, question_types, grade, 
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel('gemini-1.5-flash')
 
-    # Prompt chuyên sâu (System Prompt)
     prompt = f"""
-    Bạn là một chuyên gia khảo thí và giáo viên tiểu học cốt cán tại Việt Nam.
-    Nhiệm vụ: Soạn đề kiểm tra định kỳ môn {subject} Lớp {grade}.
+    Bạn là chuyên gia giáo dục tiểu học. Hãy soạn đề kiểm tra môn {subject} Lớp {grade} theo chuẩn Thông tư 27.
 
     -------------------
-    1. CĂN CỨ PHÁP LÝ (BẮT BUỘC TUÂN THỦ):
-    - Áp dụng Thông tư 27/2020/TT-BGDĐT về đánh giá học sinh tiểu học.
-    - Đảm bảo 3 mức độ nhận thức: Mức 1 (Nhận biết/Nhắc lại), Mức 2 (Kết nối/Hiểu), Mức 3 (Vận dụng/Giải quyết vấn đề).
-    - Ngôn ngữ: Tiếng Việt trong sáng, phù hợp tâm lý lứa tuổi tiểu học.
-
-    -------------------
-    2. DỮ LIỆU ĐẦU VÀO:
-    
-    A. KẾ HOẠCH DẠY HỌC / NỘI DUNG CẦN KIỂM TRA:
+    1. NỘI DUNG DẠY HỌC / KIẾN THỨC CẦN RA ĐỀ:
     {subject_plan}
 
-    B. MA TRẬN ĐỀ (KHUNG PHÂN BỔ CÂU HỎI VÀ ĐIỂM SỐ):
-    Dưới đây là cấu trúc ma trận (dạng CSV) quy định số lượng câu hỏi cho từng chủ đề:
+    -------------------
+    2. MA TRẬN ĐỀ (BẢNG PHÂN BỔ CÂU HỎI):
+    Dưới đây là dữ liệu ma trận (được trích xuất từ file Excel/Word của giáo viên). 
+    Hãy đọc kỹ các cột: Tên chủ đề, Số câu, Mức độ (Biết/Hiểu/Vận dụng), Điểm số.
+    
+    [DỮ LIỆU MA TRẬN BẮT ĐẦU]
     {matrix_content}
+    [DỮ LIỆU MA TRẬN KẾT THÚC]
 
     -------------------
-    3. YÊU CẦU ĐẦU RA:
-    Hãy tạo một đề kiểm tra chi tiết bao gồm các dạng câu hỏi sau (nếu phù hợp với Ma trận): {', '.join(question_types)}.
+    3. YÊU CẦU:
+    - Soạn đề thi gồm các dạng: {', '.join(question_types)}.
+    - Tuân thủ nghiêm ngặt số lượng câu hỏi và mức độ kiến thức trong Ma trận.
+    - Văn phong phù hợp học sinh tiểu học.
     
-    Cấu trúc đề bài trả về:
-    
-    PHẦN I: TRẮC NGHIỆM KHÁCH QUAN
-    (Soạn các câu hỏi trắc nghiệm, đúng/sai, nối cột... dựa theo phân bổ trong Ma trận và Nội dung dạy học. Đảm bảo số lượng câu khớp với ma trận).
-    
-    PHẦN II: TỰ LUẬN / THỰC HÀNH
-    (Soạn câu hỏi tự luận hoặc yêu cầu thực hành nếu ma trận có yêu cầu).
-
-    PHẦN III: ĐÁP ÁN VÀ HƯỚNG DẪN CHẤM CHI TIẾT
-    (Cung cấp đáp án chính xác và biểu điểm).
-
-    LƯU Ý QUAN TRỌNG:
-    - Chỉ lấy kiến thức nằm trong phần "Kế hoạch dạy học" đã cung cấp.
-    - Bám sát số lượng câu hỏi quy định trong "Ma trận đề". Ví dụ: Ma trận ghi Chủ đề A có 1 câu Biết, 1 câu Hiểu thì phải ra đúng số lượng đó.
+    CẤU TRÚC ĐỀ TRẢ VỀ:
+    PHẦN I: TRẮC NGHIỆM (Số điểm theo ma trận)
+    PHẦN II: TỰ LUẬN (Số điểm theo ma trận)
+    PHẦN III: HƯỚNG DẪN CHẤM VÀ ĐÁP ÁN (Chi tiết)
     """
 
-    with st.spinner('Đang phân tích Ma trận và Kế hoạch dạy học...'):
+    with st.spinner('Đang đọc file Ma trận và soạn đề...'):
         try:
             response = model.generate_content(prompt)
             return response.text
@@ -82,69 +109,51 @@ def generate_exam(api_key, subject_plan, matrix_content, question_types, grade, 
             return f"Lỗi khi gọi AI: {str(e)}"
 
 # --- GIAO DIỆN CHÍNH ---
-st.markdown('<div class="main-header">📝 HỆ THỐNG RA ĐỀ KIỂM TRA TIỂU HỌC <br>(Theo Thông tư 27 & Ma trận nhà trường)</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">📝 RA ĐỀ KIỂM TRA TIỂU HỌC <br>(Hỗ trợ Excel, Word, CSV)</div>', unsafe_allow_html=True)
 
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.markdown('<p class="step-header">1. Thông tin môn học</p>', unsafe_allow_html=True)
+    st.markdown('<p class="step-header">1. Thông tin chung</p>', unsafe_allow_html=True)
     subject = st.selectbox("Môn học", ["Tin học", "Công nghệ", "Toán", "Tiếng Việt", "Khoa học", "Lịch sử & Địa lí"])
     grade = st.selectbox("Khối lớp", ["Lớp 3", "Lớp 4", "Lớp 5"])
     
-    st.markdown('<p class="step-header">2. Tải dữ liệu nguồn</p>', unsafe_allow_html=True)
+    st.markdown('<p class="step-header">2. Tải Ma trận (Hard Data)</p>', unsafe_allow_html=True)
+    # Cập nhật cho phép tải nhiều loại file
+    uploaded_matrix = st.file_uploader("Tải file Ma trận (Excel .xlsx, Word .docx)", type=['xlsx', 'xls', 'docx', 'csv'])
     
-    # Upload Kế hoạch dạy học
-    uploaded_plan = st.file_uploader("Tải Kế hoạch/Nội dung dạy học (Text/Word)", type=['txt', 'docx'])
-    plan_content = ""
-    if uploaded_plan is not None:
-        if uploaded_plan.name.endswith('.txt'):
-            plan_content = uploaded_plan.read().decode("utf-8")
-        else:
-            plan_content = "Đã nhận file Word. (Tính năng đọc Word cần xử lý thêm, tạm thời coi như text rỗng hoặc bạn hãy copy nội dung dán vào file txt)." 
-            # Để đơn giản demo, ta dùng text_area dự phòng bên dưới
-    
-    # Text area dự phòng nếu không upload file
-    if not plan_content:
-        plan_content = st.text_area("Hoặc dán nội dung bài học cần kiểm tra vào đây:", height=150)
-
-    # Upload Ma trận (Hard Data của bạn)
-    st.markdown("---")
-    uploaded_matrix = st.file_uploader("Tải Ma trận đề (File CSV chuẩn)", type=['csv'])
     matrix_text = ""
     if uploaded_matrix is not None:
-        try:
-            df = pd.read_csv(uploaded_matrix)
-            st.dataframe(df.head(5), height=150) # Hiển thị sơ bộ ma trận
-            matrix_text = df.to_string() # Chuyển CSV thành text để AI đọc
-        except Exception as e:
-            st.error(f"Lỗi đọc file CSV: {e}")
+        matrix_text, preview = get_matrix_content(uploaded_matrix)
+        if matrix_text is None:
+            st.error(preview) # Hiện lỗi
+        else:
+            st.success("✅ Đã đọc được file Ma trận!")
+            if isinstance(preview, pd.DataFrame):
+                st.dataframe(preview, height=150)
+            else:
+                st.info(preview)
 
-    st.markdown('<p class="step-header">3. Chọn dạng câu hỏi</p>', unsafe_allow_html=True)
-    q_types = st.multiselect(
-        "Chọn các dạng bài muốn xuất hiện trong đề:",
-        ["Trắc nghiệm 4 lựa chọn (A,B,C,D)", "Đúng / Sai", "Ghép nối (Nối cột)", "Điền khuyết", "Tự luận / Thực hành"],
-        default=["Trắc nghiệm 4 lựa chọn (A,B,C,D)", "Tự luận / Thực hành"]
-    )
+    st.markdown('<p class="step-header">3. Nội dung kiến thức</p>', unsafe_allow_html=True)
+    plan_content = st.text_area("Dán nội dung bài học/Yêu cầu cần đạt vào đây:", height=200, placeholder="Ví dụ: Bài 1 - Thông tin và quyết định...")
 
 with col2:
-    st.markdown('<p class="step-header">4. Kết quả Đề kiểm tra</p>', unsafe_allow_html=True)
+    st.markdown('<p class="step-header">4. Cấu hình & Xuất đề</p>', unsafe_allow_html=True)
+    q_types = st.multiselect(
+        "Chọn dạng câu hỏi:",
+        ["Trắc nghiệm ABCD", "Đúng / Sai", "Ghép nối", "Điền khuyết", "Tự luận"],
+        default=["Trắc nghiệm ABCD", "Tự luận"]
+    )
     
-    if st.button("🚀 TẠO ĐỀ KIỂM TRA NGAY", type="primary"):
+    if st.button("🚀 TẠO ĐỀ KIỂM TRA", type="primary"):
         if not plan_content:
-            st.warning("⚠️ Chưa có nội dung dạy học.")
+            st.warning("⚠️ Chưa nhập nội dung kiến thức.")
         elif not uploaded_matrix:
-            st.warning("⚠️ Chưa tải file Ma trận lên (File CSV bạn cung cấp).")
+            st.warning("⚠️ Chưa tải file Ma trận.")
         else:
             result = generate_exam(api_key, plan_content, matrix_text, q_types, grade, subject)
             st.markdown(result)
-            
-            # Nút tải về
-            st.download_button(
-                label="📥 Tải Đề về máy (.txt)",
-                data=result,
-                file_name=f"DeKiemTra_{subject}_{grade}.txt"
-            )
+            st.download_button(label="📥 Tải Đề về máy (.txt)", data=result, file_name=f"DeKiemTra_{subject}_{grade}.txt")
 
-# --- HƯỚNG DẪN CHÂN TRANG ---
 st.markdown("---")
-st.caption("© 2024 - Công cụ hỗ trợ giáo viên tiểu học. Phát triển dựa trên Streamlit & Google Gemini.")
+st.caption("Hệ thống hỗ trợ đọc Ma trận từ Excel và bảng trong Word.")
