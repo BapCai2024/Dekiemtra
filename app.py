@@ -54,7 +54,7 @@ def generate_exam_levels(api_key, subject_plan, matrix_content, levels_config, g
         return "⚠️ Vui lòng nhập API Key trước."
     
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
     # Trích xuất cấu hình để đưa vào prompt
     mcq = levels_config['mcq']
