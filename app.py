@@ -396,4 +396,4 @@ elif st.session_state.step == 'config':
         c1, c2 = st.columns(2)
         default_level = c1.selectbox("Mức độ:", ["Biết", "Hiểu", "Vận dụng"], index=0)
         default_type = c2.selectbox("Dạng bài:", ["Trắc nghiệm (ABCD)", "Đúng/Sai", "Điền khuyết", "Nối cột", "Tự luận"], index=0)
-        default_point = st.number_input("Điểm mặc định:", 0.25, 5.0
+        default_point = st.number_input("Điểm mặc định:", 0.25, 5.0)
