@@ -94,7 +94,7 @@ def read_file_content(uploaded_file):
         return f"Lỗi đọc file: {e}"
     return ""
 
-# --- HÀM GỌI AI (GEMINI) ---
+# --- HÀM GỌI AI (THÔNG MINH - TỰ DÒ TÌM MODEL) ---
 def generate_exam(api_key, grade, subject, content):
     if not api_key:
         return "⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục."
@@ -102,13 +102,33 @@ def generate_exam(api_key, grade, subject, content):
     # Cấu hình API Key
     genai.configure(api_key=api_key)
     
-    # --- KHẮC PHỤC LỖI TẠI ĐÂY ---
-    # Sử dụng 'gemini-pro' thay vì 'gemini-1.5-flash'. 
-    # 'gemini-pro' tương thích với mọi phiên bản thư viện.
+    # --- ĐOẠN CODE KHẮC PHỤC LỖI 404 ---
+    # Thay vì gọi đích danh, hệ thống sẽ dò xem máy bạn hỗ trợ model nào
+    chosen_model_name = "gemini-pro" # Mặc định
+    
     try:
-        model = genai.GenerativeModel("gemini-pro") 
+        # Lấy danh sách model mà API Key của bạn hỗ trợ
+        valid_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                valid_models.append(m.name)
+        
+        # Ưu tiên các model mới nhất
+        if 'models/gemini-1.5-flash' in valid_models:
+            chosen_model_name = 'models/gemini-1.5-flash'
+        elif 'models/gemini-pro' in valid_models:
+            chosen_model_name = 'models/gemini-pro'
+        elif len(valid_models) > 0:
+            chosen_model_name = valid_models[0] # Lấy cái đầu tiên tìm thấy
+            
+    except Exception as e:
+        # Nếu lỗi dò tìm, giữ nguyên mặc định
+        pass
+
+    try:
+        model = genai.GenerativeModel(chosen_model_name) 
     except:
-        return "Lỗi khởi tạo Model. Vui lòng kiểm tra lại kết nối mạng."
+        return f"Lỗi nghiêm trọng: Không khởi tạo được model {chosen_model_name}. Vui lòng cập nhật thư viện: pip install -U google-generativeai"
 
     # PROMPT KỸ THUẬT
     prompt = f"""
@@ -132,12 +152,11 @@ def generate_exam(api_key, grade, subject, content):
     """
     
     try:
-        with st.spinner('AI đang phân tích chương trình GDPT 2018 và soạn đề...'):
+        with st.spinner(f'Đang kết nối AI ({chosen_model_name}) và soạn đề...'):
             response = model.generate_content(prompt)
             return response.text
     except Exception as e:
-        # Bắt lỗi cụ thể nếu key sai hoặc hết quota
-        return f"Lỗi kết nối AI: {str(e)}. \nHãy đảm bảo API Key chính xác và còn hạn mức sử dụng."
+        return f"Lỗi kết nối AI: {str(e)}. \n1. Kiểm tra lại API Key.\n2. Chạy lệnh: pip install -U google-generativeai"
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
@@ -154,12 +173,12 @@ with st.sidebar:
         else:
             try:
                 genai.configure(api_key=api_key)
-                # Test thử model gemini-pro
-                test_model = genai.GenerativeModel("gemini-pro")
-                test_model.generate_content("Hello")
+                # Test thử
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content("Xin chào")
                 st.success("Kết nối thành công! ✅")
             except Exception as e:
-                st.error(f"Lỗi: {e}")
+                st.error(f"Lỗi: {e}. Vui lòng cập nhật thư viện pip.")
 
     st.info("Để lấy API Key miễn phí, truy cập: [Google AI Studio](https://aistudio.google.com/)")
     st.markdown("---")
