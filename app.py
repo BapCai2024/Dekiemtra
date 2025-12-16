@@ -204,6 +204,7 @@ if btn_preview:
                 current_lesson_data, q_type, level, points
             )
             st.session_state.current_preview = preview_content
+            # Lưu cả chủ đề (topic) để xuất ma trận
             st.session_state.temp_question_data = {
                 "topic": selected_topic,
                 "lesson": selected_lesson_name,
