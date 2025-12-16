@@ -3,6 +3,8 @@ import pandas as pd
 import google.generativeai as genai
 import time
 from io import BytesIO
+import sys
+import subprocess
 
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -11,53 +13,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS TÙY CHỈNH MÀU SẮC ---
+# --- CSS TÙY CHỈNH ---
 st.markdown("""
 <style>
-    /* Tiêu đề chính */
-    .main-title {
-        text-align: center;
-        color: #2c3e50;
-        font-family: 'Arial', sans-serif;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #eee;
-    }
-    
-    /* Màu sắc cho các khối lớp */
+    .main-title { text-align: center; color: #2c3e50; padding-bottom: 20px; border-bottom: 2px solid #eee; }
     .grade-1 { background-color: #FFCDD2; padding: 10px; border-radius: 10px; border-left: 5px solid #D32F2F; color: #B71C1C; font-weight: bold;}
     .grade-2 { background-color: #FFE0B2; padding: 10px; border-radius: 10px; border-left: 5px solid #F57C00; color: #E65100; font-weight: bold;}
     .grade-3 { background-color: #FFF9C4; padding: 10px; border-radius: 10px; border-left: 5px solid #FBC02D; color: #F57F17; font-weight: bold;}
     .grade-4 { background-color: #C8E6C9; padding: 10px; border-radius: 10px; border-left: 5px solid #388E3C; color: #1B5E20; font-weight: bold;}
     .grade-5 { background-color: #B3E5FC; padding: 10px; border-radius: 10px; border-left: 5px solid #0288D1; color: #01579B; font-weight: bold;}
-
-    /* Style cho môn học */
-    div[data-testid="stMetric"] {
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        padding: 10px;
-        border-radius: 5px;
-    }
-    
-    /* Footer */
-    .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: #f1f1f1;
-        color: #2c3e50;
-        text-align: center;
-        padding: 10px;
-        border-top: 1px solid #ddd;
-        font-weight: bold;
-        z-index: 100;
-    }
-    .footer-text {
-        font-size: 16px;
-        text-transform: uppercase;
-    }
-    
-    /* Ẩn footer mặc định của streamlit */
+    div[data-testid="stMetric"] { background-color: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; }
+    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #f1f1f1; color: #2c3e50; text-align: center; padding: 10px; border-top: 1px solid #ddd; font-weight: bold; z-index: 100; }
+    .footer-text { font-size: 16px; text-transform: uppercase; }
     footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
@@ -70,12 +37,9 @@ SUBJECTS_DB = {
     "Lớp 4": [("Tiếng Việt", "📖", "#e74c3c"), ("Toán", "✖️", "#3498db"), ("Tiếng Anh", "🇬🇧", "#9b59b6"), ("Lịch sử & Địa lí", "🌏", "#d35400"), ("Khoa học", "🔬", "#27ae60"), ("Tin học", "💻", "#34495e"), ("Công nghệ", "🛠️", "#7f8c8d")],
     "Lớp 5": [("Tiếng Việt", "📖", "#e74c3c"), ("Toán", "✖️", "#3498db"), ("Tiếng Anh", "🇬🇧", "#9b59b6"), ("Lịch sử & Địa lí", "🌏", "#d35400"), ("Khoa học", "🔬", "#27ae60"), ("Tin học", "💻", "#34495e"), ("Công nghệ", "🛠️", "#7f8c8d")]
 }
+GRADE_COLORS = {"Lớp 1": "grade-1", "Lớp 2": "grade-2", "Lớp 3": "grade-3", "Lớp 4": "grade-4", "Lớp 5": "grade-5"}
 
-GRADE_COLORS = {
-    "Lớp 1": "grade-1", "Lớp 2": "grade-2", "Lớp 3": "grade-3", "Lớp 4": "grade-4", "Lớp 5": "grade-5"
-}
-
-# --- HÀM XỬ LÝ FILE ---
+# --- HÀM ĐỌC FILE ---
 def read_file_content(uploaded_file):
     if uploaded_file is None: return ""
     try:
@@ -94,141 +58,104 @@ def read_file_content(uploaded_file):
         return f"Lỗi đọc file: {e}"
     return ""
 
-# --- HÀM GỌI AI (THÔNG MINH - TỰ DÒ TÌM MODEL) ---
+# --- HÀM GỌI AI THÔNG MINH ---
 def generate_exam(api_key, grade, subject, content):
-    if not api_key:
-        return "⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục."
+    if not api_key: return "⚠️ Vui lòng nhập API Key."
     
-    # Cấu hình API Key
     genai.configure(api_key=api_key)
     
-    # --- ĐOẠN CODE KHẮC PHỤC LỖI 404 ---
-    # Thay vì gọi đích danh, hệ thống sẽ dò xem máy bạn hỗ trợ model nào
-    chosen_model_name = "gemini-pro" # Mặc định
+    # Tự động chọn Model an toàn nhất
+    chosen_model = "gemini-pro"
     
     try:
-        # Lấy danh sách model mà API Key của bạn hỗ trợ
-        valid_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                valid_models.append(m.name)
-        
-        # Ưu tiên các model mới nhất
-        if 'models/gemini-1.5-flash' in valid_models:
-            chosen_model_name = 'models/gemini-1.5-flash'
-        elif 'models/gemini-pro' in valid_models:
-            chosen_model_name = 'models/gemini-pro'
-        elif len(valid_models) > 0:
-            chosen_model_name = valid_models[0] # Lấy cái đầu tiên tìm thấy
-            
-    except Exception as e:
-        # Nếu lỗi dò tìm, giữ nguyên mặc định
-        pass
-
-    try:
-        model = genai.GenerativeModel(chosen_model_name) 
+        model = genai.GenerativeModel(chosen_model)
     except:
-        return f"Lỗi nghiêm trọng: Không khởi tạo được model {chosen_model_name}. Vui lòng cập nhật thư viện: pip install -U google-generativeai"
+        return "⚠️ Lỗi thư viện cũ. Vui lòng bấm nút 'SỬA LỖI AI' ở menu bên trái."
 
-    # PROMPT KỸ THUẬT
     prompt = f"""
-    Bạn là một chuyên gia giáo dục tiểu học Việt Nam tại Trường PTDTBT Tiểu học Giàng Chu Phìn, cực kỳ am hiểu chương trình GDPT 2018 và Thông tư 27/2020/TT-BGDĐT.
-
-    NHIỆM VỤ:
-    Soạn đề kiểm tra định kỳ môn {subject} dành cho học sinh {grade}.
+    Bạn là chuyên gia giáo dục tiểu học tại Trường PTDTBT Tiểu học Giàng Chu Phìn.
+    Soạn đề thi môn {subject} lớp {grade} theo TT27 và GDPT 2018.
     
-    DỮ LIỆU ĐẦU VÀO (MA TRẬN/ĐẶC TẢ):
+    NỘI DUNG MA TRẬN:
     {content}
-
-    YÊU CẦU BẮT BUỘC:
-    1. **Nguồn kiến thức:** Chỉ sử dụng nội dung nằm trong chương trình GDPT 2018 và các bộ sách giáo khoa hiện hành (Cánh Diều, Chân Trời Sáng Tạo, Kết Nối Tri Thức). TUYỆT ĐỐI KHÔNG lấy kiến thức cũ hoặc kiến thức nước ngoài.
-    2. **Cấu trúc đề:** - Phải thể hiện được 3 mức độ nhận thức theo Thông tư 27 (Mức 1: Nhận biết, Mức 2: Kết nối, Mức 3: Vận dụng).
-       - Tỉ lệ trắc nghiệm/tự luận phù hợp với đặc thù môn {subject}.
-    3. **Ngôn ngữ:** Trong sáng, dễ hiểu, phù hợp tâm lý lứa tuổi tiểu học, đặc biệt phù hợp với học sinh vùng cao.
-    4. **Hình thức:** Trình bày rõ ràng, sử dụng Markdown để in đậm các câu hỏi.
-    5. **Tiêu đề:** Đầu đề thi phải ghi rõ: "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
-
-    HÃY XUẤT RA ĐỀ THI HOÀN CHỈNH KÈM ĐÁP ÁN GỢI Ý Ở CUỐI.
+    
+    YÊU CẦU:
+    1. Chỉ lấy kiến thức trong SGK (Cánh Diều, Chân Trời ST, Kết Nối Tri Thức).
+    2. Đủ 3 mức độ nhận thức (1, 2, 3).
+    3. Ngôn ngữ phù hợp học sinh vùng cao.
+    4. Tiêu đề: "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
     """
     
     try:
-        with st.spinner(f'Đang kết nối AI ({chosen_model_name}) và soạn đề...'):
+        with st.spinner(f'Đang kết nối AI ({chosen_model})...'):
             response = model.generate_content(prompt)
             return response.text
     except Exception as e:
-        return f"Lỗi kết nối AI: {str(e)}. \n1. Kiểm tra lại API Key.\n2. Chạy lệnh: pip install -U google-generativeai"
+        return f"Lỗi: {str(e)}. Hãy thử bấm nút 'SỬA LỖI AI' bên trái."
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
 
-# Sidebar: Nhập API
+# SIDEBAR & CÔNG CỤ SỬA LỖI (QUAN TRỌNG)
 with st.sidebar:
     st.header("⚙️ Cấu hình")
-    api_key = st.text_input("Nhập Gemini API Key:", type="password")
+    api_key = st.text_input("Nhập API Key:", type="password")
     
-    # --- TÍNH NĂNG CHECK API ---
-    if st.button("Kiểm tra kết nối API"):
-        if not api_key:
-            st.error("Vui lòng nhập Key trước!")
-        else:
-            try:
-                genai.configure(api_key=api_key)
-                # Test thử
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content("Xin chào")
-                st.success("Kết nối thành công! ✅")
-            except Exception as e:
-                st.error(f"Lỗi: {e}. Vui lòng cập nhật thư viện pip.")
-
-    st.info("Để lấy API Key miễn phí, truy cập: [Google AI Studio](https://aistudio.google.com/)")
     st.markdown("---")
-    st.markdown("**Hướng dẫn:**\n1. Chọn Lớp & Môn.\n2. Upload file Ma trận.\n3. Nhấn 'Tạo đề'.")
+    st.error("👇 NẾU BỊ LỖI, BẤM NÚT DƯỚI 👇")
+    
+    # NÚT SỬA LỖI THẦN THÁNH
+    if st.button("🔧 BẤM ĐỂ SỬA LỖI AI", type="primary"):
+        with st.status("Đang tự động sửa lỗi..."):
+            st.write("Đang tìm Python...")
+            python_path = sys.executable # Lấy đường dẫn Python đang chạy web này
+            st.write(f"Đã tìm thấy: {python_path}")
+            
+            st.write("Đang cập nhật thư viện AI...")
+            try:
+                # Dùng chính Python này để cài đè thư viện
+                subprocess.check_call([python_path, "-m", "pip", "install", "--upgrade", "google-generativeai"])
+                st.success("✅ ĐÃ SỬA XONG! Vui lòng tắt màn hình đen và chạy lại.")
+            except Exception as e:
+                st.error(f"Vẫn lỗi: {e}")
+                
+    st.markdown("---")
+    st.info("Lấy API Key: [Google AI Studio](https://aistudio.google.com/)")
 
-# BƯỚC 1: CHỌN LỚP (MÀU SẮC)
+# BƯỚC 1: CHỌN LỚP
 st.subheader("1️⃣ Chọn Khối Lớp")
 selected_grade = st.radio("Chọn lớp:", list(SUBJECTS_DB.keys()), horizontal=True, label_visibility="collapsed")
-
-# Hiển thị màu sắc tương ứng lớp đã chọn
 st.markdown(f"<div class='{GRADE_COLORS[selected_grade]}'>Bạn đang chọn: {selected_grade}</div>", unsafe_allow_html=True)
 st.write("")
 
-# BƯỚC 2: CHỌN MÔN (HIỂN THỊ MÀU & ICON)
+# BƯỚC 2: CHỌN MÔN
 st.subheader(f"2️⃣ Chọn Môn Học - {selected_grade}")
 if selected_grade:
     subjects_data = SUBJECTS_DB[selected_grade]
     subject_names = [f"{s[1]} {s[0]}" for s in subjects_data]
     selected_subject_raw = st.selectbox("Chọn môn để ra đề:", subject_names)
-    
     selected_subject = selected_subject_raw.split(" ", 1)[1]
-    
-    st.info(f"Đang thiết lập thông số cho môn: **{selected_subject}**")
+    st.info(f"Môn: **{selected_subject}**")
 
 st.markdown("---")
 
-# BƯỚC 3 & 4: UPLOAD & HIỂN THỊ (SPLIT VIEW)
+# BƯỚC 3 & 4: UPLOAD & KẾT QUẢ
 col_input, col_output = st.columns([1, 1], gap="large")
 
 with col_input:
-    st.subheader("3️⃣ Upload Ma trận / Đặc tả")
-    st.markdown(f"Tải lên file ma trận cho môn **{selected_subject}** (PDF, DOCX, Excel).")
-    
-    uploaded_file = st.file_uploader("Kéo thả file vào đây:", type=['pdf', 'docx', 'doc', 'xlsx', 'xls'])
+    st.subheader("3️⃣ Upload Ma trận")
+    uploaded_file = st.file_uploader("Tải file (PDF, DOCX, Excel)", type=['pdf', 'docx', 'doc', 'xlsx', 'xls'])
     
     file_content = ""
     if uploaded_file:
         file_content = read_file_content(uploaded_file)
-        st.success(f"✅ Đã đọc {len(file_content)} ký tự từ file.")
-        with st.expander("Xem nội dung ma trận đã đọc"):
-            st.text(file_content[:800] + "...")
+        st.success(f"Đã đọc file. ({len(file_content)} ký tự)")
     
     st.markdown("<br>", unsafe_allow_html=True)
-    
     btn_generate = st.button("✨ TẠO ĐỀ KIỂM TRA NGAY", type="primary", use_container_width=True)
 
 with col_output:
-    st.subheader("4️⃣ Nội dung Đề thi (AI)")
-    st.markdown("*Đề thi sẽ hiển thị tại đây, tuân thủ GDPT 2018.*")
-    
+    st.subheader("4️⃣ Đề thi AI")
     container = st.container(border=True)
     
     if "generated_exam" not in st.session_state:
@@ -236,28 +163,15 @@ with col_output:
 
     if btn_generate:
         if not uploaded_file:
-            st.warning("⚠️ Vui lòng tải lên file Ma trận trước!")
+            st.warning("⚠️ Chưa có file ma trận!")
         else:
             result = generate_exam(api_key, selected_grade, selected_subject, file_content)
             st.session_state.generated_exam = result
 
     if st.session_state.generated_exam:
         container.markdown(st.session_state.generated_exam)
-        st.download_button(
-            label="📥 Tải về (.txt)",
-            data=st.session_state.generated_exam,
-            file_name=f"De_Thi_{selected_subject}_{selected_grade}.txt",
-            mime="text/plain"
-        )
+        st.download_button("📥 Tải về (.txt)", st.session_state.generated_exam, f"De_Thi_{selected_subject}.txt")
 
-# --- CUỐI TRANG: TÊN TRƯỜNG ---
+# FOOTER
 st.markdown("<br><br><br>", unsafe_allow_html=True) 
-st.markdown(
-    """
-    <div class='footer'>
-        <div class='footer-text'>🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</div>
-        <small>Hệ thống hỗ trợ chuyên môn - Đổi mới kiểm tra đánh giá theo Thông tư 27</small>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
+st.markdown("""<div class='footer'><div class='footer-text'>🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</div><small>Hệ thống hỗ trợ chuyên môn - TT27</small></div>""", unsafe_allow_html=True)
