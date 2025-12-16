@@ -1,11 +1,3 @@
-Dưới đây là phiên bản code hoàn chỉnh đã được cập nhật theo yêu cầu của bạn:
-
-1. **Giao diện:** Đã **xóa bỏ phần hiển thị dữ liệu JSON** thô. Thay vào đó là bảng **"Trạng thái & Cấu trúc đề"**. Bảng này sẽ tự động nhận diện xem bạn đang dùng chế độ "Mặc định (TT27)" hay "Theo file Ma trận tải lên".
-2. **Sửa lỗi 429 (Quota Exceeded):** Tôi đã nâng cấp thuật toán chờ. Khi gặp lỗi, hệ thống sẽ chờ **60 giây** (thay vì 30s) để đảm bảo bộ đếm của Google reset hoàn toàn, giúp tỷ lệ thành công cao hơn hẳn.
-
-Bạn copy toàn bộ code sau đè lên file cũ:
-
-```python
 import streamlit as st
 import google.generativeai as genai
 import pandas as pd
@@ -392,5 +384,3 @@ elif st.session_state.step == 'preview':
 # Footer
 st.markdown('<div style="margin-bottom: 60px;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="footer">© 2025 - Trần Ngọc Hải - Trường PTDTBT Tiểu học Giàng Chu Phìn - ĐT: 0944 134 973</div>', unsafe_allow_html=True)
-
-```
