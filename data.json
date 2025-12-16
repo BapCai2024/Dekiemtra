@@ -1,0 +1,443 @@
+{
+  "Toán": {
+    "Lớp 1": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Các số từ 0 đến 10": [
+          {"topic": "Các số 0, 1, 2, 3, 4, 5", "periods": 3},
+          {"topic": "Các số 6, 7, 8, 9, 10", "periods": 4},
+          {"topic": "Nhiều hơn, ít hơn, bằng nhau", "periods": 2},
+          {"topic": "So sánh số", "periods": 2},
+          {"topic": "Mấy và mấy", "periods": 2}
+        ],
+        "Chủ đề 2: Làm quen với một số hình phẳng": [
+          {"topic": "Hình vuông, hình tròn, hình tam giác, hình chữ nhật", "periods": 3},
+          {"topic": "Thực hành lắp ghép, xếp hình", "periods": 2}
+        ],
+        "Chủ đề 3: Phép cộng, phép trừ trong phạm vi 10": [
+          {"topic": "Phép cộng trong phạm vi 10", "periods": 4},
+          {"topic": "Phép trừ trong phạm vi 10", "periods": 4}
+        ]
+      }
+    },
+    "Lớp 2": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Ôn tập và bổ sung": [
+          {"topic": "Bài 1: Ôn tập các số đến 100", "periods": 3},
+          {"topic": "Bài 2: Tia số. Số liền trước, số liền sau", "periods": 2},
+          {"topic": "Bài 3: Số hạng - Tổng, Số bị trừ - Số trừ - Hiệu", "periods": 3}
+        ],
+        "Chủ đề 2: Phép cộng, phép trừ trong phạm vi 20": [
+          {"topic": "Bài 7: Phép cộng (qua 10) trong phạm vi 20", "periods": 5},
+          {"topic": "Bài 8: Bảng cộng (qua 10)", "periods": 2},
+          {"topic": "Bài 11: Phép trừ (qua 10) trong phạm vi 20", "periods": 5}
+        ],
+        "Chủ đề 3: Làm quen với khối lượng, dung tích": [
+          {"topic": "Bài 15: Ki-lô-gam", "periods": 3},
+          {"topic": "Bài 16: Lít", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 3": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Ôn tập và bổ sung": [
+          {"topic": "Bài 1: Ôn tập các số đến 1000", "periods": 2},
+          {"topic": "Bài 2: Ôn tập phép cộng, phép trừ trong phạm vi 1000", "periods": 2},
+          {"topic": "Bài 3: Tìm thành phần trong phép cộng, phép trừ", "periods": 2},
+          {"topic": "Bài 4: Ôn tập bảng nhân 2; 5, bảng chia 2; 5", "periods": 2}
+        ],
+        "Chủ đề 2: Bảng nhân, bảng chia": [
+          {"topic": "Bài 9: Bảng nhân 6, bảng chia 6", "periods": 2},
+          {"topic": "Bài 10: Bảng nhân 7, bảng chia 7", "periods": 2},
+          {"topic": "Bài 11: Bảng nhân 8, bảng chia 8", "periods": 2},
+          {"topic": "Bài 12: Bảng nhân 9, bảng chia 9", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Ôn tập và bổ sung": [
+          {"topic": "Bài 1: Ôn tập các số đến 100 000", "periods": 2},
+          {"topic": "Bài 2: Ôn tập các phép tính trong phạm vi 100 000", "periods": 3},
+          {"topic": "Bài 3: Số chẵn, số lẻ", "periods": 2},
+          {"topic": "Bài 4: Biểu thức chứa chữ", "periods": 3},
+          {"topic": "Bài 5: Giải bài toán có 3 bước tính", "periods": 2}
+        ],
+        "Chủ đề 2: Góc và đơn vị đo góc": [
+          {"topic": "Bài 7: Đo góc, đơn vị đo góc", "periods": 2},
+          {"topic": "Bài 8: Góc nhọn, góc tù, góc bẹt", "periods": 3}
+        ],
+        "Chủ đề 3: Số có nhiều chữ số": [
+          {"topic": "Bài 10: Số có sáu chữ số. Số 1 000 000", "periods": 3},
+          {"topic": "Bài 11: Hàng và lớp", "periods": 3},
+          {"topic": "Bài 12: Các số trong phạm vi lớp triệu", "periods": 3},
+          {"topic": "Bài 17: Yến, tạ, tấn", "periods": 3}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Ôn tập và bổ sung": [
+          {"topic": "Bài 1: Ôn tập số tự nhiên", "periods": 2},
+          {"topic": "Bài 2: Ôn tập các phép tính với số tự nhiên", "periods": 2},
+          {"topic": "Bài 3: Ôn tập phân số", "periods": 2},
+          {"topic": "Bài 4: Phân số thập phân", "periods": 1},
+          {"topic": "Bài 6: Cộng, trừ hai phân số khác mẫu số", "periods": 2},
+          {"topic": "Bài 7: Hỗn số", "periods": 2}
+        ],
+        "Chủ đề 2: Số thập phân": [
+          {"topic": "Bài 10: Khái niệm số thập phân", "periods": 3},
+          {"topic": "Bài 11: So sánh các số thập phân", "periods": 2},
+          {"topic": "Bài 12: Viết số đo đại lượng dưới dạng số thập phân", "periods": 3}
+        ],
+        "Chủ đề 3: Một số đơn vị đo diện tích": [
+          {"topic": "Bài 15: Ki-lô-mét vuông. Héc-ta", "periods": 2},
+          {"topic": "Bài 16: Các đơn vị đo diện tích", "periods": 2}
+        ]
+      }
+    }
+  },
+  "Tiếng Việt": {
+    "Lớp 1": {
+      "Cùng học để phát triển năng lực": {
+        "Học chữ ghi âm": [
+          {"topic": "Bài 1A: a, b", "periods": 2},
+          {"topic": "Bài 1B: c, o", "periods": 2},
+          {"topic": "Bài 2A: e, ê", "periods": 2},
+          {"topic": "Bài 3A: l, m", "periods": 2}
+        ],
+        "Học chữ ghi vần": [
+          {"topic": "Bài 5A: ch, tr", "periods": 2},
+          {"topic": "Bài 6A: â, ai, ay, ây", "periods": 2},
+          {"topic": "Bài 7A: ao, eo", "periods": 2}
+        ],
+        "Chủ đề: Trường em": [
+          {"topic": "Bài 19A: Tới trường", "periods": 2},
+          {"topic": "Bài 19B: Ở trường thật thú vị", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 2": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Em lớn lên từng ngày": [
+          {"topic": "Bài 1: Tôi là học sinh lớp 2", "periods": 4},
+          {"topic": "Bài 2: Ngày hôm qua đâu rồi", "periods": 4},
+          {"topic": "Bài 3: Niềm vui của Bi và Bống", "periods": 4},
+          {"topic": "Bài 4: Làm việc thật là vui", "periods": 4}
+        ],
+        "Chủ đề 2: Đi học vui sao": [
+          {"topic": "Bài 7: Cây xấu hổ", "periods": 4},
+          {"topic": "Bài 8: Cầu thủ dự bị", "periods": 6},
+          {"topic": "Bài 9: Cô giáo lớp em", "periods": 4}
+        ],
+        "Chủ đề 3: Niềm vui tuổi thơ": [
+          {"topic": "Bài 17: Gọi bạn", "periods": 4},
+          {"topic": "Bài 18: Tớ nhớ cậu", "periods": 6}
+        ]
+      }
+    },
+    "Lớp 3": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Những trải nghiệm thú vị": [
+          {"topic": "Bài 1: Ngày gặp lại", "periods": 4},
+          {"topic": "Bài 2: Về thăm quê", "periods": 4},
+          {"topic": "Bài 3: Cánh rừng trong nắng", "periods": 4},
+          {"topic": "Bài 4: Lần đầu ra biển", "periods": 4},
+          {"topic": "Bài 5: Nhật kí tập bơi", "periods": 4}
+        ],
+        "Chủ đề 2: Cổng trường rộng mở": [
+          {"topic": "Bài 9: Đi học vui sao", "periods": 4},
+          {"topic": "Bài 10: Con đường tới trường", "periods": 4},
+          {"topic": "Bài 11: Lời giải toán đặc biệt", "periods": 4}
+        ],
+        "Chủ đề 3: Mái nhà yêu thương": [
+          {"topic": "Bài 17: Ngưỡng cửa", "periods": 4},
+          {"topic": "Bài 18: Món quà đặc biệt", "periods": 4}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ điểm 1: Mỗi người một vẻ": [
+          {"topic": "Bài 1: Điều kì diệu", "periods": 3},
+          {"topic": "Bài 2: Thi nhạc", "periods": 4},
+          {"topic": "Bài 3: Anh em sinh đôi", "periods": 3},
+          {"topic": "Bài 4: Công chúa và người dẫn chuyện", "periods": 4}
+        ],
+        "Chủ điểm 2: Trải nghiệm và khám phá": [
+          {"topic": "Bài 9: Bầu trời trong quả trứng", "periods": 3},
+          {"topic": "Bài 10: Tiếng nói của cỏ cây", "periods": 4},
+          {"topic": "Bài 11: Tập làm văn", "periods": 3}
+        ],
+        "Chủ điểm 3: Niềm vui sáng tạo": [
+          {"topic": "Bài 17: Vẽ màu", "periods": 3},
+          {"topic": "Bài 18: Đồng cỏ nở hoa", "periods": 4}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ điểm 1: Thế giới tuổi thơ": [
+          {"topic": "Bài 1: Thanh âm của gió", "periods": 3},
+          {"topic": "Bài 2: Cánh đồng hoa", "periods": 4},
+          {"topic": "Bài 3: Tuổi Ngựa", "periods": 3},
+          {"topic": "Bài 4: Bến sông tuổi thơ", "periods": 4}
+        ],
+        "Chủ điểm 2: Thiên nhiên kì thú": [
+          {"topic": "Bài 9: Trước cổng trời", "periods": 3},
+          {"topic": "Bài 10: Kì diệu rừng xanh", "periods": 4},
+          {"topic": "Bài 11: Hang Sơn Đoòng", "periods": 3}
+        ],
+        "Chủ điểm 3: Trên con đường học tập": [
+          {"topic": "Bài 17: Thư gửi các học sinh", "periods": 3},
+          {"topic": "Bài 18: Tấm gương tự học", "periods": 4}
+        ]
+      }
+    }
+  },
+  "Khoa học": {
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Chất": [
+          {"topic": "Bài 1: Tính chất của nước và nước với cuộc sống", "periods": 2},
+          {"topic": "Bài 2: Sự chuyển thể của nước", "periods": 2},
+          {"topic": "Bài 3: Sự ô nhiễm và bảo vệ nguồn nước", "periods": 2},
+          {"topic": "Bài 4: Không khí có ở đâu?", "periods": 2}
+        ],
+        "Chủ đề 2: Năng lượng": [
+          {"topic": "Bài 8: Ánh sáng và sự truyền ánh sáng", "periods": 2},
+          {"topic": "Bài 9: Vai trò của ánh sáng", "periods": 2},
+          {"topic": "Bài 10: Âm thanh và sự truyền âm thanh", "periods": 2}
+        ],
+        "Chủ đề 3: Thực vật và động vật": [
+          {"topic": "Bài 15: Thực vật cần gì để sống?", "periods": 3},
+          {"topic": "Bài 16: Động vật cần gì để sống?", "periods": 3}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Chất": [
+          {"topic": "Bài 1: Thành phần và vai trò của đất", "periods": 2},
+          {"topic": "Bài 2: Ô nhiễm, xói mòn đất và bảo vệ môi trường đất", "periods": 3},
+          {"topic": "Bài 3: Hỗn hợp và dung dịch", "periods": 2},
+          {"topic": "Bài 4: Đặc điểm của chất ở trạng thái rắn, lỏng, khí", "periods": 2}
+        ],
+        "Chủ đề 2: Năng lượng": [
+          {"topic": "Bài 7: Vai trò của năng lượng", "periods": 2},
+          {"topic": "Bài 8: Sử dụng năng lượng điện", "periods": 2}
+        ],
+        "Chủ đề 3: Thực vật và động vật": [
+          {"topic": "Bài 13: Sinh sản của thực vật có hoa", "periods": 2},
+          {"topic": "Bài 14: Sự phát triển của cây con", "periods": 3}
+        ]
+      }
+    }
+  },
+  "Lịch sử & Địa lí": {
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Địa phương em": [
+          {"topic": "Bài 1: Làm quen với phương tiện học tập", "periods": 2},
+          {"topic": "Bài 2: Thiên nhiên và con người địa phương", "periods": 2},
+          {"topic": "Bài 3: Lịch sử và văn hóa truyền thống", "periods": 2}
+        ],
+        "Chủ đề 2: Trung du và miền núi Bắc Bộ": [
+          {"topic": "Bài 4: Thiên nhiên vùng Trung du và miền núi Bắc Bộ", "periods": 3},
+          {"topic": "Bài 5: Dân cư, hoạt động sản xuất", "periods": 3},
+          {"topic": "Bài 6: Một số nét văn hóa", "periods": 2},
+          {"topic": "Bài 7: Đền Hùng và lễ giỗ Tổ Hùng Vương", "periods": 2}
+        ],
+        "Chủ đề 3: Đồng bằng Bắc Bộ": [
+          {"topic": "Bài 8: Thiên nhiên vùng đồng bằng Bắc Bộ", "periods": 3},
+          {"topic": "Bài 9: Dân cư, hoạt động sản xuất", "periods": 3},
+          {"topic": "Bài 10: Một số nét văn hóa", "periods": 2},
+          {"topic": "Bài 11: Sông Hồng và văn minh sông Hồng", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Đất nước và con người Việt Nam": [
+          {"topic": "Bài 1: Vị trí địa lí, lãnh thổ, đơn vị hành chính", "periods": 2},
+          {"topic": "Bài 2: Thiên nhiên Việt Nam", "periods": 4},
+          {"topic": "Bài 3: Biển, đảo Việt Nam", "periods": 2},
+          {"topic": "Bài 4: Dân cư và dân tộc ở Việt Nam", "periods": 4}
+        ],
+        "Chủ đề 2: Những quốc gia đầu tiên": [
+          {"topic": "Bài 5: Nhà nước Văn Lang, Âu Lạc", "periods": 3},
+          {"topic": "Bài 6: Vương quốc Phù Nam", "periods": 1},
+          {"topic": "Bài 7: Vương quốc Chăm-pa", "periods": 2}
+        ],
+        "Chủ đề 3: Xây dựng và bảo vệ đất nước": [
+          {"topic": "Bài 8: Đấu tranh giành độc lập thời Bắc thuộc", "periods": 3},
+          {"topic": "Bài 9: Triều Lý và việc định đô ở Thăng Long", "periods": 3}
+        ]
+      }
+    }
+  },
+  "Tin học": {
+    "Lớp 3": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Máy tính và em": [
+          {"topic": "Bài 1: Thông tin và quyết định", "periods": 2},
+          {"topic": "Bài 2: Xử lí thông tin", "periods": 2},
+          {"topic": "Bài 3: Máy tính và em", "periods": 2},
+          {"topic": "Bài 4: Làm việc với máy tính", "periods": 3}
+        ],
+        "Chủ đề 2: Mạng máy tính và Internet": [
+          {"topic": "Bài 6: Khám phá thông tin trên Internet", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Máy tính và em": [
+          {"topic": "Bài 1: Phần cứng và phần mềm máy tính", "periods": 2},
+          {"topic": "Bài 2: Gõ các phím trên hàng phím số", "periods": 2}
+        ],
+        "Chủ đề 2: Mạng máy tính và Internet": [
+          {"topic": "Bài 3: Thông tin trên trang web", "periods": 2}
+        ],
+        "Chủ đề 5: Ứng dụng tin học": [
+          {"topic": "Bài 8: Tạo bài trình chiếu", "periods": 2},
+          {"topic": "Bài 9: Định dạng văn bản trong trang trình chiếu", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Máy tính và em": [
+          {"topic": "Bài 1: Em có thể làm gì với máy tính?", "periods": 2}
+        ],
+        "Chủ đề 2: Mạng máy tính và Internet": [
+          {"topic": "Bài 2: Tìm kiếm thông tin trên website", "periods": 2}
+        ],
+        "Chủ đề 5: Ứng dụng tin học": [
+          {"topic": "Bài 6: Định dạng kí tự và bố trí hình ảnh", "periods": 2},
+          {"topic": "Bài 7: Thực hành soạn thảo văn bản", "periods": 2}
+        ]
+      }
+    }
+  },
+  "Công nghệ": {
+    "Lớp 3": {
+      "Kết nối tri thức với cuộc sống": {
+        "Phần 1: Công nghệ và đời sống": [
+          {"topic": "Bài 1: Tự nhiên và công nghệ", "periods": 2},
+          {"topic": "Bài 2: Sử dụng đèn học", "periods": 2},
+          {"topic": "Bài 3: Sử dụng quạt điện", "periods": 2},
+          {"topic": "Bài 4: Sử dụng máy thu thanh", "periods": 3}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Phần 1: Công nghệ và đời sống": [
+          {"topic": "Bài 1: Lợi ích của hoa, cây cảnh", "periods": 3},
+          {"topic": "Bài 2: Một số loại hoa, cây cảnh phổ biến", "periods": 3},
+          {"topic": "Bài 3: Vật liệu và dụng cụ trồng hoa", "periods": 3},
+          {"topic": "Bài 4: Gieo hạt hoa, cây cảnh trong chậu", "periods": 3}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Phần 1: Công nghệ và đời sống": [
+          {"topic": "Bài 1: Vai trò của công nghệ", "periods": 2},
+          {"topic": "Bài 2: Nhà sáng chế", "periods": 2},
+          {"topic": "Bài 3: Tìm hiểu thiết kế", "periods": 2},
+          {"topic": "Bài 4: Thiết kế sản phẩm", "periods": 4}
+        ],
+        "Phần 2: Thủ công kĩ thuật": [
+          {"topic": "Bài 7: Lắp ráp mô hình xe điện chạy bằng pin", "periods": 4},
+          {"topic": "Bài 8: Mô hình máy phát điện gió", "periods": 4}
+        ]
+      }
+    }
+  },
+  "Tiếng Anh": {
+    "Lớp 3": {
+      "i-Learn Smart Start": {
+        "Unit 1: My Friends": [
+          {"topic": "Lesson 1", "periods": 2},
+          {"topic": "Lesson 2", "periods": 2},
+          {"topic": "Lesson 3", "periods": 2}
+        ],
+        "Unit 2: Family": [
+          {"topic": "Lesson 1", "periods": 2},
+          {"topic": "Lesson 2", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "i-Learn Smart Start": {
+        "Unit 1: Animals": [
+          {"topic": "Lesson 1", "periods": 3},
+          {"topic": "Lesson 2", "periods": 3},
+          {"topic": "Lesson 3", "periods": 3}
+        ],
+        "Unit 2: What I can do": [
+          {"topic": "Lesson 1", "periods": 3},
+          {"topic": "Lesson 2", "periods": 3}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "i-Learn Smart Start": {
+        "Unit 1: School": [
+          {"topic": "Lesson 1", "periods": 3},
+          {"topic": "Lesson 2", "periods": 3},
+          {"topic": "Lesson 3", "periods": 3}
+        ],
+        "Unit 2: Holidays": [
+          {"topic": "Lesson 1", "periods": 3},
+          {"topic": "Lesson 2", "periods": 3}
+        ]
+      }
+    }
+  },
+  "Đạo đức": {
+    "Lớp 1": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Tự chăm sóc bản thân": [
+          {"topic": "Bài 1: Em giữ sạch đôi tay", "periods": 1},
+          {"topic": "Bài 2: Em giữ sạch răng miệng", "periods": 1}
+        ],
+        "Chủ đề 2: Yêu thương gia đình": [
+          {"topic": "Bài: Gia đình của em", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 2": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Quê hương em": [
+          {"topic": "Bài 1: Vẻ đẹp quê hương em", "periods": 2},
+          {"topic": "Bài 2: Em yêu quê hương", "periods": 3}
+        ],
+        "Chủ đề 2: Kính trọng thầy cô": [
+          {"topic": "Bài 3: Kính trọng thầy giáo, cô giáo", "periods": 2}
+        ]
+      }
+    },
+    "Lớp 4": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Biết ơn người lao động": [
+          {"topic": "Bài 1: Biết ơn người lao động", "periods": 4}
+        ],
+        "Chủ đề 2: Cảm thông, giúp đỡ người gặp khó khăn": [
+          {"topic": "Bài 2: Cảm thông, giúp đỡ người gặp khó khăn", "periods": 4}
+        ]
+      }
+    },
+    "Lớp 5": {
+      "Kết nối tri thức với cuộc sống": {
+        "Chủ đề 1: Biết ơn người có công với quê hương": [
+          {"topic": "Bài 1: Biết ơn những người có công với quê hương, đất nước", "periods": 4}
+        ],
+        "Chủ đề 2: Tôn trọng sự khác biệt": [
+          {"topic": "Bài 2: Tôn trọng sự khác biệt của người khác", "periods": 3}
+        ]
+      }
+    }
+  }
+}
