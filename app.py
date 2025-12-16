@@ -58,67 +58,80 @@ def read_file_content(uploaded_file):
         return f"Lỗi đọc file: {e}"
     return ""
 
-# --- HÀM GỌI AI THÔNG MINH ---
+# --- HÀM GỌI AI (ĐÃ SỬA LỖI & THÊM YÊU CẦU CẦN ĐẠT) ---
 def generate_exam(api_key, grade, subject, content):
     if not api_key: return "⚠️ Vui lòng nhập API Key."
     
     genai.configure(api_key=api_key)
     
-    # Tự động chọn Model an toàn nhất
-    chosen_model = "gemini-pro"
+    # DANH SÁCH MODEL SẼ THỬ LẦN LƯỢT (Nếu cái đầu lỗi thì thử cái sau)
+    models_to_try = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"]
     
-    try:
-        model = genai.GenerativeModel(chosen_model)
-    except:
-        return "⚠️ Lỗi thư viện cũ. Vui lòng bấm nút 'SỬA LỖI AI' ở menu bên trái."
+    active_model = None
+    response_text = ""
+    error_log = []
 
+    # PROMPT MỚI THEO YÊU CẦU CỦA BẠN
     prompt = f"""
-    Bạn là chuyên gia giáo dục tiểu học tại Trường PTDTBT Tiểu học Giàng Chu Phìn.
-    Soạn đề thi môn {subject} lớp {grade} theo TT27 và GDPT 2018.
+    Đóng vai trò là chuyên gia giáo dục tại TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN.
+    Nhiệm vụ: Soạn đề thi môn {subject} lớp {grade} theo TT27.
     
-    NỘI DUNG MA TRẬN:
+    DỮ LIỆU MA TRẬN:
     {content}
     
-    YÊU CẦU:
-    1. Chỉ lấy kiến thức trong SGK (Cánh Diều, Chân Trời ST, Kết Nối Tri Thức).
-    2. Đủ 3 mức độ nhận thức (1, 2, 3).
-    3. Ngôn ngữ phù hợp học sinh vùng cao.
-    4. Tiêu đề: "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
+    YÊU CẦU TUYỆT ĐỐI:
+    1. **YÊU CẦU CẦN ĐẠT:** Nội dung đề thi phải bám sát "Yêu cầu cần đạt" của chương trình GDPT 2018 đối với môn {subject} lớp {grade}.
+    2. **NGUỒN KIẾN THỨC:** Chỉ lấy dữ liệu từ các bộ sách (Cánh Diều, Chân Trời ST, Kết Nối Tri Thức). Không lấy nguồn ngoài.
+    3. **CẤU TRÚC:** Đảm bảo 3 mức độ nhận thức (1, 2, 3).
+    4. **ĐỐI TƯỢNG:** Ngôn ngữ trong sáng, phù hợp học sinh vùng cao.
+    5. **TIÊU ĐỀ:** Phải có dòng chữ "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN" ở đầu đề.
     """
-    
-    try:
-        with st.spinner(f'Đang kết nối AI ({chosen_model})...'):
-            response = model.generate_content(prompt)
-            return response.text
-    except Exception as e:
-        return f"Lỗi: {str(e)}. Hãy thử bấm nút 'SỬA LỖI AI' bên trái."
+
+    # VÒNG LẶP THỬ MODEL (FIX LỖI 404)
+    with st.spinner('Đang kết nối AI (Đang tự động thử các dòng Model)...'):
+        for model_name in models_to_try:
+            try:
+                model = genai.GenerativeModel(model_name)
+                # Thử gọi lệnh đơn giản trước để xem model có sống không
+                response = model.generate_content(prompt)
+                response_text = response.text
+                active_model = model_name
+                break # Nếu thành công thì thoát vòng lặp ngay
+            except Exception as e:
+                error_log.append(f"{model_name}: {str(e)}")
+                continue # Nếu lỗi thì thử model tiếp theo trong danh sách
+
+    if response_text:
+        return f"*(Đã tạo bằng model: {active_model})*\n\n" + response_text
+    else:
+        # Nếu thử hết cả 3 model mà vẫn lỗi
+        return f"⚠️ KHÔNG THỂ TẠO ĐỀ. Chi tiết lỗi:\n" + "\n".join(error_log) + "\n\n👉 LỜI KHUYÊN: Hãy tắt hẳn cửa sổ đen (CMD) và chạy lại lệnh 'streamlit run app.py'."
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
 
-# SIDEBAR & CÔNG CỤ SỬA LỖI (QUAN TRỌNG)
+# SIDEBAR & CÔNG CỤ SỬA LỖI
 with st.sidebar:
     st.header("⚙️ Cấu hình")
     api_key = st.text_input("Nhập API Key:", type="password")
     
     st.markdown("---")
-    st.error("👇 NẾU BỊ LỖI, BẤM NÚT DƯỚI 👇")
+    st.warning("👇 NẾU VẪN BỊ LỖI, BẤM NÚT DƯỚI 👇")
     
-    # NÚT SỬA LỖI THẦN THÁNH
-    if st.button("🔧 BẤM ĐỂ SỬA LỖI AI", type="primary"):
-        with st.status("Đang tự động sửa lỗi..."):
-            st.write("Đang tìm Python...")
-            python_path = sys.executable # Lấy đường dẫn Python đang chạy web này
-            st.write(f"Đã tìm thấy: {python_path}")
-            
-            st.write("Đang cập nhật thư viện AI...")
+    # NÚT SỬA LỖI (UPDATE MẠNH)
+    if st.button("🔧 CẬP NHẬT HỆ THỐNG", type="primary"):
+        with st.status("Đang xử lý..."):
+            python_path = sys.executable 
+            st.write(f"Python: {python_path}")
             try:
-                # Dùng chính Python này để cài đè thư viện
-                subprocess.check_call([python_path, "-m", "pip", "install", "--upgrade", "google-generativeai"])
-                st.success("✅ ĐÃ SỬA XONG! Vui lòng tắt màn hình đen và chạy lại.")
+                st.write("Đang gỡ bản cũ...")
+                subprocess.run([python_path, "-m", "pip", "uninstall", "google-generativeai", "-y"])
+                st.write("Đang cài bản mới nhất...")
+                subprocess.check_call([python_path, "-m", "pip", "install", "google-generativeai==0.5.2"]) # Cài bản ổn định
+                st.success("✅ ĐÃ XONG! QUAN TRỌNG: Bạn hãy tắt cửa sổ CMD đi và chạy lại.")
             except Exception as e:
-                st.error(f"Vẫn lỗi: {e}")
-                
+                st.error(f"Lỗi: {e}")
+
     st.markdown("---")
     st.info("Lấy API Key: [Google AI Studio](https://aistudio.google.com/)")
 
