@@ -10,6 +10,7 @@ import pypdf
 import re
 import json
 import os
+import time
 
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(page_title="Hệ Thống Hỗ Trợ Ra Đề Tiểu Học", page_icon="🏫", layout="wide")
@@ -21,20 +22,16 @@ if not os.path.exists(DATA_FOLDER):
 
 # --- QUẢN LÝ SESSION ---
 if 'step' not in st.session_state: st.session_state.step = 'home'
-if 'selected_grade' not in st.session_state: st.session_state.selected_grade = 'Lớp 1' # Mặc định
 if 'selected_subject' not in st.session_state: st.session_state.selected_subject = ''
 if 'selected_color' not in st.session_state: st.session_state.selected_color = ''
 if 'topic_df' not in st.session_state: st.session_state.topic_df = None 
-if 'matrix_df_display' not in st.session_state: st.session_state.matrix_df_display = None # Lưu bảng ma trận để hiển thị song song
 if 'auto_config' not in st.session_state: st.session_state.auto_config = {}
 
 # --- CSS TÙY CHỈNH ---
 st.markdown("""
 <style>
-    /* ẨN GIAO DIỆN THỪA */
     #MainMenu {visibility: hidden;} header {visibility: hidden;} footer {visibility: hidden;} .stDeployButton {display:none;}
     
-    /* THẺ TÁC GIẢ NỔI */
     .floating-author-badge {
         position: fixed; bottom: 20px; right: 20px; background-color: white; padding: 10px 15px;
         border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 2px solid #0984e3; z-index: 9999;
@@ -46,18 +43,14 @@ st.markdown("""
     .author-name {font-weight: bold; color: #2d3436; font-size: 14px;}
     .author-link {font-size: 11px; color: #0984e3; text-decoration: none; font-weight: 600;}
 
-    /* STYLE CHÍNH */
     .main-title {font-family: 'Times New Roman', serif; font-size: 30px; font-weight: bold; text-align: center; text-transform: uppercase; color: #2c3e50; margin-bottom: 20px;}
     .subject-card {padding: 20px; border-radius: 10px; color: white; text-align: center; font-weight: bold; font-size: 18px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px;}
     .subject-card:hover {transform: scale(1.05);}
-    
-    /* Màu môn học */
     .bg-blue {background-color: #3498db;} .bg-green {background-color: #2ecc71;} .bg-red {background-color: #e74c3c;}
     .bg-purple {background-color: #9b59b6;} .bg-orange {background-color: #e67e22;} .bg-teal {background-color: #1abc9c;}
     
-    /* Highlight vùng chọn */
-    .step-box {border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; background-color: #fcfcfc;}
-    .step-header {font-weight: bold; color: #2980b9; margin-bottom: 10px; font-size: 16px;}
+    /* Box xóa file */
+    .delete-box {border: 1px solid #e74c3c; padding: 10px; border-radius: 5px; background-color: #fdf0ed; margin-top: 10px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,19 +74,33 @@ def show_floating_badge():
     </div>
     """, unsafe_allow_html=True)
 
-# --- HÀM HỖ TRỢ ---
+# --- HÀM QUẢN LÝ FILE ---
 def save_uploaded_template(uploaded_file):
     if uploaded_file is not None:
-        file_path = os.path.join(DATA_FOLDER, uploaded_file.name)
-        with open(file_path, "wb") as f: f.write(uploaded_file.getbuffer())
-        return True
+        try:
+            file_path = os.path.join(DATA_FOLDER, uploaded_file.name)
+            with open(file_path, "wb") as f: f.write(uploaded_file.getbuffer())
+            return True
+        except Exception: return False
+    return False
+
+def delete_matrix_file(filename):
+    try:
+        file_path = os.path.join(DATA_FOLDER, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return True
+    except Exception: pass
     return False
 
 def get_matrix_files():
-    if os.path.exists(DATA_FOLDER):
-        return [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls', '.docx', '.pdf', '.csv'))]
+    try:
+        if os.path.exists(DATA_FOLDER):
+            return [f for f in os.listdir(DATA_FOLDER) if f.endswith(('.xlsx', '.xls', '.docx', '.pdf', '.csv'))]
+    except Exception: pass
     return []
 
+# --- HÀM ĐỌC NỘI DUNG ---
 def read_file_content(file_obj, is_local=False):
     try:
         if is_local:
@@ -128,7 +135,6 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
         style.element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
     except: pass
     
-    # Header: Chỉ tên trường
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
     table.columns[0].width = Inches(2.5)
@@ -183,7 +189,6 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
     ans_title.runs[0].bold = True
     ans_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(clean_text_for_word(answer_key))
-    
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
@@ -266,23 +271,15 @@ show_floating_badge()
 # --- MÀN HÌNH 1: CHỌN LỚP & MÔN ---
 if st.session_state.step == 'home':
     st.write("### 1️⃣ Chọn Khối Lớp & Môn Học:")
-    
-    # 1. Chọn Lớp
     st.markdown('<div class="step-header">Chọn Khối Lớp:</div>', unsafe_allow_html=True)
-    c_g1, c_g2, c_g3, c_g4, c_g5 = st.columns(5)
-    
-    # Logic hiển thị nút bấm lớp học
     grades = ["Lớp 1", "Lớp 2", "Lớp 3", "Lớp 4", "Lớp 5"]
     cols_grade = st.columns(5)
     for i, g in enumerate(grades):
         if cols_grade[i].button(g, key=f"grade_{g}", use_container_width=True, 
                                 type="primary" if st.session_state.selected_grade == g else "secondary"):
             st.session_state.selected_grade = g
-
     st.info(f"👉 Đang chọn: **{st.session_state.selected_grade}**")
     st.markdown("---")
-
-    # 2. Chọn Môn
     st.markdown('<div class="step-header">Chọn Môn Học:</div>', unsafe_allow_html=True)
     cols = st.columns(3)
     for index, sub in enumerate(SUBJECTS_DATA):
@@ -306,7 +303,6 @@ elif st.session_state.step == 'config':
     subject = st.session_state.selected_subject
     grade = st.session_state.selected_grade
     color = st.session_state.selected_color
-    
     st.markdown(f"""<div style="background-color:{color}; padding:10px; border-radius:8px; color:white; margin-bottom:20px; text-align:center;"><h3 style="margin:0;">{grade.upper()} - MÔN: {subject.upper()}</h3></div>""", unsafe_allow_html=True)
 
     with st.sidebar:
@@ -316,58 +312,65 @@ elif st.session_state.step == 'config':
         school_name = st.text_input("Tên trường:", value="TH Nguyễn Du")
         exam_name = st.text_input("Kỳ thi:", value="CUỐI HỌC KÌ I")
         
-        # QUẢN LÝ DỮ LIỆU CỨNG
         st.markdown("---")
-        st.markdown("##### 📂 Ma trận Mẫu (Trong Folder)")
-        uploaded_template = st.file_uploader("Thêm file mẫu mới:", type=['xlsx', 'docx', 'pdf'], label_visibility="collapsed")
+        st.markdown("##### 📂 Dữ liệu Ma trận Mẫu")
+        st.info("Upload file (PDF, Word, Excel) để thêm vào kho dữ liệu cứng.")
+        uploaded_template = st.file_uploader("Upload file mẫu:", type=['xlsx', 'docx', 'pdf'], label_visibility="collapsed")
         if uploaded_template is not None:
             if save_uploaded_template(uploaded_template):
-                st.success(f"Đã lưu: {uploaded_template.name}")
+                st.success(f"✅ Đã thêm: {uploaded_template.name}")
                 st.rerun()
-
-    # --- KHU VỰC CẤU HÌNH ---
-    # 1. CHỌN CHỦ ĐỀ
-    st.markdown('<div class="step-box"><div class="step-header">Bước 1: Xác định Chủ đề & Nội dung (Kế hoạch dạy học)</div>', unsafe_allow_html=True)
-    file_plan = st.file_uploader("📂 Tải Kế hoạch dạy học (Word/PDF):", type=['docx', 'pdf', 'txt'])
-    plan_text_content = ""
-    if file_plan: plan_text_content = read_input_file(file_plan)
-
-    selected_data_for_ai = []
-    if file_plan:
-        if st.session_state.topic_df is None:
-            if st.button("🔍 Quét Chủ đề bài học"):
-                if not api_key: st.error("Cần nhập API Key.")
-                else:
-                    with st.spinner("Đang phân tích..."):
-                        topics_data = extract_topics_json(api_key, plan_text_content)
-                        if topics_data:
-                            df = pd.DataFrame(topics_data)
-                            df.insert(0, "Chọn", False)
-                            df.rename(columns={"topic": "Tên bài/Chủ đề", "periods": "Số tiết"}, inplace=True)
-                            st.session_state.topic_df = df
-                        else: st.error("Không tìm thấy chủ đề.")
         
-        if st.session_state.topic_df is not None:
-            edited_df = st.data_editor(
-                st.session_state.topic_df,
-                column_config={"Chọn": st.column_config.CheckboxColumn(default=False), "Số tiết": st.column_config.NumberColumn(min_value=1, max_value=10)},
-                disabled=["Tên bài/Chủ đề"], hide_index=True, use_container_width=True
-            )
-            selected_rows = edited_df[edited_df["Chọn"] == True]
-            if not selected_rows.empty:
-                st.success(f"Đã chọn: {len(selected_rows)} bài - {selected_rows['Số tiết'].sum()} tiết")
-                for index, row in selected_rows.iterrows():
-                    selected_data_for_ai.append({"topic": row["Tên bài/Chủ đề"], "periods": row["Số tiết"]})
+        # --- PHẦN XÓA FILE ---
+        existing_files = get_matrix_files()
+        if existing_files:
+            st.markdown("---")
+            st.markdown("##### 🗑️ Xóa file mẫu")
+            file_to_delete = st.selectbox("Chọn file cần xóa:", ["-- Chọn --"] + existing_files)
+            if st.button("Xóa file đã chọn"):
+                if file_to_delete != "-- Chọn --":
+                    if delete_matrix_file(file_to_delete):
+                        st.toast(f"Đã xóa {file_to_delete}", icon="🗑️")
+                        time.sleep(1) # Đợi chút để hiển thị thông báo
+                        st.rerun()
+                    else: st.error("Lỗi khi xóa file.")
 
-    # 2. CHỌN MA TRẬN & CẤU TRÚC (SONG SONG)
-    st.markdown('<div class="step-box"><div class="step-header">Bước 2: Cấu trúc Đề & Ma trận tham chiếu</div>', unsafe_allow_html=True)
-    
     col_matrix_view, col_config = st.columns([1.2, 1])
     
-    # --- CỘT TRÁI: VIEW MA TRẬN ---
+    # --- CỘT TRÁI: VIEW MA TRẬN & CHỦ ĐỀ ---
     with col_matrix_view:
-        st.write("📊 **Chọn nguồn Ma trận:**")
-        matrix_source = st.radio("", ["Upload file mới", "Dùng Mẫu có sẵn (Trong Folder)"], horizontal=True, label_visibility="collapsed")
+        # 1. CHỦ ĐỀ
+        st.markdown('<div class="step-box"><div class="step-header">Bước 1: Chủ đề dạy học</div>', unsafe_allow_html=True)
+        file_plan = st.file_uploader("📂 Tải Kế hoạch (Word/PDF):", type=['docx', 'pdf', 'txt'])
+        plan_text_content = ""
+        selected_data_for_ai = []
+        
+        if file_plan: 
+            plan_text_content = read_input_file(file_plan)
+            if st.session_state.topic_df is None:
+                if st.button("🔍 Quét Chủ đề"):
+                    if not api_key: st.error("Cần API Key.")
+                    else:
+                        with st.spinner("Đang phân tích..."):
+                            topics_data = extract_topics_json(api_key, plan_text_content)
+                            if topics_data:
+                                df = pd.DataFrame(topics_data)
+                                df.insert(0, "Chọn", False)
+                                df.rename(columns={"topic": "Tên bài/Chủ đề", "periods": "Số tiết"}, inplace=True)
+                                st.session_state.topic_df = df
+                            else: st.error("Không tìm thấy chủ đề.")
+            
+            if st.session_state.topic_df is not None:
+                edited_df = st.data_editor(st.session_state.topic_df, column_config={"Chọn": st.column_config.CheckboxColumn(default=False)}, disabled=["Tên bài/Chủ đề"], hide_index=True, use_container_width=True)
+                selected_rows = edited_df[edited_df["Chọn"] == True]
+                if not selected_rows.empty:
+                    st.success(f"Đã chọn: {len(selected_rows)} bài.")
+                    for index, row in selected_rows.iterrows():
+                        selected_data_for_ai.append({"topic": row["Tên bài/Chủ đề"], "periods": row["Số tiết"]})
+
+        # 2. VIEW MA TRẬN
+        st.markdown('<div class="step-box"><div class="step-header">Bước 2: Ma trận tham chiếu</div>', unsafe_allow_html=True)
+        matrix_source = st.radio("", ["Upload file mới", "Dùng Mẫu có sẵn"], horizontal=True, label_visibility="collapsed")
         matrix_text_final = ""
         
         if matrix_source == "Upload file mới":
@@ -375,10 +378,8 @@ elif st.session_state.step == 'config':
             if file_matrix:
                 matrix_text_final = read_input_file(file_matrix)
                 try:
-                    if file_matrix.name.endswith(('.xlsx', '.xls')):
-                        st.session_state.matrix_df_display = pd.read_excel(file_matrix)
-                    elif file_matrix.name.endswith('.csv'):
-                        st.session_state.matrix_df_display = pd.read_csv(file_matrix)
+                    if file_matrix.name.endswith(('.xlsx', '.xls')): st.session_state.matrix_df_display = pd.read_excel(file_matrix)
+                    elif file_matrix.name.endswith('.csv'): st.session_state.matrix_df_display = pd.read_csv(file_matrix)
                 except: pass
         else:
             files_in_folder = get_matrix_files()
@@ -388,19 +389,16 @@ elif st.session_state.step == 'config':
                     matrix_text_final = read_file_content(selected_file, is_local=True)
                     try:
                         file_path = os.path.join(DATA_FOLDER, selected_file)
-                        if selected_file.endswith(('.xlsx', '.xls')):
-                            st.session_state.matrix_df_display = pd.read_excel(file_path)
-                        elif selected_file.endswith('.csv'):
-                            st.session_state.matrix_df_display = pd.read_csv(file_path)
+                        if selected_file.endswith(('.xlsx', '.xls')): st.session_state.matrix_df_display = pd.read_excel(file_path)
+                        elif selected_file.endswith('.csv'): st.session_state.matrix_df_display = pd.read_csv(file_path)
                     except: pass
             else: st.warning("Chưa có file mẫu.")
 
-        # Hiển thị bảng ma trận
         if st.session_state.matrix_df_display is not None:
             st.write("👀 **Xem trước Ma trận:**")
-            st.dataframe(st.session_state.matrix_df_display, height=300, use_container_width=True)
+            st.dataframe(st.session_state.matrix_df_display, height=250, use_container_width=True)
 
-    # --- CỘT PHẢI: CẤU HÌNH SỐ CÂU ---
+    # --- CỘT PHẢI: CẤU HÌNH ---
     with col_config:
         st.write("🛠️ **Thiết lập Số câu & Điểm:**")
         ac = st.session_state.auto_config
@@ -434,10 +432,8 @@ elif st.session_state.step == 'config':
         score_essay = essay_total * essay_point
         total_score = score_tn_basic + score_tn_adv + score_essay
 
-        if total_score == 10:
-            st.success(f"✅ TỔNG ĐIỂM: 10/10")
-        else:
-            st.error(f"⚠️ TỔNG: {total_score} (Cần chỉnh lại)")
+        if total_score == 10: st.success(f"✅ TỔNG ĐIỂM: 10/10")
+        else: st.error(f"⚠️ TỔNG: {total_score} (Cần chỉnh lại)")
 
         if st.button("🚀 TẠO ĐỀ & TẢI FILE", type="primary", use_container_width=True):
             if not api_key: st.error("Thiếu API Key.")
