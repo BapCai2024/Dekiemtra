@@ -291,4 +291,52 @@ elif st.session_state.step == 'config':
 
     st.markdown("---")
     if st.button("🚀 SOẠN ĐỀ THI (XEM TRƯỚC)", type="primary", use_container_width=True):
-        if
+        if not api_key:
+            st.error("Vui lòng nhập Google API Key ở cột bên trái!")
+        else:
+            with st.spinner(f"AI đang phân tích dữ liệu và file đặc tả để soạn đề..."):
+                # Gửi toàn bộ dữ liệu JSON vào làm context cho AI
+                info = {"subj": subj, "grade": grade, "book": "Tổng hợp"}
+                
+                # Chuyển đổi dữ liệu JSON thành chuỗi để gửi cho AI
+                data_context = json.dumps(current_data, ensure_ascii=False) if isinstance(current_data, dict) else str(current_data)
+                
+                body, key = call_ai_generate(api_key, info, data_context, ref_content)
+                
+                if body:
+                    st.session_state.preview_body = body
+                    st.session_state.preview_key = key
+                    st.session_state.info = info
+                    st.session_state.step = 'preview'
+                    st.rerun()
+                else:
+                    st.error(key)
+
+# --- PREVIEW ---
+elif st.session_state.step == 'preview':
+    c1, c2 = st.columns([1, 5])
+    if c1.button("⬅️ Chỉnh sửa yêu cầu", on_click=lambda: st.session_state.update(step='config')): pass
+    
+    c2.markdown("### 👁️ XEM TRƯỚC VÀ CHỈNH SỬA")
+    
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        st.markdown("**Nội dung Đề thi:**")
+        new_body = st.text_area("Body", value=st.session_state.preview_body, height=600, label_visibility="collapsed")
+    with col_p2:
+        st.markdown("**Đáp án & Hướng dẫn chấm:**")
+        new_key = st.text_area("Key", value=st.session_state.preview_key, height=600, label_visibility="collapsed")
+        
+    st.markdown("---")
+    if st.button("💾 TẢI FILE WORD (.DOCX)", type="primary", use_container_width=True):
+        f = create_docx_final(school_name, exam_name, st.session_state.info, new_body, new_key)
+        st.download_button(
+            label="📥 Click để tải về máy",
+            data=f,
+            file_name=f"De_{st.session_state.info['subj']}_{st.session_state.info['grade']}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+
+# Footer
+st.markdown('<div style="margin-bottom: 60px;"></div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">© 2025 - Trần Ngọc Hải - Trường PTDTBT Tiểu học Giàng Chu Phìn - ĐT: 0944 134 973</div>', unsafe_allow_html=True)
