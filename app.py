@@ -133,51 +133,60 @@ def create_docx_final(school, exam, info, body, key):
 
 def call_ai_generate(api_key, info, lessons, uploaded_ref):
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
     
-    lesson_text = "\n".join([f"- {l}" for l in lessons])
+    # --- SỬA LỖI TẠI ĐÂY ---
+    # Sử dụng tên model an toàn hơn (có suffix -latest hoặc -001/-002)
+    # Nếu vẫn lỗi, hãy dùng chức năng "Kiểm tra Model" ở sidebar để lấy tên đúng
+    model_name = 'gemini-1.5-flash-latest' 
     
-    ref_instruction = ""
-    if uploaded_ref:
-        ref_instruction = f"""
-        3. CẤU TRÚC ĐỀ THI (BẮT BUỘC TUÂN THỦ FILE ĐÍNH KÈM SAU):
-        Người dùng đã tải lên một file Ma trận/Đặc tả kỹ thuật. Hãy đọc kỹ nội dung dưới đây và ra đề thi bám sát cấu trúc (số lượng câu, mức độ, dạng bài) trong file này:
-        --- BẮT ĐẦU FILE ĐÍNH KÈM ---
-        {uploaded_ref[:20000]}
-        --- KẾT THÚC FILE ĐÍNH KÈM ---
-        """
-    else:
-        ref_instruction = """
-        3. CẤU TRÚC ĐỀ THI (TỰ ĐỘNG THEO TT27):
-        - PHẦN I: Trắc nghiệm (Khoảng 40-50% điểm). Gồm: Nhiều lựa chọn, Đúng/Sai, Nối cột, Điền khuyết.
-        - PHẦN II: Tự luận (Khoảng 50-60% điểm).
-        - Đảm bảo 3 mức độ: Hoàn thành tốt, Hoàn thành, Chưa hoàn thành.
-        """
-
-    prompt = f"""
-    Bạn là chuyên gia giáo dục tiểu học. Hãy soạn ĐỀ KIỂM TRA ĐỊNH KỲ môn {info['subj']} Lớp {info['grade']} - Bộ sách {info['book']}.
-    
-    1. PHẠM VI KIẾN THỨC (BÀI HỌC ĐÃ CHỌN):
-    {lesson_text}
-    
-    2. YÊU CẦU CHUYÊN MÔN:
-    - Hãy sử dụng kiến thức chuẩn của Chương trình GDPT 2018 liên quan đến các bài học trên.
-    - Ngôn ngữ trong sáng, phù hợp lứa tuổi học sinh tiểu học.
-    
-    {ref_instruction}
-
-    4. ĐỊNH DẠNG ĐẦU RA:
-    - Trình bày rõ ràng thành 2 phần: ĐỀ BÀI và ĐÁP ÁN.
-    - BẮT BUỘC ngăn cách giữa ĐỀ và ĐÁP ÁN bằng dòng chữ duy nhất: ###TACH_DAP_AN###
-    """
     try:
+        model = genai.GenerativeModel(model_name)
+        
+        lesson_text = "\n".join([f"- {l}" for l in lessons])
+        
+        ref_instruction = ""
+        if uploaded_ref:
+            ref_instruction = f"""
+            3. CẤU TRÚC ĐỀ THI (BẮT BUỘC TUÂN THỦ FILE ĐÍNH KÈM SAU):
+            Người dùng đã tải lên một file Ma trận/Đặc tả kỹ thuật. Hãy đọc kỹ nội dung dưới đây và ra đề thi bám sát cấu trúc (số lượng câu, mức độ, dạng bài) trong file này:
+            --- BẮT ĐẦU FILE ĐÍNH KÈM ---
+            {uploaded_ref[:20000]}
+            --- KẾT THÚC FILE ĐÍNH KÈM ---
+            """
+        else:
+            ref_instruction = """
+            3. CẤU TRÚC ĐỀ THI (TỰ ĐỘNG THEO TT27):
+            - PHẦN I: Trắc nghiệm (Khoảng 40-50% điểm). Gồm: Nhiều lựa chọn, Đúng/Sai, Nối cột, Điền khuyết.
+            - PHẦN II: Tự luận (Khoảng 50-60% điểm).
+            - Đảm bảo 3 mức độ: Hoàn thành tốt, Hoàn thành, Chưa hoàn thành.
+            """
+
+        prompt = f"""
+        Bạn là chuyên gia giáo dục tiểu học. Hãy soạn ĐỀ KIỂM TRA ĐỊNH KỲ môn {info['subj']} Lớp {info['grade']} - Bộ sách {info['book']}.
+        
+        1. PHẠM VI KIẾN THỨC (BÀI HỌC ĐÃ CHỌN):
+        {lesson_text}
+        
+        2. YÊU CẦU CHUYÊN MÔN:
+        - Hãy sử dụng kiến thức chuẩn của Chương trình GDPT 2018 liên quan đến các bài học trên.
+        - Ngôn ngữ trong sáng, phù hợp lứa tuổi học sinh tiểu học.
+        
+        {ref_instruction}
+
+        4. ĐỊNH DẠNG ĐẦU RA:
+        - Trình bày rõ ràng thành 2 phần: ĐỀ BÀI và ĐÁP ÁN.
+        - BẮT BUỘC ngăn cách giữa ĐỀ và ĐÁP ÁN bằng dòng chữ duy nhất: ###TACH_DAP_AN###
+        """
+        
         response = model.generate_content(prompt)
         text = response.text
         if "###TACH_DAP_AN###" in text:
             return text.split("###TACH_DAP_AN###")
         return text, "Không tìm thấy dấu tách. AI trả về toàn bộ nội dung."
+        
     except Exception as e:
-        return None, str(e)
+        # Trả về thông báo lỗi chi tiết hơn
+        return None, f"Lỗi gọi AI ({model_name}): {str(e)}. Hãy thử Kiểm tra Model ở menu bên trái."
 
 # ==========================================
 # 3. GIAO DIỆN CHÍNH
@@ -193,6 +202,19 @@ with st.sidebar:
     st.header("⚙️ Cài đặt")
     api_key = st.text_input("Google API Key:", type="password")
     st.info("Nhập API Key để AI hoạt động.")
+    
+    # --- TÍNH NĂNG MỚI: KIỂM TRA MODEL ---
+    if api_key:
+        if st.button("Kiểm tra Model khả dụng"):
+            try:
+                genai.configure(api_key=api_key)
+                models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                st.success("Kết nối thành công! Các model khả dụng:")
+                st.code("\n".join(models), language="text")
+            except Exception as e:
+                st.error(f"Lỗi API Key: {e}")
+    # -------------------------------------
+
     st.divider()
     school_name = st.text_input("Trường:", "TH PTDTBT GIÀNG CHU PHÌN")
     exam_name = st.text_input("Kỳ thi:", "KIỂM TRA CUỐI HỌC KÌ I")
@@ -282,7 +304,7 @@ elif st.session_state.step == 'config':
         elif not sel_lessons:
             st.warning("Vui lòng chọn ít nhất 1 bài học!")
         else:
-            with st.spinner("AI đang kết hợp dữ liệu bài học và file đặc tả để soạn đề..."):
+            with st.spinner(f"AI đang kết hợp dữ liệu bài học và file đặc tả để soạn đề..."):
                 info = {"subj": subj, "grade": grade, "book": sel_book}
                 body, key = call_ai_generate(api_key, info, sel_lessons, ref_content)
                 
