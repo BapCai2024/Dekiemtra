@@ -37,12 +37,29 @@ st.markdown("""
         padding: 10px;
         border-radius: 5px;
     }
+    
+    /* Footer */
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        color: #2c3e50;
+        text-align: center;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+        font-weight: bold;
+        z-index: 100;
+    }
+    .footer-text {
+        font-size: 16px;
+        text-transform: uppercase;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- DỮ LIỆU CẤU HÌNH ---
-# Danh sách môn học đánh giá định kỳ theo TT27
-# Cấu trúc: [Tên môn, Icon, Màu sắc đại diện (Hex)]
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📖", "#e74c3c"), ("Toán", "✖️", "#3498db")],
     "Lớp 2": [("Tiếng Việt", "📖", "#e74c3c"), ("Toán", "✖️", "#3498db")],
@@ -80,11 +97,14 @@ def generate_exam(api_key, grade, subject, content):
         return "⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục."
     
     genai.configure(api_key=api_key)
-   model = genai.GenerativeModel("gemini-2.5-flash") # hoặc ("gemini-2.5-pro")
+    
+    # --- SỬA LỖI DÒNG 83 ---
+    # Đã sửa thành "gemini-1.5-flash" (Model hiện tại chuẩn của Google)
+    model = genai.GenerativeModel("gemini-1.5-flash") 
 
-    # PROMPT KỸ THUẬT (SYSTEM INSTRUCTION)
+    # PROMPT KỸ THUẬT
     prompt = f"""
-    Bạn là một chuyên gia giáo dục tiểu học Việt Nam, cực kỳ am hiểu chương trình GDPT 2018 và Thông tư 27/2020/TT-BGDĐT.
+    Bạn là một chuyên gia giáo dục tiểu học Việt Nam tại Trường PTDTBT Tiểu học Giàng Chu Phìn, cực kỳ am hiểu chương trình GDPT 2018 và Thông tư 27/2020/TT-BGDĐT.
 
     NHIỆM VỤ:
     Soạn đề kiểm tra định kỳ môn {subject} dành cho học sinh {grade}.
@@ -96,8 +116,9 @@ def generate_exam(api_key, grade, subject, content):
     1. **Nguồn kiến thức:** Chỉ sử dụng nội dung nằm trong chương trình GDPT 2018 và các bộ sách giáo khoa hiện hành (Cánh Diều, Chân Trời Sáng Tạo, Kết Nối Tri Thức). TUYỆT ĐỐI KHÔNG lấy kiến thức cũ hoặc kiến thức nước ngoài.
     2. **Cấu trúc đề:** - Phải thể hiện được 3 mức độ nhận thức theo Thông tư 27 (Mức 1: Nhận biết, Mức 2: Kết nối, Mức 3: Vận dụng).
        - Tỉ lệ trắc nghiệm/tự luận phù hợp với đặc thù môn {subject}.
-    3. **Ngôn ngữ:** Trong sáng, dễ hiểu, phù hợp tâm lý lứa tuổi tiểu học.
+    3. **Ngôn ngữ:** Trong sáng, dễ hiểu, phù hợp tâm lý lứa tuổi tiểu học, đặc biệt phù hợp với học sinh vùng cao.
     4. **Hình thức:** Trình bày rõ ràng, sử dụng Markdown để in đậm các câu hỏi.
+    5. **Tiêu đề:** Đề thi phải có tiêu đề "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
 
     HÃY XUẤT RA ĐỀ THI HOÀN CHỈNH KÈM ĐÁP ÁN GỢI Ý Ở CUỐI.
     """
@@ -116,18 +137,28 @@ st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h
 with st.sidebar:
     st.header("⚙️ Cấu hình")
     api_key = st.text_input("Nhập Gemini API Key:", type="password")
+    
+    # --- TÍNH NĂNG CHECK API ---
+    if st.button("Kiểm tra kết nối API"):
+        if not api_key:
+            st.error("Vui lòng nhập Key trước!")
+        else:
+            try:
+                genai.configure(api_key=api_key)
+                # Test thử một lệnh đơn giản
+                test_model = genai.GenerativeModel("gemini-1.5-flash")
+                test_model.generate_content("Hello")
+                st.success("Kết nối thành công! ✅")
+            except Exception as e:
+                st.error(f"Key không hợp lệ hoặc lỗi mạng: {e}")
+
     st.info("Để lấy API Key miễn phí, truy cập: [Google AI Studio](https://aistudio.google.com/)")
     st.markdown("---")
     st.markdown("**Hướng dẫn:**\n1. Chọn Lớp & Môn.\n2. Upload file Ma trận.\n3. Nhấn 'Tạo đề'.")
 
 # BƯỚC 1: CHỌN LỚP (MÀU SẮC)
 st.subheader("1️⃣ Chọn Khối Lớp")
-cols = st.columns(5)
-selected_grade = None
-
-# Tạo nút chọn lớp giả lập bằng radio button nằm ngang cho đẹp
-grade_options = list(SUBJECTS_DB.keys())
-selected_grade = st.radio("Chọn lớp:", grade_options, horizontal=True, label_visibility="collapsed")
+selected_grade = st.radio("Chọn lớp:", list(SUBJECTS_DB.keys()), horizontal=True, label_visibility="collapsed")
 
 # Hiển thị màu sắc tương ứng lớp đã chọn
 st.markdown(f"<div class='{GRADE_COLORS[selected_grade]}'>Bạn đang chọn: {selected_grade}</div>", unsafe_allow_html=True)
@@ -137,15 +168,11 @@ st.write("")
 st.subheader(f"2️⃣ Chọn Môn Học - {selected_grade}")
 if selected_grade:
     subjects_data = SUBJECTS_DB[selected_grade]
-    # Lấy danh sách tên môn để hiển thị selectbox
     subject_names = [f"{s[1]} {s[0]}" for s in subjects_data]
     selected_subject_raw = st.selectbox("Chọn môn để ra đề:", subject_names)
     
-    # Tách tên môn ra khỏi icon để xử lý
     selected_subject = selected_subject_raw.split(" ", 1)[1]
-    selected_icon = selected_subject_raw.split(" ", 1)[0]
     
-    # Hiển thị thẻ môn học đẹp mắt
     st.info(f"Đang thiết lập thông số cho môn: **{selected_subject}**")
 
 st.markdown("---")
@@ -168,7 +195,6 @@ with col_input:
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # NÚT TẠO ĐỀ (MÀU SẮC PHÙ HỢP)
     btn_generate = st.button("✨ TẠO ĐỀ KIỂM TRA NGAY", type="primary", use_container_width=True)
 
 with col_output:
@@ -187,14 +213,23 @@ with col_output:
             result = generate_exam(api_key, selected_grade, selected_subject, file_content)
             st.session_state.generated_exam = result
 
-    # Hiển thị kết quả
     if st.session_state.generated_exam:
         container.markdown(st.session_state.generated_exam)
-        
-        # Nút tải về
         st.download_button(
             label="📥 Tải về (.txt)",
             data=st.session_state.generated_exam,
             file_name=f"De_Thi_{selected_subject}_{selected_grade}.txt",
             mime="text/plain"
         )
+
+# --- THÊM CUỐI TRANG: TÊN TRƯỜNG ---
+st.markdown("<br><br><br>", unsafe_allow_html=True) # Tạo khoảng trống
+st.markdown(
+    """
+    <div class='footer'>
+        <div class='footer-text'>🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</div>
+        <small>Hệ thống hỗ trợ chuyên môn - Đổi mới kiểm tra đánh giá theo Thông tư 27</small>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
