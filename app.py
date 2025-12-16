@@ -10,7 +10,7 @@ import pypdf
 import re
 import json
 
-# Import dữ liệu cứng (nếu có)
+# --- IMPORT DỮ LIỆU CỨNG (Nếu có) ---
 try:
     from data_matrices import SAMPLE_MATRICES
 except ImportError:
@@ -19,14 +19,14 @@ except ImportError:
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(page_title="Hệ Thống Hỗ Trợ Ra Đề Tiểu Học", page_icon="🏫", layout="wide")
 
-# --- QUẢN LÝ SESSION STATE ---
+# --- QUẢN LÝ TRẠNG THÁI (SESSION STATE) ---
 if 'step' not in st.session_state: st.session_state.step = 'home'
 if 'selected_subject' not in st.session_state: st.session_state.selected_subject = ''
 if 'selected_color' not in st.session_state: st.session_state.selected_color = ''
-if 'topic_df' not in st.session_state: st.session_state.topic_df = None # Lưu bảng chủ đề
+if 'topic_df' not in st.session_state: st.session_state.topic_df = None 
 if 'auto_config' not in st.session_state: st.session_state.auto_config = {}
 
-# --- CSS ---
+# --- CSS GIAO DIỆN ---
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;} header {visibility: hidden;} footer {visibility: hidden;}
@@ -60,7 +60,7 @@ def show_author_profile():
     </div>
     """, unsafe_allow_html=True)
 
-# --- XỬ LÝ WORD ---
+# --- CÁC HÀM XỬ LÝ (WORD, AI, PDF) ---
 def clean_text_for_word(text):
     if not text: return ""
     text = str(text)
@@ -78,6 +78,7 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
         style.element.rPr.rFonts.set(qn('w:eastAsia'), 'Times New Roman')
     except: pass
     
+    # Header
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
     table.columns[0].width = Inches(2.5)
@@ -95,18 +96,21 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
     p_right.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph() 
     
+    # Title
     title = doc.add_paragraph()
     run_title = title.add_run(str(exam_name).upper())
     run_title.bold = True
     run_title.font.size = Pt(14)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
+    # Info
     info = doc.add_paragraph()
     info.add_run("Họ và tên học sinh: ..................................................................................... ").bold = False
     info.add_run(f"Lớp: {student_info.get('grade', '...')}.....")
     info.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph() 
     
+    # Score Table
     score_table = doc.add_table(rows=2, cols=2)
     score_table.style = 'Table Grid'
     score_table.cell(0, 0).text = "Điểm"
@@ -117,6 +121,7 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
     doc.add_paragraph() 
     doc.add_paragraph("------------------------------------------------------------------------------------------------------")
     
+    # Body
     clean_body = clean_text_for_word(content_body)
     for line in clean_body.split('\n'):
         line = line.strip()
@@ -127,6 +132,7 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
         else: para.add_run(line)
         para.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     
+    # Answer Key
     doc.add_page_break()
     ans_title = doc.add_paragraph("HƯỚNG DẪN CHẤM VÀ ĐÁP ÁN")
     ans_title.runs[0].bold = True
@@ -145,35 +151,22 @@ def get_best_model():
         return models[0].replace('models/', '') if models else 'gemini-pro'
     except: return 'gemini-pro'
 
-# --- HÀM MỚI: TRÍCH XUẤT JSON CHỦ ĐỀ & SỐ TIẾT ---
 def extract_topics_json(api_key, text):
     if not api_key: return []
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(get_best_model())
-    
     prompt = f"""
     Phân tích văn bản kế hoạch dạy học dưới đây.
     Hãy trích xuất danh sách các "Bài học" hoặc "Chủ đề" cùng với "Số tiết" (nếu có).
-    
-    YÊU CẦU OUTPUT: Trả về duy nhất một chuỗi JSON (List of Objects) hợp lệ. Không có markdown.
-    Format:
-    [
-        {{"topic": "Tên bài 1", "periods": 2}},
-        {{"topic": "Tên bài 2", "periods": 1}}
-    ]
-    Nếu không tìm thấy số tiết, để periods là 1.
-    
-    Văn bản nguồn:
-    {text[:15000]} 
+    OUTPUT: JSON List of Objects. Format: [{{"topic": "Tên bài", "periods": 2}}].
+    Văn bản: {text[:15000]} 
     """
     try:
         response = model.generate_content(prompt)
         content = response.text.replace("```json", "").replace("```", "").strip()
         data = json.loads(content)
         return data
-    except Exception as e:
-        print(f"Lỗi JSON: {e}")
-        return []
+    except Exception as e: return []
 
 def generate_exam_content(api_key, subject_plan, matrix_content, config, info, selected_data):
     if not api_key: return None, None
@@ -187,15 +180,10 @@ def generate_exam_content(api_key, subject_plan, matrix_content, config, info, s
            - Mức 1: {config['prac_lv1']}, Mức 2: {config['prac_lv2']}, Mức 3: {config['prac_lv3']} yêu cầu.
         """
     
-    # Tạo bảng chỉ dẫn chủ đề
     topics_instruction = ""
     if selected_data:
         topics_str = ", ".join([f"{item['topic']} ({item['periods']} tiết)" for item in selected_data])
-        topics_instruction = f"""
-        LƯU Ý QUAN TRỌNG VỀ PHẠM VI KIẾN THỨC:
-        Chỉ được ra câu hỏi nằm trong các chủ đề đã chọn sau đây (Chú ý phân bổ câu hỏi tương ứng với số tiết):
-        {topics_str}
-        """
+        topics_instruction = f"PHẠM VI KIẾN THỨC CHỈ NẰM TRONG: {topics_str}"
 
     prompt = f"""
     Bạn là chuyên gia khảo thí Tiểu học. Hãy soạn ĐỀ KIỂM TRA MÔN {info['subject']} - {info['grade']}.
@@ -203,12 +191,12 @@ def generate_exam_content(api_key, subject_plan, matrix_content, config, info, s
     
     {topics_instruction}
     
-    CẤU TRÚC ĐỀ (Bắt buộc):
-    1. PHẦN TRẮC NGHIỆM ({config['mcq_total']} câu):
-       - Dạng: {config['q_abcd']} ABCD, {config['q_tf']} Đ/S, {config['q_match']} Nối, {config['q_fill']} Điền.
+    CẤU TRÚC ĐỀ (Bắt buộc theo cấu hình):
+    1. PHẦN TRẮC NGHIỆM (Tổng {config['mcq_total']} câu):
+       - Dạng: {config['q_abcd']} ABCD (0.5đ), {config['q_tf']} Đ/S (0.5đ), {config['q_match']} Nối (1.0đ), {config['q_fill']} Điền (1.0đ).
        - Mức độ: Biết {config['mcq_lv1']}, Hiểu {config['mcq_lv2']}, Vận dụng {config['mcq_lv3']}.
     
-    2. PHẦN TỰ LUẬN ({config['essay_total']} câu):
+    2. PHẦN TỰ LUẬN ({config['essay_total']} câu - {config['essay_point']} điểm/câu):
        - Mức độ: Biết {config['essay_lv1']}, Hiểu {config['essay_lv2']}, Vận dụng {config['essay_lv3']}.
     
     {practical_prompt}
@@ -243,9 +231,9 @@ def read_input_file(uploaded_file):
         elif uploaded_file.name.endswith(('.xlsx', '.xls')): return pd.read_excel(uploaded_file).to_string()
         elif uploaded_file.name.endswith('.csv'): return pd.read_csv(uploaded_file).to_string()
         else: return uploaded_file.read().decode("utf-8")
-    except Exception as e: return f"Lỗi đọc file: {str(e)}"
+    except: return ""
 
-# ==================== MAIN APP ====================
+# ==================== GIAO DIỆN CHÍNH ====================
 st.markdown('<div class="main-title">HỆ THỐNG HỖ TRỢ RA ĐỀ TIỂU HỌC</div>', unsafe_allow_html=True)
 show_author_profile()
 
@@ -260,7 +248,7 @@ if st.session_state.step == 'home':
                 st.session_state.selected_subject = sub['name']
                 st.session_state.selected_color = sub['color']
                 st.session_state.step = 'config'
-                st.session_state.topic_df = None # Reset
+                st.session_state.topic_df = None
                 st.rerun()
 
 elif st.session_state.step == 'config':
@@ -282,68 +270,53 @@ elif st.session_state.step == 'config':
 
     col_left, col_right = st.columns([1.2, 1])
 
-    # === CỘT TRÁI: DỮ LIỆU & BẢNG CHỦ ĐỀ ===
+    # === CỘT TRÁI ===
     with col_left:
         st.info("1️⃣ Thiết lập Ma trận & Nội dung")
         grade = st.selectbox("Khối lớp:", ["Lớp 3", "Lớp 4", "Lớp 5"])
         
-        # --- UPLOAD ---
         file_plan = st.file_uploader("📂 Kế hoạch dạy học (Bắt buộc):", type=['docx', 'pdf', 'txt'])
         plan_text_content = ""
         if file_plan: plan_text_content = read_input_file(file_plan)
 
-        # --- NÚT PHÂN TÍCH (TẠO BẢNG) ---
+        # Quét chủ đề
         if file_plan:
             if st.session_state.topic_df is None:
                 if st.button("🔍 Phân tích & Tạo Ma trận Chủ đề"):
-                    if not api_key:
-                        st.error("Cần nhập API Key.")
+                    if not api_key: st.error("Cần nhập API Key.")
                     else:
-                        with st.spinner("Đang quét nội dung bài học và số tiết..."):
+                        with st.spinner("Đang phân tích bài học..."):
                             topics_data = extract_topics_json(api_key, plan_text_content)
                             if topics_data:
-                                # Tạo DataFrame với cột "Chọn" mặc định là False
                                 df = pd.DataFrame(topics_data)
-                                df.insert(0, "Chọn", False) # Thêm cột checkbox
+                                df.insert(0, "Chọn", False)
                                 df.rename(columns={"topic": "Tên bài/Chủ đề", "periods": "Số tiết"}, inplace=True)
                                 st.session_state.topic_df = df
-                            else: st.error("Không tìm thấy chủ đề nào.")
+                            else: st.error("Không tìm thấy chủ đề.")
             
-            # --- HIỂN THỊ BẢNG MA TRẬN CHỦ ĐỀ (EDITABLE) ---
             if st.session_state.topic_df is not None:
                 st.write("📋 **Bảng Ma trận Chủ đề (Tích chọn bài cần ra đề):**")
-                
-                # Hiển thị bảng cho phép sửa
                 edited_df = st.data_editor(
                     st.session_state.topic_df,
                     column_config={
-                        "Chọn": st.column_config.CheckboxColumn("Chọn", help="Tích vào để chọn bài này", default=False),
+                        "Chọn": st.column_config.CheckboxColumn("Chọn", default=False),
                         "Số tiết": st.column_config.NumberColumn("Số tiết", min_value=1, max_value=10, step=1),
                     },
-                    disabled=["Tên bài/Chủ đề"], # Không cho sửa tên bài, chỉ sửa số tiết và tích chọn
+                    disabled=["Tên bài/Chủ đề"],
                     hide_index=True,
                     use_container_width=True
                 )
-                
-                # Lọc ra các bài đã chọn
                 selected_rows = edited_df[edited_df["Chọn"] == True]
-                
                 if not selected_rows.empty:
-                    total_periods = selected_rows["Số tiết"].sum()
-                    st.success(f"✅ Đã chọn: **{len(selected_rows)} bài** (Tổng thời lượng: **{total_periods} tiết**)")
-                    
-                    # Chuyển đổi thành list để gửi AI
-                    # Format: [{'topic': '...', 'periods': 2}, ...]
+                    st.success(f"✅ Đã chọn: {len(selected_rows)} bài - {selected_rows['Số tiết'].sum()} tiết")
                     selected_data_for_ai = []
                     for index, row in selected_rows.iterrows():
                         selected_data_for_ai.append({"topic": row["Tên bài/Chủ đề"], "periods": row["Số tiết"]})
                 else:
-                    st.warning("Vui lòng tích chọn ít nhất 1 bài trong bảng trên.")
+                    st.warning("Vui lòng tích chọn bài.")
                     selected_data_for_ai = []
-            else:
-                selected_data_for_ai = []
+            else: selected_data_for_ai = []
 
-        # --- UPLOAD MA TRẬN CẤU TRÚC (Optional) ---
         st.write("---")
         st.write("📊 **Khung Ma trận (Cấu trúc điểm):**")
         matrix_source = st.radio("Nguồn:", ["Upload file mới", "Dùng Mẫu có sẵn"], horizontal=True)
@@ -383,4 +356,58 @@ elif st.session_state.step == 'config':
             mcq_lv1 = c1.number_input("Biết (TN):", 0, 20, 3)
             mcq_lv2 = c2.number_input("Hiểu (TN):", 0, 20, 2)
             mcq_lv3 = c3.number_input("Vận dụng (TN):", 0, 20, 1)
-            mcq_total = mcq_lv1 + mcq_
+            
+            # SỬA LỖI Ở ĐÂY: Viết đầy đủ dòng lệnh
+            mcq_total = mcq_lv1 + mcq_lv2 + mcq_lv3
+            
+            st.caption(f"Tổng: {mcq_total} câu TN. Phân dạng:")
+            d1, d2 = st.columns(2)
+            q_abcd = d1.number_input("ABCD (0.5đ):", 0, 20, max(0, mcq_total-2))
+            q_tf = d1.number_input("Đúng/Sai (0.5đ):", 0, 5, 1)
+            q_match = d2.number_input("Nối cột (1.0đ):", 0, 5, 0)
+            q_fill = d2.number_input("Điền khuyết (1.0đ):", 0, 5, 1)
+
+        with tabs[1]:
+            essay_point = st.number_input("Điểm/câu TL:", 0.5, 5.0, def_essay_pt, step=0.5)
+            e1, e2, e3 = st.columns(3)
+            essay_lv1 = e1.number_input("Biết (TL):", 0, 5, 0)
+            essay_lv2 = e2.number_input("Hiểu (TL):", 0, 5, 1)
+            essay_lv3 = e3.number_input("Vận dụng (TL):", 0, 5, 1)
+            essay_total = essay_lv1 + essay_lv2 + essay_lv3
+
+        # Tính điểm
+        score_tn_basic = (q_abcd + q_tf) * def_mcq_pt
+        score_tn_adv = (q_match + q_fill) * 1.0 
+        score_essay = essay_total * essay_point
+        total_score = score_tn_basic + score_tn_adv + score_essay
+
+        st.markdown("---")
+        if total_score == 10:
+            st.markdown(f"<div style='background:#d4edda; color:#155724; padding:10px; border-radius:5px; text-align:center;'>✅ TỔNG ĐIỂM: 10/10</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div style='background:#f8d7da; color:#721c24; padding:10px; border-radius:5px; text-align:center;'>⚠️ TỔNG: {total_score}</div>", unsafe_allow_html=True)
+
+        if st.button("🚀 TẠO ĐỀ & TẢI FILE", type="primary", use_container_width=True):
+            if not api_key: st.error("Thiếu API Key.")
+            elif not plan_text_content or (matrix_source == "Upload file mới" and not matrix_text_final):
+                 st.error("Thiếu dữ liệu nguồn.")
+            elif not selected_data_for_ai:
+                 st.error("Vui lòng tích chọn bài học ở bảng bên trái.")
+            else:
+                with st.spinner("Đang xử lý..."):
+                    config = {
+                        "mcq_total": mcq_total, "mcq_point": def_mcq_pt,
+                        "mcq_lv1": mcq_lv1, "mcq_lv2": mcq_lv2, "mcq_lv3": mcq_lv3,
+                        "q_abcd": q_abcd, "q_tf": q_tf, "q_fill": q_fill, "q_match": q_match,
+                        "essay_total": essay_total, "essay_point": essay_point,
+                        "essay_lv1": essay_lv1, "essay_lv2": essay_lv2, "essay_lv3": essay_lv3,
+                        "has_practical": False
+                    }
+                    info = {"subject": subject, "grade": grade}
+                    
+                    exam_body, answer_key = generate_exam_content(api_key, plan_text_content, matrix_text_final, config, info, selected_data_for_ai)
+                    
+                    if exam_body and "Lỗi" not in exam_body:
+                        docx = create_docx_file(school_name, exam_name, info, exam_body, answer_key)
+                        st.download_button("📥 Tải File Word", docx, f"De_{subject}_{grade}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    else: st.error(exam_body)
