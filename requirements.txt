@@ -1,6 +1,7 @@
 streamlit
+google-generativeai
 pandas
-openpyxl
 python-docx
-pypdf
-google-generativeai>=0.7.0
+openpyxl
+PyPDF2
+requests
