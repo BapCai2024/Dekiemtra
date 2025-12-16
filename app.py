@@ -145,3 +145,6 @@ def create_docx_file(school_name, exam_name, student_info, content_body, answer_
     cell_left = table.cell(0, 0)
     p_left = cell_left.paragraphs[0]
     run
+# --- CHÂN TRANG ---
+st.markdown("---")
+st.markdown("<div style='text-align: center; color: #666;'>© 2025 - Trần Ngọc Hải - Trường PTDTBT Tiểu học Giàng Chu Phìn - ĐT: 0944 134 973</div>", unsafe_allow_html=True)
