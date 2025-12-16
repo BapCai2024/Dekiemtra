@@ -56,6 +56,9 @@ st.markdown("""
         font-size: 16px;
         text-transform: uppercase;
     }
+    
+    /* Ẩn footer mặc định của streamlit */
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -98,9 +101,12 @@ def generate_exam(api_key, grade, subject, content):
     
     genai.configure(api_key=api_key)
     
-    # --- SỬA LỖI DÒNG 83 ---
-    # Đã sửa thành "gemini-1.5-flash" (Model hiện tại chuẩn của Google)
-    model = genai.GenerativeModel("gemini-1.5-flash") 
+    # --- SỬA LỖI TẠI ĐÂY ---
+    # Sử dụng 'gemini-pro' thay vì 'gemini-1.5-flash' để tương thích tốt hơn
+    try:
+        model = genai.GenerativeModel("gemini-pro") 
+    except:
+        return "Lỗi: Không tìm thấy Model. Hãy chạy 'pip install -U google-generativeai' trong terminal."
 
     # PROMPT KỸ THUẬT
     prompt = f"""
@@ -118,7 +124,7 @@ def generate_exam(api_key, grade, subject, content):
        - Tỉ lệ trắc nghiệm/tự luận phù hợp với đặc thù môn {subject}.
     3. **Ngôn ngữ:** Trong sáng, dễ hiểu, phù hợp tâm lý lứa tuổi tiểu học, đặc biệt phù hợp với học sinh vùng cao.
     4. **Hình thức:** Trình bày rõ ràng, sử dụng Markdown để in đậm các câu hỏi.
-    5. **Tiêu đề:** Đề thi phải có tiêu đề "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
+    5. **Tiêu đề:** Đầu đề thi phải ghi rõ: "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
 
     HÃY XUẤT RA ĐỀ THI HOÀN CHỈNH KÈM ĐÁP ÁN GỢI Ý Ở CUỐI.
     """
@@ -128,7 +134,7 @@ def generate_exam(api_key, grade, subject, content):
             response = model.generate_content(prompt)
             return response.text
     except Exception as e:
-        return f"Lỗi kết nối AI: {str(e)}"
+        return f"Lỗi kết nối AI: {str(e)}. Hãy kiểm tra lại API Key hoặc mạng internet."
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
@@ -145,8 +151,8 @@ with st.sidebar:
         else:
             try:
                 genai.configure(api_key=api_key)
-                # Test thử một lệnh đơn giản
-                test_model = genai.GenerativeModel("gemini-1.5-flash")
+                # Test thử model
+                test_model = genai.GenerativeModel("gemini-pro")
                 test_model.generate_content("Hello")
                 st.success("Kết nối thành công! ✅")
             except Exception as e:
@@ -222,8 +228,8 @@ with col_output:
             mime="text/plain"
         )
 
-# --- THÊM CUỐI TRANG: TÊN TRƯỜNG ---
-st.markdown("<br><br><br>", unsafe_allow_html=True) # Tạo khoảng trống
+# --- CUỐI TRANG: TÊN TRƯỜNG ---
+st.markdown("<br><br><br>", unsafe_allow_html=True) 
 st.markdown(
     """
     <div class='footer'>
