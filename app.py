@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
-import google.generativeai as genai
+import requests # Dùng cái này để gọi trực tiếp, không qua thư viện Google nữa
+import json
 import time
 from io import BytesIO
-import sys
-import subprocess
 
 # --- CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -58,25 +57,21 @@ def read_file_content(uploaded_file):
         return f"Lỗi đọc file: {e}"
     return ""
 
-# --- HÀM GỌI AI (ĐÃ SỬA LỖI & THÊM YÊU CẦU CẦN ĐẠT) ---
-def generate_exam(api_key, grade, subject, content):
+# --- HÀM GỌI AI TRỰC TIẾP QUA API (KHÔNG CẦN THƯ VIỆN GOOGLE) ---
+def generate_exam_direct(api_key, grade, subject, content):
     if not api_key: return "⚠️ Vui lòng nhập API Key."
-    
-    genai.configure(api_key=api_key)
-    
-    # DANH SÁCH MODEL SẼ THỬ LẦN LƯỢT (Nếu cái đầu lỗi thì thử cái sau)
-    models_to_try = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"]
-    
-    active_model = None
-    response_text = ""
-    error_log = []
 
-    # PROMPT MỚI THEO YÊU CẦU CỦA BẠN
-    prompt = f"""
-    Đóng vai trò là chuyên gia giáo dục tại TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN.
-    Nhiệm vụ: Soạn đề thi môn {subject} lớp {grade} theo TT27.
+    # URL kết nối trực tiếp đến Google Gemini 1.5 Flash (Model mới nhất)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     
-    DỮ LIỆU MA TRẬN:
+    headers = {'Content-Type': 'application/json'}
+
+    # Prompt chi tiết
+    prompt_text = f"""
+    Đóng vai trò là chuyên gia giáo dục tại TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN.
+    Nhiệm vụ: Soạn đề thi môn {subject} lớp {grade} theo Thông tư 27.
+    
+    DỮ LIỆU MA TRẬN / ĐẶC TẢ:
     {content}
     
     YÊU CẦU TUYỆT ĐỐI:
@@ -87,50 +82,53 @@ def generate_exam(api_key, grade, subject, content):
     5. **TIÊU ĐỀ:** Phải có dòng chữ "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN" ở đầu đề.
     """
 
-    # VÒNG LẶP THỬ MODEL (FIX LỖI 404)
-    with st.spinner('Đang kết nối AI (Đang tự động thử các dòng Model)...'):
-        for model_name in models_to_try:
-            try:
-                model = genai.GenerativeModel(model_name)
-                # Thử gọi lệnh đơn giản trước để xem model có sống không
-                response = model.generate_content(prompt)
-                response_text = response.text
-                active_model = model_name
-                break # Nếu thành công thì thoát vòng lặp ngay
-            except Exception as e:
-                error_log.append(f"{model_name}: {str(e)}")
-                continue # Nếu lỗi thì thử model tiếp theo trong danh sách
+    data = {
+        "contents": [{
+            "parts": [{"text": prompt_text}]
+        }]
+    }
 
-    if response_text:
-        return f"*(Đã tạo bằng model: {active_model})*\n\n" + response_text
-    else:
-        # Nếu thử hết cả 3 model mà vẫn lỗi
-        return f"⚠️ KHÔNG THỂ TẠO ĐỀ. Chi tiết lỗi:\n" + "\n".join(error_log) + "\n\n👉 LỜI KHUYÊN: Hãy tắt hẳn cửa sổ đen (CMD) và chạy lại lệnh 'streamlit run app.py'."
+    try:
+        with st.spinner('Đang kết nối trực tiếp đến máy chủ Google (Không qua thư viện)...'):
+            # Gửi yêu cầu
+            response = requests.post(url, headers=headers, data=json.dumps(data))
+            
+            # Kiểm tra kết quả
+            if response.status_code == 200:
+                result_json = response.json()
+                try:
+                    return result_json['candidates'][0]['content']['parts'][0]['text']
+                except:
+                    return "⚠️ AI trả về dữ liệu trống. Vui lòng thử lại."
+            else:
+                return f"⚠️ Lỗi kết nối ({response.status_code}): {response.text}"
+                
+    except Exception as e:
+        return f"Lỗi hệ thống: {str(e)}"
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
 
-# SIDEBAR & CÔNG CỤ SỬA LỖI
+# SIDEBAR
 with st.sidebar:
     st.header("⚙️ Cấu hình")
     api_key = st.text_input("Nhập API Key:", type="password")
     
-    st.markdown("---")
-    st.warning("👇 NẾU VẪN BỊ LỖI, BẤM NÚT DƯỚI 👇")
-    
-    # NÚT SỬA LỖI (UPDATE MẠNH)
-    if st.button("🔧 CẬP NHẬT HỆ THỐNG", type="primary"):
-        with st.status("Đang xử lý..."):
-            python_path = sys.executable 
-            st.write(f"Python: {python_path}")
+    # Check API trực tiếp
+    if st.button("Kiểm tra kết nối"):
+        if not api_key:
+            st.error("Chưa nhập Key")
+        else:
             try:
-                st.write("Đang gỡ bản cũ...")
-                subprocess.run([python_path, "-m", "pip", "uninstall", "google-generativeai", "-y"])
-                st.write("Đang cài bản mới nhất...")
-                subprocess.check_call([python_path, "-m", "pip", "install", "google-generativeai==0.5.2"]) # Cài bản ổn định
-                st.success("✅ ĐÃ XONG! QUAN TRỌNG: Bạn hãy tắt cửa sổ CMD đi và chạy lại.")
-            except Exception as e:
-                st.error(f"Lỗi: {e}")
+                test_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+                test_data = {"contents": [{"parts": [{"text": "Hello"}]}]}
+                res = requests.post(test_url, headers={'Content-Type': 'application/json'}, json=test_data)
+                if res.status_code == 200:
+                    st.success("Kết nối tốt! ✅")
+                else:
+                    st.error(f"Lỗi Key: {res.status_code}")
+            except:
+                st.error("Không có mạng internet.")
 
     st.markdown("---")
     st.info("Lấy API Key: [Google AI Studio](https://aistudio.google.com/)")
@@ -178,7 +176,8 @@ with col_output:
         if not uploaded_file:
             st.warning("⚠️ Chưa có file ma trận!")
         else:
-            result = generate_exam(api_key, selected_grade, selected_subject, file_content)
+            # GỌI HÀM TRỰC TIẾP MỚI
+            result = generate_exam_direct(api_key, selected_grade, selected_subject, file_content)
             st.session_state.generated_exam = result
 
     if st.session_state.generated_exam:
