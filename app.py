@@ -99,14 +99,16 @@ def generate_exam(api_key, grade, subject, content):
     if not api_key:
         return "⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục."
     
+    # Cấu hình API Key
     genai.configure(api_key=api_key)
     
-    # --- SỬA LỖI TẠI ĐÂY ---
-    # Sử dụng 'gemini-pro' thay vì 'gemini-1.5-flash' để tương thích tốt hơn
+    # --- KHẮC PHỤC LỖI TẠI ĐÂY ---
+    # Sử dụng 'gemini-pro' thay vì 'gemini-1.5-flash'. 
+    # 'gemini-pro' tương thích với mọi phiên bản thư viện.
     try:
         model = genai.GenerativeModel("gemini-pro") 
     except:
-        return "Lỗi: Không tìm thấy Model. Hãy chạy 'pip install -U google-generativeai' trong terminal."
+        return "Lỗi khởi tạo Model. Vui lòng kiểm tra lại kết nối mạng."
 
     # PROMPT KỸ THUẬT
     prompt = f"""
@@ -134,7 +136,8 @@ def generate_exam(api_key, grade, subject, content):
             response = model.generate_content(prompt)
             return response.text
     except Exception as e:
-        return f"Lỗi kết nối AI: {str(e)}. Hãy kiểm tra lại API Key hoặc mạng internet."
+        # Bắt lỗi cụ thể nếu key sai hoặc hết quota
+        return f"Lỗi kết nối AI: {str(e)}. \nHãy đảm bảo API Key chính xác và còn hạn mức sử dụng."
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
@@ -151,12 +154,12 @@ with st.sidebar:
         else:
             try:
                 genai.configure(api_key=api_key)
-                # Test thử model
+                # Test thử model gemini-pro
                 test_model = genai.GenerativeModel("gemini-pro")
                 test_model.generate_content("Hello")
                 st.success("Kết nối thành công! ✅")
             except Exception as e:
-                st.error(f"Key không hợp lệ hoặc lỗi mạng: {e}")
+                st.error(f"Lỗi: {e}")
 
     st.info("Để lấy API Key miễn phí, truy cập: [Google AI Studio](https://aistudio.google.com/)")
     st.markdown("---")
