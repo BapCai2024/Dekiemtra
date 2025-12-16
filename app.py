@@ -16,13 +16,20 @@ st.markdown("""
     .main-title { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;}
     .question-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #1565C0; margin-bottom: 10px; }
     div.stButton > button:first-child { border-radius: 5px; }
-    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #f1f1f1; color: #333; text-align: center; padding: 10px; font-size: 14px; border-top: 1px solid #ddd; z-index: 100; }
+    
+    /* Footer */
+    .footer {
+        position: fixed; left: 0; bottom: 0; width: 100%;
+        background-color: #f1f1f1; color: #333;
+        text-align: center; padding: 10px; font-size: 14px;
+        border-top: 1px solid #ddd; z-index: 100;
+    }
     .content-container { padding-bottom: 60px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CƠ SỞ DỮ LIỆU (CHI TIẾT MỤC LỤC SGK) ---
-# Quy ước: KNTT = Kết nối tri thức | CKP = Cùng Khám Phá (Tin học)
+# --- 3. CƠ SỞ DỮ LIỆU CHƯƠNG TRÌNH HỌC (DATA FULL) ---
+# KNTT: Kết nối tri thức | CKP: Cùng Khám Phá (Tin học) | Tiếng Việt: Tổng hợp
 
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📖"), ("Toán", "✖️")],
@@ -34,83 +41,84 @@ SUBJECTS_DB = {
 
 CURRICULUM_DB = {
     # =================================================================================
-    # KHỐI LỚP 1 (Sách: Kết nối tri thức)
+    # KHỐI LỚP 1
     # =================================================================================
     "Lớp 1": {
-        "Toán": { 
+        "Toán": { # KNTT
             "Học kỳ I": [
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 1: Các số 0, 1, 2, 3, 4, 5 (3 tiết)", "YCCĐ": "Đếm, đọc, viết các số đến 5."},
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 2: Các số 6, 7, 8, 9, 10 (4 tiết)", "YCCĐ": "Đếm, đọc, viết các số đến 10."},
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 3: Nhiều hơn, ít hơn, bằng nhau (2 tiết)", "YCCĐ": "So sánh số lượng hai nhóm vật."},
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 4: So sánh số (2 tiết)", "YCCĐ": "Sử dụng dấu >, <, =."},
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 5: Mấy và mấy (2 tiết)", "YCCĐ": "Gộp và tách số trong phạm vi 10."},
-                {"Chủ đề": "2. Làm quen với hình phẳng", "Bài học": "Bài 7: Hình vuông, hình tròn, hình tam giác (2 tiết)", "YCCĐ": "Nhận dạng hình phẳng."},
-                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 8: Phép cộng trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép cộng, viết phép tính."},
-                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 9: Phép trừ trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép trừ, viết phép tính."},
-                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 10: Luyện tập chung (3 tiết)", "YCCĐ": "Vận dụng cộng trừ giải quyết vấn đề."}
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 1: Các số 0, 1, 2, 3, 4, 5 (3 tiết)", "YCCĐ": "Đếm, đọc, viết số trong phạm vi 5."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 2: Các số 6, 7, 8, 9, 10 (4 tiết)", "YCCĐ": "Đếm, đọc, viết số đến 10."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 3: Nhiều hơn, ít hơn, bằng nhau (2 tiết)", "YCCĐ": "So sánh số lượng."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 4: So sánh số (2 tiết)", "YCCĐ": "Sử dụng dấu >, <, =."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 5: Mấy và mấy (2 tiết)", "YCCĐ": "Tách và gộp số."},
+                {"Chủ đề": "2. Hình phẳng", "Bài học": "Bài 7: Hình vuông, tròn, tam giác (2 tiết)", "YCCĐ": "Nhận dạng hình phẳng."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 8: Phép cộng trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép cộng."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 9: Phép trừ trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép trừ."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 10: Luyện tập chung (3 tiết)", "YCCĐ": "Vận dụng cộng trừ giải toán."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "4. Các số trong PV 100", "Bài học": "Bài 21: Số có hai chữ số (3 tiết)", "YCCĐ": "Đọc, viết, nhận biết cấu tạo số."},
-                {"Chủ đề": "4. Các số trong PV 100", "Bài học": "Bài 23: Bảng các số từ 1 đến 100 (2 tiết)", "YCCĐ": "Thứ tự số, số liền trước/sau."},
-                {"Chủ đề": "5. Cộng, trừ PV 100", "Bài học": "Bài 29: Phép cộng số có hai chữ số với số có một chữ số (2 tiết)", "YCCĐ": "Cộng không nhớ, đặt tính đúng."},
-                {"Chủ đề": "5. Cộng, trừ PV 100", "Bài học": "Bài 30: Phép cộng số có hai chữ số với số có hai chữ số (2 tiết)", "YCCĐ": "Cộng không nhớ PV 100."},
-                {"Chủ đề": "5. Cộng, trừ PV 100", "Bài học": "Bài 32: Phép trừ số có hai chữ số cho số có một chữ số (2 tiết)", "YCCĐ": "Trừ không nhớ PV 100."},
-                {"Chủ đề": "6. Thời gian, Đo lường", "Bài học": "Bài 35: Các ngày trong tuần (1 tiết)", "YCCĐ": "Đọc thứ ngày, thời khóa biểu."},
-                {"Chủ đề": "6. Thời gian, Đo lường", "Bài học": "Bài 36: Thực hành xem lịch và giờ (2 tiết)", "YCCĐ": "Xem giờ đúng, xem lịch tờ."},
-                {"Chủ đề": "7. Ôn tập cuối năm", "Bài học": "Bài 38: Ôn tập các số và phép tính (3 tiết)", "YCCĐ": "Tổng hợp kiến thức cả năm."}
+                {"Chủ đề": "4. Các số PV 100", "Bài học": "Bài 21: Số có hai chữ số (3 tiết)", "YCCĐ": "Đọc viết số, cấu tạo số."},
+                {"Chủ đề": "4. Các số PV 100", "Bài học": "Bài 23: Bảng các số 1-100 (2 tiết)", "YCCĐ": "Thứ tự số, so sánh số."},
+                {"Chủ đề": "5. Cộng trừ PV 100", "Bài học": "Bài 29: Phép cộng số có 2 chữ số (2 tiết)", "YCCĐ": "Cộng không nhớ."},
+                {"Chủ đề": "5. Cộng trừ PV 100", "Bài học": "Bài 32: Phép trừ số có 2 chữ số (2 tiết)", "YCCĐ": "Trừ không nhớ."},
+                {"Chủ đề": "6. Thời gian", "Bài học": "Bài 35: Các ngày trong tuần (1 tiết)", "YCCĐ": "Xem lịch, thời khóa biểu."},
+                {"Chủ đề": "6. Thời gian", "Bài học": "Bài 36: Xem giờ đúng (2 tiết)", "YCCĐ": "Xem đồng hồ giờ đúng."},
+                {"Chủ đề": "7. Ôn tập", "Bài học": "Bài 38: Ôn tập cuối năm (4 tiết)", "YCCĐ": "Tổng hợp kiến thức."}
             ]
         },
-        "Tiếng Việt": {
+        "Tiếng Việt": { # Tổng hợp
             "Học kỳ I": [
-                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 1: A a (KNTT)", "YCCĐ": "Nhận biết âm a, chữ a."},
-                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 2: B b, dấu huyền (KNTT)", "YCCĐ": "Đọc âm b, thanh huyền, tiếng bà."},
-                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 3: C c, dấu sắc (KNTT)", "YCCĐ": "Đọc âm c, thanh sắc, tiếng cá."},
-                {"Chủ đề": "Học vần (Kết hợp)", "Bài học": "Bài: an, at (KNTT/CTST)", "YCCĐ": "Đọc trơn, viết đúng vần an, at."},
-                {"Chủ đề": "Học vần (Kết hợp)", "Bài học": "Bài: on, ot (KNTT/Cánh Diều)", "YCCĐ": "Đọc trơn, viết đúng vần on, ot."}
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 1: A a (2 tiết)", "YCCĐ": "Nhận biết âm a, chữ a."},
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 2: B b, dấu huyền (2 tiết)", "YCCĐ": "Đọc âm b, thanh huyền."},
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 3: C c, dấu sắc (2 tiết)", "YCCĐ": "Đọc âm c, thanh sắc."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài: an, at (2 tiết)", "YCCĐ": "Đọc viết vần an, at."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài: on, ot (2 tiết)", "YCCĐ": "Đọc viết vần on, ot."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài: ay, âp (2 tiết)", "YCCĐ": "Đọc viết vần ay, âp."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Gia đình", "Bài học": "Bài đọc: Ngôi nhà (KNTT)", "YCCĐ": "Đọc hiểu bài thơ, tình cảm gia đình."},
-                {"Chủ đề": "Gia đình", "Bài học": "Bài đọc: Làm anh (Cánh Diều)", "YCCĐ": "Hiểu trách nhiệm của anh chị em."},
+                {"Chủ đề": "Gia đình", "Bài học": "Bài đọc: Ngôi nhà (KNTT)", "YCCĐ": "Đọc hiểu bài thơ về gia đình."},
+                {"Chủ đề": "Gia đình", "Bài học": "Bài đọc: Làm anh (Cánh Diều)", "YCCĐ": "Trách nhiệm của anh chị em."},
                 {"Chủ đề": "Thiên nhiên", "Bài học": "Bài đọc: Hoa kết trái (CTST)", "YCCĐ": "Nhận biết các loại hoa quả."},
-                {"Chủ đề": "Nhà trường", "Bài học": "Bài đọc: Trường em (KNTT)", "YCCĐ": "Tình cảm yêu mến trường lớp."},
-                {"Chủ đề": "Bác Hồ", "Bài học": "Bài đọc: Bác Hồ và thiếu nhi (Cánh Diều)", "YCCĐ": "Cảm nhận tình thương của Bác."}
+                {"Chủ đề": "Nhà trường", "Bài học": "Bài đọc: Trường em (KNTT)", "YCCĐ": "Tình cảm với trường lớp."},
+                {"Chủ đề": "Bác Hồ", "Bài học": "Bài đọc: Bác Hồ và thiếu nhi (Cánh Diều)", "YCCĐ": "Tình cảm Bác Hồ."}
             ]
         }
     },
 
     # =================================================================================
-    # KHỐI LỚP 2 (Sách: Kết nối tri thức)
+    # KHỐI LỚP 2
     # =================================================================================
     "Lớp 2": {
-        "Toán": {
+        "Toán": { # KNTT
             "Học kỳ I": [
-                {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 1: Ôn tập các số đến 100", "YCCĐ": "Đọc, viết, so sánh số đến 100."},
-                {"Chủ đề": "2. Phép cộng, trừ qua 10", "Bài học": "Bài 6: Bảng cộng (qua 10)", "YCCĐ": "Thuộc bảng cộng, tính nhẩm."},
-                {"Chủ đề": "2. Phép cộng, trừ qua 10", "Bài học": "Bài 11: Bảng trừ (qua 10)", "YCCĐ": "Thuộc bảng trừ, tính nhẩm."},
-                {"Chủ đề": "3. Hình học", "Bài học": "Bài 18: Đường thẳng, đường cong", "YCCĐ": "Phân biệt đường thẳng, cong."},
-                {"Chủ đề": "3. Hình học", "Bài học": "Bài 19: Điểm, đoạn thẳng", "YCCĐ": "Nhận biết điểm, đoạn thẳng, 3 điểm thẳng hàng."},
-                {"Chủ đề": "4. Đo lường", "Bài học": "Bài 22: Ngày, tháng", "YCCĐ": "Xem lịch, biết số ngày trong tháng."}
+                {"Chủ đề": "1. Ôn tập", "Bài học": "Bài 1: Ôn tập các số đến 100", "YCCĐ": "Củng cố số học lớp 1."},
+                {"Chủ đề": "2. Phép cộng trừ qua 10", "Bài học": "Bài 6: Bảng cộng qua 10 (3 tiết)", "YCCĐ": "Thực hiện cộng có nhớ."},
+                {"Chủ đề": "2. Phép cộng trừ qua 10", "Bài học": "Bài 11: Bảng trừ qua 10 (3 tiết)", "YCCĐ": "Thực hiện trừ có nhớ."},
+                {"Chủ đề": "3. Hình học", "Bài học": "Bài 18: Đường thẳng, đường cong", "YCCĐ": "Nhận biết các loại đường."},
+                {"Chủ đề": "3. Hình học", "Bài học": "Bài 19: Điểm, đoạn thẳng", "YCCĐ": "Đo độ dài đoạn thẳng."},
+                {"Chủ đề": "4. Đo lường", "Bài học": "Bài 22: Ngày, tháng", "YCCĐ": "Xem lịch."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 40: Bảng nhân 2", "YCCĐ": "Lập và thuộc bảng nhân 2."},
-                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 41: Bảng nhân 5", "YCCĐ": "Lập và thuộc bảng nhân 5."},
-                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 45: Bảng chia 2", "YCCĐ": "Lập và thuộc bảng chia 2."},
-                {"Chủ đề": "6. Các số đến 1000", "Bài học": "Bài 48: Đơn vị, chục, trăm, nghìn", "YCCĐ": "Nhận biết hàng, quan hệ giữa các hàng."},
-                {"Chủ đề": "6. Các số đến 1000", "Bài học": "Bài 59: Phép cộng (có nhớ) trong PV 1000", "YCCĐ": "Cộng có nhớ số có 3 chữ số."},
-                {"Chủ đề": "7. Ôn tập", "Bài học": "Bài 70: Ôn tập chung", "YCCĐ": "Hệ thống kiến thức cả năm."}
+                {"Chủ đề": "5. Phép nhân chia", "Bài học": "Bài 40: Bảng nhân 2", "YCCĐ": "Thuộc bảng nhân 2."},
+                {"Chủ đề": "5. Phép nhân chia", "Bài học": "Bài 41: Bảng nhân 5", "YCCĐ": "Thuộc bảng nhân 5."},
+                {"Chủ đề": "5. Phép nhân chia", "Bài học": "Bài 45: Bảng chia 2", "YCCĐ": "Thuộc bảng chia 2."},
+                {"Chủ đề": "6. Số đến 1000", "Bài học": "Bài 48: Đơn vị, chục, trăm, nghìn", "YCCĐ": "Cấu tạo số 3 chữ số."},
+                {"Chủ đề": "6. Số đến 1000", "Bài học": "Bài 59: Phép cộng có nhớ PV 1000", "YCCĐ": "Cộng số có 3 chữ số."},
+                {"Chủ đề": "7. Ôn tập", "Bài học": "Bài 70: Ôn tập chung", "YCCĐ": "Tổng hợp kiến thức."}
             ]
         },
         "Tiếng Việt": {
             "Học kỳ I": [
-                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Tôi là học sinh lớp 2 (KNTT)", "YCCĐ": "Hiểu tâm trạng ngày khai trường."},
-                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Ngày hôm qua đâu rồi? (KNTT)", "YCCĐ": "Hiểu giá trị thời gian."},
-                {"Chủ đề": "Bạn bè", "Bài học": "Đọc: Út Tin (CTST)", "YCCĐ": "Nhận diện đặc điểm nhân vật."},
-                {"Chủ đề": "Thầy cô", "Bài học": "Đọc: Cô giáo lớp em (Cánh Diều)", "YCCĐ": "Cảm nhận tình cảm thầy trò."}
+                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Tôi là học sinh lớp 2 (KNTT)", "YCCĐ": "Tâm trạng ngày khai trường."},
+                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Ngày hôm qua đâu rồi? (KNTT)", "YCCĐ": "Giá trị thời gian."},
+                {"Chủ đề": "Bạn bè", "Bài học": "Đọc: Út Tin (CTST)", "YCCĐ": "Đặc điểm nhân vật."},
+                {"Chủ đề": "Thầy cô", "Bài học": "Đọc: Cô giáo lớp em (Cánh Diều)", "YCCĐ": "Tình cảm thầy trò."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Mùa nước nổi (CTST)", "YCCĐ": "Vẻ đẹp thiên nhiên miền Tây."},
-                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Đường đến trường (KNTT)", "YCCĐ": "Vẻ đẹp cảnh vật đường đi học."},
-                {"Chủ đề": "Bốn mùa", "Bài học": "Đọc: Chuyện bốn mùa (KNTT)", "YCCĐ": "Đặc điểm các mùa trong năm."}
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Mùa nước nổi (CTST)", "YCCĐ": "Vẻ đẹp miền Tây."},
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Đường đến trường (KNTT)", "YCCĐ": "Cảnh vật đường đi học."},
+                {"Chủ đề": "Bốn mùa", "Bài học": "Đọc: Chuyện bốn mùa (KNTT)", "YCCĐ": "Đặc điểm các mùa."},
+                {"Chủ đề": "Bác Hồ", "Bài học": "Đọc: Ai ngoan sẽ được thưởng (CTST)", "YCCĐ": "Đức tính trung thực."}
             ]
         }
     },
@@ -121,51 +129,50 @@ CURRICULUM_DB = {
     "Lớp 3": {
         "Tin học": { # Sách: Cùng Khám Phá (NXB ĐH Huế)
             "Học kỳ I": [
-                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 1: Các thành phần của máy tính (1 tiết)", "YCCĐ": "Nhận diện: thân máy, màn hình, phím, chuột."},
-                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 2: Chức năng các bộ phận máy tính (1 tiết)", "YCCĐ": "Biết chức năng thiết bị vào/ra."},
-                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 3: Làm quen với chuột máy tính (2 tiết)", "YCCĐ": "Thao tác: di chuyển, nháy, kéo thả."},
-                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 4: Làm quen với bàn phím máy tính (2 tiết)", "YCCĐ": "Nhận biết khu vực phím, đặt tay đúng."},
-                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 5: Xem tin tức và giải trí trên Internet (2 tiết)", "YCCĐ": "Truy cập trang web, xem thông tin."}
+                {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 1: Các thành phần của máy tính (1 tiết)", "YCCĐ": "Nhận diện thân máy, màn hình, phím, chuột."},
+                {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 2: Chức năng các bộ phận máy tính (1 tiết)", "YCCĐ": "Biết chức năng thiết bị vào/ra."},
+                {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 3: Làm quen với chuột máy tính (2 tiết)", "YCCĐ": "Thao tác: di chuyển, nháy, kéo thả."},
+                {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 4: Làm quen với bàn phím (2 tiết)", "YCCĐ": "Khu vực phím, đặt tay đúng."},
+                {"Chủ đề": "B. Mạng máy tính", "Bài học": "Bài 5: Xem tin tức, giải trí trên Internet (2 tiết)", "YCCĐ": "Truy cập web, xem thông tin."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Chủ đề C: Tổ chức lưu trữ", "Bài học": "Bài 6: Sắp xếp để tìm kiếm (1 tiết)", "YCCĐ": "Hiểu sự cần thiết của sắp xếp dữ liệu."},
-                {"Chủ đề": "Chủ đề C: Tổ chức lưu trữ", "Bài học": "Bài 7: Sơ đồ hình cây (1 tiết)", "YCCĐ": "Nhận biết cấu trúc cây thư mục."},
-                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 8: Làm quen với soạn thảo văn bản (2 tiết)", "YCCĐ": "Gõ kí tự, dấu tiếng Việt (Telex/Vni)."},
-                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 9: Soạn thảo văn bản đơn giản (2 tiết)", "YCCĐ": "Gõ đoạn văn ngắn, xóa sửa lỗi."},
-                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 11: Vẽ tranh đơn giản (2 tiết)", "YCCĐ": "Sử dụng công cụ vẽ hình cơ bản."},
-                {"Chủ đề": "Chủ đề F: Giải quyết vấn đề", "Bài học": "Bài 13: Luyện tập sử dụng chuột (2 tiết)", "YCCĐ": "Thành thạo thao tác chuột qua trò chơi."}
+                {"Chủ đề": "C. Tổ chức lưu trữ", "Bài học": "Bài 6: Sắp xếp để tìm kiếm (1 tiết)", "YCCĐ": "Sự cần thiết của sắp xếp dữ liệu."},
+                {"Chủ đề": "C. Tổ chức lưu trữ", "Bài học": "Bài 7: Sơ đồ hình cây (1 tiết)", "YCCĐ": "Cấu trúc thư mục."},
+                {"Chủ đề": "E. Ứng dụng tin học", "Bài học": "Bài 8: Làm quen soạn thảo văn bản (2 tiết)", "YCCĐ": "Gõ kí tự, dấu tiếng Việt."},
+                {"Chủ đề": "E. Ứng dụng tin học", "Bài học": "Bài 9: Soạn thảo văn bản đơn giản (2 tiết)", "YCCĐ": "Gõ đoạn văn, sửa lỗi."},
+                {"Chủ đề": "E. Ứng dụng tin học", "Bài học": "Bài 11: Vẽ tranh đơn giản (2 tiết)", "YCCĐ": "Sử dụng công cụ vẽ cơ bản."},
+                {"Chủ đề": "F. Giải quyết vấn đề", "Bài học": "Bài 13: Luyện tập sử dụng chuột (2 tiết)", "YCCĐ": "Thành thạo chuột qua trò chơi."}
             ]
         },
         "Toán": { # KNTT
             "Học kỳ I": [
-                {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 1: Ôn tập các số đến 1000", "YCCĐ": "Đọc, viết, so sánh số đến 1000."},
-                {"Chủ đề": "2. Bảng nhân, bảng chia", "Bài học": "Bài 5: Bảng nhân 6", "YCCĐ": "Lập và thuộc bảng nhân 6."},
-                {"Chủ đề": "2. Bảng nhân, bảng chia", "Bài học": "Bài 9: Bảng nhân 8", "YCCĐ": "Lập và thuộc bảng nhân 8."},
-                {"Chủ đề": "3. Góc và Hình", "Bài học": "Bài 15: Góc vuông, góc không vuông", "YCCĐ": "Nhận biết góc vuông bằng ê-ke."},
-                {"Chủ đề": "4. Phép chia số lớn", "Bài học": "Bài 38: Chia số có ba chữ số cho số có một chữ số", "YCCĐ": "Chia hết và chia có dư."}
+                {"Chủ đề": "1. Bảng nhân chia", "Bài học": "Bài 5: Bảng nhân 6", "YCCĐ": "Thuộc bảng nhân 6."},
+                {"Chủ đề": "1. Bảng nhân chia", "Bài học": "Bài 9: Bảng nhân 8", "YCCĐ": "Thuộc bảng nhân 8."},
+                {"Chủ đề": "2. Góc và Hình", "Bài học": "Bài 15: Góc vuông, góc không vuông", "YCCĐ": "Dùng ê-ke kiểm tra góc."},
+                {"Chủ đề": "3. Phép chia số lớn", "Bài học": "Bài 38: Chia số có 3 chữ số cho số có 1 chữ số", "YCCĐ": "Chia hết và có dư."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "5. Số đến 100.000", "Bài học": "Bài 45: Các số trong phạm vi 100000", "YCCĐ": "Đọc, viết số có 5 chữ số."},
-                {"Chủ đề": "6. Diện tích", "Bài học": "Bài 51: Diện tích của một hình", "YCCĐ": "Làm quen biểu tượng diện tích."},
-                {"Chủ đề": "6. Diện tích", "Bài học": "Bài 52: Diện tích hình chữ nhật", "YCCĐ": "Vận dụng công thức tính diện tích HCN."},
-                {"Chủ đề": "7. Cộng trừ PV 100.000", "Bài học": "Bài 58: Phép cộng trong phạm vi 100000", "YCCĐ": "Cộng có nhớ trong phạm vi 100.000."}
+                {"Chủ đề": "4. Số đến 100.000", "Bài học": "Bài 45: Các số trong phạm vi 100000", "YCCĐ": "Đọc viết số 5 chữ số."},
+                {"Chủ đề": "5. Diện tích", "Bài học": "Bài 51: Diện tích của một hình", "YCCĐ": "Khái niệm diện tích."},
+                {"Chủ đề": "5. Diện tích", "Bài học": "Bài 52: Diện tích hình chữ nhật", "YCCĐ": "Công thức S = a x b."},
+                {"Chủ đề": "6. Cộng trừ PV 100.000", "Bài học": "Bài 58: Phép cộng trong phạm vi 100000", "YCCĐ": "Cộng có nhớ."}
             ]
         },
         "Tiếng Việt": {
             "Học kỳ I": [
-                {"Chủ đề": "Măng non", "Bài học": "Đọc: Chiếc áo mùa thu (CTST)", "YCCĐ": "Nhận biết nhân hóa; cảm nhận mùa thu."},
-                {"Chủ đề": "Măng non", "Bài học": "Đọc: Ngày khai trường (KNTT)", "YCCĐ": "Niềm vui ngày tựu trường."},
-                {"Chủ đề": "Cộng đồng", "Bài học": "Đọc: Lớp học trên đường (Cánh Diều)", "YCCĐ": "Ý nghĩa của việc học tập."},
-                {"Chủ đề": "Sáng tạo", "Bài học": "Đọc: Ông tổ nghề thêu (Cánh Diều)", "YCCĐ": "Ca ngợi trí thông minh, sáng tạo."}
+                {"Chủ đề": "Măng non", "Bài học": "Đọc: Chiếc áo mùa thu (CTST)", "YCCĐ": "Biện pháp nhân hóa."},
+                {"Chủ đề": "Măng non", "Bài học": "Đọc: Ngày khai trường (KNTT)", "YCCĐ": "Niềm vui tựu trường."},
+                {"Chủ đề": "Cộng đồng", "Bài học": "Đọc: Lớp học trên đường (Cánh Diều)", "YCCĐ": "Nghị lực học tập."},
+                {"Chủ đề": "Sáng tạo", "Bài học": "Đọc: Ông tổ nghề thêu (Cánh Diều)", "YCCĐ": "Ca ngợi trí thông minh."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Lễ hội", "Bài học": "Đọc: Hội đua voi ở Tây Nguyên (KNTT)", "YCCĐ": "Không khí lễ hội đua voi."},
-                {"Chủ đề": "Lễ hội", "Bài học": "Đọc: Đua ghe ngo (CTST)", "YCCĐ": "Nét văn hóa lễ hội Khmer."}
+                {"Chủ đề": "Lễ hội", "Bài học": "Đọc: Hội đua voi ở Tây Nguyên (KNTT)", "YCCĐ": "Văn hóa Tây Nguyên."},
+                {"Chủ đề": "Lễ hội", "Bài học": "Đọc: Đua ghe ngo (CTST)", "YCCĐ": "Văn hóa Khmer."}
             ]
         },
-        "Công nghệ": { # KNTT
-            "Học kỳ I": [{"Chủ đề": "Tự nhiên và CN", "Bài học": "Bài 1: Tự nhiên và Công nghệ", "YCCĐ": "Phân biệt đối tượng tự nhiên/công nghệ."}, {"Chủ đề": "Đồ dùng điện", "Bài học": "Bài 2: Sử dụng đèn học", "YCCĐ": "Sử dụng đèn học an toàn."}],
-            "Học kỳ II": [{"Chủ đề": "Thủ công", "Bài học": "Bài 7: Làm đồ dùng học tập", "YCCĐ": "Làm ống đựng bút/thước kẻ."}, {"Chủ đề": "Thủ công", "Bài học": "Bài 9: Làm biển báo giao thông", "YCCĐ": "Làm mô hình biển báo."}]
+        "Công nghệ": {
+            "Học kỳ I": [{"Chủ đề": "Tự nhiên và CN", "Bài học": "Bài 1: Tự nhiên và Công nghệ", "YCCĐ": "Phân biệt đối tượng."}, {"Chủ đề": "Đồ dùng điện", "Bài học": "Bài 2: Sử dụng đèn học", "YCCĐ": "An toàn điện."}],
+            "Học kỳ II": [{"Chủ đề": "Thủ công", "Bài học": "Bài 7: Làm đồ dùng học tập", "YCCĐ": "Làm ống bút."}, {"Chủ đề": "Thủ công", "Bài học": "Bài 9: Làm biển báo giao thông", "YCCĐ": "Làm biển báo."}]
         }
     },
 
@@ -173,6 +180,39 @@ CURRICULUM_DB = {
     # KHỐI LỚP 4
     # =================================================================================
     "Lớp 4": {
+        "Khoa học": { # KNTT - ĐẦY ĐỦ CÁC CHỦ ĐỀ
+            "Học kỳ I": [
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 1: Tính chất của nước (2 tiết)", "YCCĐ": "Nêu tính chất không màu, không mùi, hòa tan."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 2: Sự chuyển thể của nước (2 tiết)", "YCCĐ": "Phân biệt lỏng, rắn, hơi; sự bay hơi/ngưng tụ."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 3: Vòng tuần hoàn của nước (2 tiết)", "YCCĐ": "Vẽ sơ đồ vòng tuần hoàn nước trong tự nhiên."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 5: Không khí (2 tiết)", "YCCĐ": "Nêu tính chất và vai trò của không khí."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 8: Ánh sáng và bóng tối (2 tiết)", "YCCĐ": "Vật phát sáng, vật được chiếu sáng; giải thích bóng tối."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 10: Âm thanh (2 tiết)", "YCCĐ": "Sự lan truyền âm thanh; vật phát ra âm thanh."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 11: Nhiệt độ và nhiệt kế (2 tiết)", "YCCĐ": "Cách đo nhiệt độ cơ thể và không khí."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 16: Nhu cầu sống của thực vật (2 tiết)", "YCCĐ": "Cần nước, ánh sáng, không khí, chất khoáng."},
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 18: Sự trao đổi chất ở động vật (2 tiết)", "YCCĐ": "Sơ đồ trao đổi chất ở động vật."},
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 20: Chuỗi thức ăn (2 tiết)", "YCCĐ": "Vẽ sơ đồ chuỗi thức ăn trong tự nhiên."},
+                {"Chủ đề": "4. Nấm", "Bài học": "Bài 23: Các loại nấm (2 tiết)", "YCCĐ": "Phân biệt nấm ăn và nấm độc; vai trò của nấm."},
+                {"Chủ đề": "5. Con người và sức khỏe", "Bài học": "Bài 26: Các nhóm chất dinh dưỡng (2 tiết)", "YCCĐ": "Vai trò của bột đường, đạm, béo, vitamin."}
+            ]
+        },
+        "Lịch sử và Địa lí": { # KNTT - ĐẦY ĐỦ CÁC CHỦ ĐỀ
+            "Học kỳ I": [
+                {"Chủ đề": "1. Địa phương em", "Bài học": "Bài 1: Làm quen với bản đồ (2 tiết)", "YCCĐ": "Nhận biết các kí hiệu bản đồ, phương hướng."},
+                {"Chủ đề": "2. Trung du và MN Bắc Bộ", "Bài học": "Bài 3: Thiên nhiên vùng Trung du (2 tiết)", "YCCĐ": "Mô tả địa hình đồi bát úp, khí hậu, ruộng bậc thang."},
+                {"Chủ đề": "2. Trung du và MN Bắc Bộ", "Bài học": "Bài 5: Đền Hùng và lễ giỗ tổ (2 tiết)", "YCCĐ": "Kể lại truyền thuyết Hùng Vương; ý nghĩa lễ hội."},
+                {"Chủ đề": "3. Đồng bằng Bắc Bộ", "Bài học": "Bài 8: Sông Hồng và văn minh lúa nước (2 tiết)", "YCCĐ": "Vai trò sông Hồng; hệ thống đê điều."},
+                {"Chủ đề": "3. Đồng bằng Bắc Bộ", "Bài học": "Bài 10: Thăng Long - Hà Nội (2 tiết)", "YCCĐ": "Các tên gọi của Hà Nội; di tích Văn Miếu."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "4. Duyên hải Miền Trung", "Bài học": "Bài 15: Biển đảo Việt Nam (2 tiết)", "YCCĐ": "Xác định Hoàng Sa, Trường Sa; vai trò kinh tế biển."},
+                {"Chủ đề": "4. Duyên hải Miền Trung", "Bài học": "Bài 16: Phố cổ Hội An (2 tiết)", "YCCĐ": "Mô tả kiến trúc, di sản văn hóa Hội An."},
+                {"Chủ đề": "5. Tây Nguyên", "Bài học": "Bài 18: Thiên nhiên Tây Nguyên (2 tiết)", "YCCĐ": "Đất đỏ bazan, các cao nguyên xếp tầng."},
+                {"Chủ đề": "5. Tây Nguyên", "Bài học": "Bài 20: Văn hóa Cồng chiêng (2 tiết)", "YCCĐ": "Giá trị di sản văn hóa phi vật thể."}
+            ]
+        },
         "Tin học": { # Sách: Cùng Khám Phá (NXB ĐH Huế)
             "Học kỳ I": [
                 {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 1: Các thiết bị phần cứng (1 tiết)", "YCCĐ": "Phân loại thiết bị gắn liền và ngoại vi."},
@@ -192,43 +232,35 @@ CURRICULUM_DB = {
         "Toán": { # KNTT
             "Học kỳ I": [
                 {"Chủ đề": "1. Số tự nhiên", "Bài học": "Bài 5: Dãy số tự nhiên", "YCCĐ": "Đặc điểm dãy số tự nhiên."},
-                {"Chủ đề": "1. Số tự nhiên", "Bài học": "Bài 6: Viết số tự nhiên trong hệ thập phân", "YCCĐ": "Giá trị theo vị trí của chữ số."},
-                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 10: Góc nhọn, góc tù, góc bẹt", "YCCĐ": "Phân biệt các loại góc."},
-                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 11: Đơn vị đo góc. Độ", "YCCĐ": "Dùng thước đo góc để đo độ."},
-                {"Chủ đề": "3. Phép tính", "Bài học": "Bài 25: Phép chia cho số có hai chữ số", "YCCĐ": "Chia số nhiều chữ số cho 2 chữ số."}
+                {"Chủ đề": "1. Số tự nhiên", "Bài học": "Bài 6: Viết số tự nhiên hệ thập phân", "YCCĐ": "Giá trị theo vị trí."},
+                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 10: Góc nhọn, tù, bẹt", "YCCĐ": "Phân biệt các loại góc."},
+                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 11: Đơn vị đo góc. Độ", "YCCĐ": "Dùng thước đo góc."},
+                {"Chủ đề": "3. Phép tính", "Bài học": "Bài 25: Phép chia cho số có 2 chữ số", "YCCĐ": "Chia số nhiều chữ số."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "4. Phân số", "Bài học": "Bài 40: Rút gọn phân số", "YCCĐ": "Chia tử và mẫu cho cùng số."},
-                {"Chủ đề": "4. Phân số", "Bài học": "Bài 41: Quy đồng mẫu số các phân số", "YCCĐ": "Quy đồng mẫu số đơn giản."},
+                {"Chủ đề": "4. Phân số", "Bài học": "Bài 40: Rút gọn phân số", "YCCĐ": "Chia tử mẫu cho cùng số."},
+                {"Chủ đề": "4. Phân số", "Bài học": "Bài 41: Quy đồng mẫu số", "YCCĐ": "Quy đồng mẫu số đơn giản."},
                 {"Chủ đề": "5. Phép tính phân số", "Bài học": "Bài 55: Phép cộng phân số", "YCCĐ": "Cộng phân số khác mẫu."},
                 {"Chủ đề": "5. Phép tính phân số", "Bài học": "Bài 57: Phép nhân phân số", "YCCĐ": "Nhân tử với tử, mẫu với mẫu."},
-                {"Chủ đề": "6. Hình học", "Bài học": "Bài 60: Hình bình hành", "YCCĐ": "Nhận biết cạnh đối song song, bằng nhau."}
+                {"Chủ đề": "6. Hình học", "Bài học": "Bài 60: Hình bình hành", "YCCĐ": "Cạnh đối song song, bằng nhau."}
             ]
         },
         "Tiếng Việt": {
             "Học kỳ I": [
                 {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Đọc: Điều ước của vua Mi-đát (KNTT)", "YCCĐ": "Hạnh phúc từ điều giản dị."},
-                {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Đọc: Tiếng nói của cỏ cây (KNTT)", "YCCĐ": "Vẻ đẹp sống động của thiên nhiên."},
-                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Tuổi ngựa (CTST)", "YCCĐ": "Khát vọng đi xa, tình yêu mẹ."},
-                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Văn hay chữ tốt (Cánh Diều)", "YCCĐ": "Tinh thần khổ luyện của Cao Bá Quát."}
+                {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Đọc: Tiếng nói của cỏ cây (KNTT)", "YCCĐ": "Vẻ đẹp của thiên nhiên."},
+                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Tuổi ngựa (CTST)", "YCCĐ": "Khát vọng đi xa."},
+                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Văn hay chữ tốt (Cánh Diều)", "YCCĐ": "Tinh thần khổ luyện."}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Sầu riêng (KNTT)", "YCCĐ": "Miêu tả hương vị trái cây miền Nam."},
-                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Chợ Tết (CTST)", "YCCĐ": "Bức tranh chợ Tết vùng cao."},
-                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Đường đi Sa Pa (KNTT)", "YCCĐ": "Vẻ đẹp thiên nhiên Sa Pa."},
-                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Hơn một ngàn ngày vòng quanh trái đất (Cánh Diều)", "YCCĐ": "Hành trình thám hiểm của Ma-zen-lan."}
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Sầu riêng (KNTT)", "YCCĐ": "Hương vị trái cây miền Nam."},
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Chợ Tết (CTST)", "YCCĐ": "Bức tranh chợ Tết."},
+                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Đường đi Sa Pa (KNTT)", "YCCĐ": "Vẻ đẹp Sa Pa."},
+                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Hơn một ngàn ngày vòng quanh trái đất", "YCCĐ": "Hành trình Ma-zen-lan."}
             ]
         },
-        "Khoa học": { # KNTT
-            "Học kỳ I": [{"Chủ đề": "Nước", "Bài học": "Bài 3: Vòng tuần hoàn của nước", "YCCĐ": "Vẽ sơ đồ vòng tuần hoàn."}, {"Chủ đề": "Ánh sáng", "Bài học": "Bài 8: Ánh sáng và bóng tối", "YCCĐ": "Nguyên nhân tạo bóng tối."}],
-            "Học kỳ II": [{"Chủ đề": "Nấm", "Bài học": "Bài 18: Nấm và tác dụng của nấm", "YCCĐ": "Phân biệt nấm ăn/độc."}, {"Chủ đề": "Dinh dưỡng", "Bài học": "Bài 22: Các nhóm chất dinh dưỡng", "YCCĐ": "Vai trò 4 nhóm chất."}]
-        },
-        "Lịch sử và Địa lí": { # KNTT
-            "Học kỳ I": [{"Chủ đề": "Trung du Bắc Bộ", "Bài học": "Bài 3: Thiên nhiên vùng Trung du", "YCCĐ": "Địa hình đồi bát úp, khí hậu."}, {"Chủ đề": "Thăng Long", "Bài học": "Bài 8: Văn miếu - Quốc tử giám", "YCCĐ": "Kiến trúc trường ĐH đầu tiên."}],
-            "Học kỳ II": [{"Chủ đề": "Biển đảo", "Bài học": "Bài 15: Biển đảo Việt Nam", "YCCĐ": "Vị trí Hoàng Sa, Trường Sa."}, {"Chủ đề": "Tây Nguyên", "Bài học": "Bài 18: Thiên nhiên vùng Tây Nguyên", "YCCĐ": "Đất đỏ bazan, cao nguyên."}]
-        },
         "Công nghệ": {
-            "Học kỳ I": [{"Chủ đề": "Hoa cây cảnh", "Bài học": "Bài 2: Các loại hoa phổ biến", "YCCĐ": "Nhận biết hoa hồng, cúc, đào."}],
+            "Học kỳ I": [{"Chủ đề": "Hoa cây cảnh", "Bài học": "Bài 2: Các loại hoa phổ biến", "YCCĐ": "Nhận biết hoa hồng, cúc, đào."}, {"Chủ đề": "Hoa cây cảnh", "Bài học": "Bài 3: Các loại cây cảnh", "YCCĐ": "Nhận biết cây cảnh thông dụng."}],
             "Học kỳ II": [{"Chủ đề": "Lắp ghép", "Bài học": "Bài 6: Lắp ghép mô hình xe", "YCCĐ": "Lắp xe đẩy/nôi."}, {"Chủ đề": "Đồ chơi", "Bài học": "Bài 9: Làm chong chóng", "YCCĐ": "Làm chong chóng giấy."}]
         }
     },
@@ -237,6 +269,39 @@ CURRICULUM_DB = {
     # KHỐI LỚP 5
     # =================================================================================
     "Lớp 5": {
+        "Khoa học": { # KNTT - ĐẦY ĐỦ CÁC CHỦ ĐỀ
+            "Học kỳ I": [
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 1: Đất và bảo vệ đất (2 tiết)", "YCCĐ": "Thành phần của đất; biện pháp bảo vệ đất."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 3: Hỗn hợp và dung dịch (2 tiết)", "YCCĐ": "Phân biệt hỗn hợp, dung dịch; tách chất."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 5: Sự biến đổi hóa học (2 tiết)", "YCCĐ": "Phân biệt biến đổi lí học và hóa học."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 8: Năng lượng mặt trời (2 tiết)", "YCCĐ": "Vai trò chiếu sáng, sưởi ấm; ứng dụng pin mặt trời."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 9: Năng lượng chất đốt (2 tiết)", "YCCĐ": "Các loại chất đốt; sử dụng an toàn, tiết kiệm."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 10: Năng lượng gió và nước chảy (2 tiết)", "YCCĐ": "Ứng dụng chạy thuyền buồm, thủy điện."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 12: Sử dụng năng lượng điện (2 tiết)", "YCCĐ": "Mạch điện đơn giản; vật dẫn/cách điện; an toàn điện."},
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 16: Sự sinh sản của thực vật (2 tiết)", "YCCĐ": "Thụ phấn, thụ tinh; cơ quan sinh sản."},
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 19: Sự sinh sản của động vật (2 tiết)", "YCCĐ": "Đẻ trứng và đẻ con; vòng đời của côn trùng."},
+                {"Chủ đề": "4. Con người và sức khỏe", "Bài học": "Bài 22: Sự sinh sản ở người (2 tiết)", "YCCĐ": "Quá trình thụ tinh; sự phát triển của thai nhi."},
+                {"Chủ đề": "4. Con người và sức khỏe", "Bài học": "Bài 25: Chăm sóc sức khỏe tuổi dậy thì (2 tiết)", "YCCĐ": "Vệ sinh cá nhân; phòng tránh xâm hại."}
+            ]
+        },
+        "Lịch sử và Địa lí": { # KNTT - ĐẦY ĐỦ CÁC CHỦ ĐỀ
+            "Học kỳ I": [
+                {"Chủ đề": "1. Đất nước dựng xây", "Bài học": "Bài 1: Nước Văn Lang - Âu Lạc (2 tiết)", "YCCĐ": "Thời gian, địa điểm ra đời; đời sống vật chất/tinh thần."},
+                {"Chủ đề": "1. Đất nước dựng xây", "Bài học": "Bài 4: Nhà Nguyễn (2 tiết)", "YCCĐ": "Sự thành lập; đóng góp về văn hóa, giáo dục."},
+                {"Chủ đề": "2. Bảo vệ tổ quốc", "Bài học": "Bài 6: Khởi nghĩa Hai Bà Trưng (2 tiết)", "YCCĐ": "Nguyên nhân, diễn biến, ý nghĩa cuộc khởi nghĩa."},
+                {"Chủ đề": "2. Bảo vệ tổ quốc", "Bài học": "Bài 8: Phong trào chống Pháp (2 tiết)", "YCCĐ": "Trương Định, Nguyễn Trung Trực; phong trào Cần Vương."},
+                {"Chủ đề": "2. Bảo vệ tổ quốc", "Bài học": "Bài 10: Cách mạng tháng Tám 1945 (2 tiết)", "YCCĐ": "Sự kiện Bác Hồ đọc Tuyên ngôn Độc lập."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "2. Bảo vệ tổ quốc", "Bài học": "Bài 12: Chiến dịch Điện Biên Phủ (3 tiết)", "YCCĐ": "Diễn biến 56 ngày đêm; ý nghĩa lịch sử."},
+                {"Chủ đề": "2. Bảo vệ tổ quốc", "Bài học": "Bài 14: Chiến dịch Hồ Chí Minh (2 tiết)", "YCCĐ": "Giải phóng miền Nam; thống nhất đất nước."},
+                {"Chủ đề": "3. Thế giới", "Bài học": "Bài 18: Các châu lục và đại dương (2 tiết)", "YCCĐ": "Vị trí 6 châu lục, 4 đại dương; đặc điểm nổi bật."},
+                {"Chủ đề": "3. Thế giới", "Bài học": "Bài 19: Châu Á (2 tiết)", "YCCĐ": "Vị trí, diện tích, khí hậu, dân cư Châu Á."},
+                {"Chủ đề": "3. Thế giới", "Bài học": "Bài 21: Các nước láng giềng (2 tiết)", "YCCĐ": "Lào, Campuchia, Trung Quốc (thủ đô, địa hình)."}
+            ]
+        },
         "Tin học": { # Sách: Cùng Khám Phá (NXB ĐH Huế)
             "Học kỳ I": [
                 {"Chủ đề": "A. Máy tính và em", "Bài học": "Bài 1: Cây thư mục (1 tiết)", "YCCĐ": "Cấu trúc cây; tạo, đổi tên, xóa thư mục."},
@@ -278,14 +343,6 @@ CURRICULUM_DB = {
                 {"Chủ đề": "Người công dân", "Bài học": "Đọc: Thái sư Trần Thủ Độ (Cánh Diều)", "YCCĐ": "Tấm gương chí công vô tư."},
                 {"Chủ đề": "Đất nước đổi mới", "Bài học": "Đọc: Trí dũng song toàn (CTST)", "YCCĐ": "Giang Văn Minh bảo vệ danh dự đất nước."}
             ]
-        },
-        "Khoa học": { # KNTT
-            "Học kỳ I": [{"Chủ đề": "Biến đổi chất", "Bài học": "Bài 5: Sự biến đổi hóa học", "YCCĐ": "Phân biệt biến đổi lí/hóa."}, {"Chủ đề": "Năng lượng", "Bài học": "Bài 10: Năng lượng mặt trời", "YCCĐ": "Vai trò, ứng dụng NL mặt trời."}],
-            "Học kỳ II": [{"Chủ đề": "Năng lượng", "Bài học": "Bài 12: Sử dụng năng lượng điện", "YCCĐ": "An toàn, tiết kiệm điện."}, {"Chủ đề": "Sinh sản", "Bài học": "Bài 18: Sự sinh sản thực vật có hoa", "YCCĐ": "Cơ quan sinh sản; hoa đơn/lưỡng tính."}]
-        },
-        "Lịch sử và Địa lí": { # KNTT
-            "Học kỳ I": [{"Chủ đề": "Dựng nước", "Bài học": "Bài 4: Nhà Nguyễn", "YCCĐ": "Đóng góp, hạn chế nhà Nguyễn."}, {"Chủ đề": "Giữ nước", "Bài học": "Bài 8: Phong trào chống Pháp cuối TK 19", "YCCĐ": "Cần Vương; Phan Đình Phùng."}],
-            "Học kỳ II": [{"Chủ đề": "Thế giới", "Bài học": "Bài 18: Các châu lục và đại dương", "YCCĐ": "Vị trí 6 châu, 4 đại dương."}, {"Chủ đề": "Châu Á", "Bài học": "Bài 19: Châu Á", "YCCĐ": "Đặc điểm tự nhiên, dân cư Châu Á."}]
         },
         "Công nghệ": {
             "Học kỳ I": [{"Chủ đề": "Sáng chế", "Bài học": "Bài 3: Tìm hiểu về thiết kế", "YCCĐ": "Ý tưởng thiết kế."}, {"Chủ đề": "Sáng chế", "Bài học": "Bài 4: Thiết kế sản phẩm đơn giản", "YCCĐ": "Thiết kế đồ dùng học tập."}],
