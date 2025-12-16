@@ -10,12 +10,30 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. CSS GIAO DIỆN ---
+# --- 2. CSS GIAO DIỆN (Đã thêm CSS cho Footer) ---
 st.markdown("""
 <style>
     .main-title { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;}
     .question-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #1565C0; margin-bottom: 10px; }
     div.stButton > button:first-child { border-radius: 5px; }
+    
+    /* CSS cho Footer */
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        color: #333;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+        border-top: 1px solid #ddd;
+        z-index: 100;
+    }
+    .content-container {
+        padding-bottom: 60px; /* Tạo khoảng trống để không bị footer che */
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -199,10 +217,10 @@ CURRICULUM_DB = {
         },
         "Công nghệ": { # KNTT
             "Học kỳ I": [
-                {"Chủ đề": "Thủ công Kĩ thuật", "Bài học": "Bài 1-3: Vật liệu và Dụng cụ, Cắt khâu đơn giản", "YCCĐ": "Nhận biết các vật liệu cơ bản. Thực hiện các thao tác đo, cắt, khâu cơ bản để làm một sản phẩm thủ công."},
+                {"Chủ đề": "Kĩ thuật", "Bài học": "Bài 1-3: Vật liệu và Dụng cụ, Cắt khâu đơn giản", "YCCĐ": "Nhận biết các vật liệu cơ bản. Thực hiện các thao tác đo, cắt, khâu cơ bản để làm một sản phẩm thủ công."},
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Công nghệ Gia đình", "Bài học": "Bài 7-9: Công việc trong gia đình, Chăm sóc cây trồng", "YCCĐ": "Nêu được tầm quan trọng của việc nhà. Biết cách chăm sóc một số loại cây cảnh, rau củ thông thường."},
+                {"Chủ đề": "Gia đình", "Bài học": "Bài 7-9: Công việc trong gia đình, Chăm sóc cây trồng", "YCCĐ": "Nêu được tầm quan trọng của việc nhà. Biết cách chăm sóc một số loại cây cảnh, rau củ thông thường."},
             ]
         }
     },
@@ -346,6 +364,7 @@ if "temp_question_data" not in st.session_state:
 
 # --- 6. GIAO DIỆN CHÍNH ---
 
+st.markdown("<div class='content-container'>", unsafe_allow_html=True) # Wrapper cho nội dung chính
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
 
 # SIDEBAR API
@@ -401,7 +420,6 @@ with col_a:
     lessons_in_term = raw_data[selected_term]
     unique_topics = list(set([l['Chủ đề'] for l in lessons_in_term]))
     
-    # FIX: Handle empty topics
     if not unique_topics:
         st.warning("Chưa có chủ đề cho học kỳ này.")
         st.stop()
@@ -418,7 +436,6 @@ with col_b:
     lesson_options = {f"{l['Bài học']}": l for l in filtered_lessons}
     selected_lesson_name = st.selectbox("Chọn Bài học (có số tiết):", list(lesson_options.keys()))
     
-    # FIX: Defensive check for KeyError
     if selected_lesson_name not in lesson_options:
         st.stop()
         
@@ -447,7 +464,6 @@ if btn_preview:
                 current_lesson_data, q_type, level, points
             )
             st.session_state.current_preview = preview_content
-            # Lưu cả chủ đề (topic) để xuất ma trận
             st.session_state.temp_question_data = {
                 "topic": selected_topic,
                 "lesson": selected_lesson_name,
@@ -498,19 +514,17 @@ if len(st.session_state.exam_list) > 0:
         st.session_state.exam_list.pop()
         st.rerun()
 
-    # 3.2. Xây dựng nội dung file tải về (Ma trận + Đề thi)
+    # 3.2. Xây dựng nội dung file tải về
     
-    # --- PHẦN 1: TẠO BẢNG ĐẶC TẢ MA TRẬN (TEXT) ---
+    # --- PHẦN 1: TẠO BẢNG ĐẶC TẢ MA TRẬN ---
     matrix_text = f"BẢNG ĐẶC TẢ MA TRẬN ĐỀ THI {selected_subject.upper()} - {selected_grade.upper()}\n"
     matrix_text += "="*80 + "\n"
     matrix_text += f"{'STT':<5} | {'Chủ đề':<20} | {'Bài học':<30} | {'Dạng':<15} | {'Mức độ':<15} | {'Điểm':<5}\n"
     matrix_text += "-"*80 + "\n"
     
     for idx, item in enumerate(st.session_state.exam_list):
-        # Cắt ngắn text để hiển thị đẹp trong bảng text
         topic_short = (item['topic'][:18] + '..') if len(item['topic']) > 18 else item['topic']
         lesson_short = (item['lesson'][:28] + '..') if len(item['lesson']) > 28 else item['lesson']
-        
         row_str = f"{idx+1:<5} | {topic_short:<20} | {lesson_short:<30} | {item['type']:<15} | {item['level']:<15} | {item['points']:<5}\n"
         matrix_text += row_str
     
@@ -527,15 +541,11 @@ if len(st.session_state.exam_list) > 0:
     
     for idx, q in enumerate(st.session_state.exam_list):
         exam_text += f"Câu {idx+1} ({q['points']} điểm): \n"
-        # Chỉ lấy phần nội dung câu hỏi (bỏ phần đáp án để in cho HS nếu cần xử lý kỹ hơn, 
-        # nhưng ở đây AI trả về cả đáp án nên ta in hết để GV cắt dán)
         exam_text += f"{q['content']}\n"
         exam_text += "\n" + "."*50 + "\n\n"
 
-    # Gộp 2 phần
     final_output_file = matrix_text + exam_text
 
-    # Nút tải xuống
     st.download_button(
         label="📥 Tải xuống (Đề thi + Bảng đặc tả)",
         data=final_output_file,
@@ -546,3 +556,17 @@ if len(st.session_state.exam_list) > 0:
 
 else:
     st.info("Chưa có câu hỏi nào. Hãy soạn và thêm câu hỏi ở trên.")
+
+st.markdown("</div>", unsafe_allow_html=True) # Đóng content container
+
+# --- FOOTER (Được thêm vào cuối cùng) ---
+st.markdown("""
+<div class="footer">
+    <p style="margin: 0; font-weight: bold; color: #2c3e50;">
+        🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN
+    </p>
+    <p style="margin: 0; font-size: 12px; color: #666;">
+        Hệ thống hỗ trợ chuyên môn & Đổi mới kiểm tra đánh giá
+    </p>
+</div>
+""", unsafe_allow_html=True)
