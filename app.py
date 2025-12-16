@@ -21,9 +21,7 @@ st.markdown("""
     .block-container {max-width: 95% !important;}
     .footer {position: fixed; left: 0; bottom: 0; width: 100%; background-color: #f1f1f1; color: #333; text-align: center; padding: 10px; border-top: 1px solid #ccc; z-index: 100;}
     .upload-area {border: 2px dashed #4CAF50; padding: 20px; border-radius: 10px; background-color: #f9fbe7; text-align: center;}
-    .process-box {border: 1px solid #ddd; padding: 20px; border-radius: 8px; background-color: #f8f9fa;}
-    .status-ok {color: #2e7d32; font-weight: bold;}
-    .status-def {color: #1565c0; font-weight: bold;}
+    .process-box {border: 1px solid #ddd; padding: 15px; border-radius: 5px; background-color: #f0f2f6;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -186,7 +184,6 @@ def call_ai_generate(api_key, info, lessons, uploaded_ref):
     - BẮT BUỘC ngăn cách giữa ĐỀ và ĐÁP ÁN bằng dòng chữ duy nhất: ###TACH_DAP_AN###
     """
     
-    # --- LOGIC RETRY MẠNH MẼ HƠN CHO LỖI 429 ---
     max_retries = 3
     for attempt in range(max_retries):
         try:
@@ -199,14 +196,13 @@ def call_ai_generate(api_key, info, lessons, uploaded_ref):
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg:
-                # Tăng thời gian chờ lên 60s để đảm bảo reset quota
-                wait_time = 60
+                wait_time = 30
                 if attempt < max_retries - 1:
-                    st.toast(f"⚠️ Quá tải (429). Đang chờ {wait_time}s để thử lại... (Lần {attempt+1}/{max_retries})", icon="⏳")
+                    st.toast(f"⚠️ Hệ thống đang bận (Lỗi 429). Đang tự động chờ {wait_time}s để thử lại...", icon="⏳")
                     time.sleep(wait_time)
                     continue
                 else:
-                    return None, "Hệ thống Google đang quá tải (Lỗi 429). Vui lòng thử lại sau 2-3 phút."
+                    return None, f"Hệ thống quá tải sau {max_retries} lần thử. Vui lòng thử lại sau 1 phút."
             else:
                 return None, f"Lỗi gọi AI ({model_name}): {error_msg}"
 
@@ -273,13 +269,13 @@ elif st.session_state.step == 'config':
     subj = st.session_state.selected_subject
     c2.markdown(f"### 🚩 {grade} - {subj}")
     
-    # Chia cột: Cột Trái (Status) - Cột Phải (Upload)
+    # Định nghĩa layout: Cột Trái (Phân tích) - Cột Phải (Upload)
     col_left, col_right = st.columns([1, 1.2])
     
     current_data = DATA_DB.get(subj, {}).get(grade, {})
     ref_content = ""
 
-    # --- 1. XỬ LÝ UPLOAD TRƯỚC (ĐỂ CÓ DỮ LIỆU HIỂN THỊ TRẠNG THÁI) ---
+    # --- XỬ LÝ CỘT PHẢI TRƯỚC (UPLOAD) ĐỂ LẤY THÔNG TIN FILE ---
     with col_right:
         st.info("📂 B. Tải lên Ma trận / Đặc tả (Tùy chọn)")
         st.markdown('<div class="upload-area">', unsafe_allow_html=True)
@@ -294,50 +290,50 @@ elif st.session_state.step == 'config':
                 with st.expander("Xem nội dung file"):
                     st.text(ref_content[:500] + "...")
 
-    # --- 2. HIỂN THỊ TRẠNG THÁI (THAY THẾ JSON PREVIEW) ---
+    # --- XỬ LÝ CỘT TRÁI (HIỂN THỊ PHÂN TÍCH YÊU CẦU) ---
     with col_left:
-        st.info("📊 A. Trạng thái & Cấu trúc đề")
-        st.markdown('<div class="process-box">', unsafe_allow_html=True)
+        st.info("📊 A. Trạng thái & Phân tích cấu trúc")
         
-        # Hiển thị chế độ dựa trên việc có file upload hay không
-        if ref_content:
-            st.markdown(f"**📑 Chế độ:** <span class='status-ok'>THEO MA TRẬN TẢI LÊN</span>", unsafe_allow_html=True)
-            st.write(f"📄 **Nguồn:** `{uploaded_file.name}`")
-            st.write("🤖 AI sẽ phân tích file này để xác định:")
-            st.write("- Số lượng câu hỏi & Điểm số.")
-            st.write("- Mức độ (Biết/Hiểu/Vận dụng).")
-        else:
-            st.markdown(f"**📑 Chế độ:** <span class='status-def'>MẶC ĐỊNH (TT27)</span>", unsafe_allow_html=True)
-            st.write("🤖 AI tự động thiết lập cấu trúc:")
-            st.write("- **Phần 1:** Trắc nghiệm (Nối, Điền khuyết, Đúng/Sai).")
-            st.write("- **Phần 2:** Tự luận.")
-            st.write("- **Đảm bảo:** Phù hợp chuẩn kiến thức GDPT 2018.")
+        # Container hiển thị trạng thái hiện tại của đề thi
+        status_box = st.container()
+        
+        with status_box:
+            st.markdown('<div class="process-box">', unsafe_allow_html=True)
+            if ref_content:
+                st.markdown(f"**📑 Chế độ:** <span style='color:green'>Theo Ma trận đặc tả tải lên</span>", unsafe_allow_html=True)
+                st.write(f"- Nguồn: `{uploaded_file.name}`")
+                st.write("- AI sẽ phân tích số lượng câu hỏi, mức độ nhận thức (Biết/Hiểu/Vận dụng) từ file này.")
+            else:
+                st.markdown(f"**📑 Chế độ:** <span style='color:blue'>Mặc định (Thông tư 27)</span>", unsafe_allow_html=True)
+                st.write("- Cấu trúc: Trắc nghiệm & Tự luận.")
+                st.write("- Mức độ: Hoàn thành tốt, Hoàn thành, Chưa hoàn thành.")
+                st.write("- Tỉ lệ điểm: Phù hợp đặc thù môn học.")
             
-        st.divider()
-        st.markdown(f"**📚 Dữ liệu:** Chương trình {grade} - {subj}")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.divider()
+            st.markdown(f"**📚 Dữ liệu nguồn:** Chương trình {grade} - {subj}")
+            st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
     
-    # --- 3. NÚT BẤM & HIỆU ỨNG STEP-BY-STEP ---
+    # --- NÚT BẤM VÀ HIỆU ỨNG QUÁ TRÌNH ---
     if st.button("🚀 SOẠN ĐỀ THI (XEM TRƯỚC)", type="primary", use_container_width=True):
         if not api_key:
             st.error("Vui lòng nhập Google API Key ở cột bên trái!")
         else:
-            # Dùng st.status để hiển thị từng bước
+            # Sử dụng st.status để hiển thị quá trình từng bước
             with st.status("🤖 AI đang làm việc...", expanded=True) as status:
                 st.write("1️⃣ Đang đọc dữ liệu chương trình học và sách giáo khoa...")
-                time.sleep(1) # Delay nhỏ để tạo hiệu ứng
+                time.sleep(1) # Delay giả lập để người dùng kịp đọc
                 
                 if ref_content:
-                    st.write("2️⃣ Đang phân tích file Ma trận / Đặc tả kỹ thuật tải lên...")
+                    st.write("2️⃣ Đang phân tích Ma trận / Đặc tả kỹ thuật từ file tải lên...")
                 else:
                     st.write("2️⃣ Đang thiết lập cấu trúc đề chuẩn Thông tư 27...")
                 time.sleep(1)
                 
-                st.write("3️⃣ Đang soạn thảo câu hỏi và đáp án (Quá trình này mất khoảng 30s - 60s)...")
+                st.write("3️⃣ Đang soạn thảo câu hỏi và đáp án (Vui lòng chờ 30s - 1 phút)...")
                 
-                # Gọi AI
+                # Gọi AI thực sự
                 info = {"subj": subj, "grade": grade, "book": "Tổng hợp"}
                 data_context = json.dumps(current_data, ensure_ascii=False) if isinstance(current_data, dict) else str(current_data)
                 
