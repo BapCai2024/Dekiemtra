@@ -107,7 +107,9 @@ def create_docx_final(school, exam, info, body, key):
     doc.add_paragraph()
     p_title = doc.add_paragraph(); p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_title.add_run(f"{exam.upper()}").bold = True; p_title.font.size = Pt(14)
-    doc.add_paragraph(f"Môn: {info['subj']} - Lớp: {info['grade']} ({info['book']})").alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # Sửa lại hiển thị info vì giờ info không còn chứa tên bộ sách cụ thể nếu lấy tất cả
+    book_display = info.get('book', 'Tổng hợp')
+    doc.add_paragraph(f"Môn: {info['subj']} - Lớp: {info['grade']} ({book_display})").alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f"Thời gian làm bài: 40 phút").alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph()
 
@@ -134,15 +136,14 @@ def create_docx_final(school, exam, info, body, key):
 def call_ai_generate(api_key, info, lessons, uploaded_ref):
     genai.configure(api_key=api_key)
     
-    # --- SỬA LỖI TẠI ĐÂY ---
-    # Sử dụng tên model an toàn hơn (có suffix -latest hoặc -001/-002)
-    # Nếu vẫn lỗi, hãy dùng chức năng "Kiểm tra Model" ở sidebar để lấy tên đúng
+    # Sử dụng tên model ổn định
     model_name = 'gemini-1.5-flash-latest' 
     
     try:
         model = genai.GenerativeModel(model_name)
         
-        lesson_text = "\n".join([f"- {l}" for l in lessons])
+        # lessons bây giờ có thể là một chuỗi JSON lớn
+        lesson_text = str(lessons)
         
         ref_instruction = ""
         if uploaded_ref:
@@ -162,13 +163,14 @@ def call_ai_generate(api_key, info, lessons, uploaded_ref):
             """
 
         prompt = f"""
-        Bạn là chuyên gia giáo dục tiểu học. Hãy soạn ĐỀ KIỂM TRA ĐỊNH KỲ môn {info['subj']} Lớp {info['grade']} - Bộ sách {info['book']}.
+        Bạn là chuyên gia giáo dục tiểu học. Hãy soạn ĐỀ KIỂM TRA ĐỊNH KỲ môn {info['subj']} Lớp {info['grade']}.
         
-        1. PHẠM VI KIẾN THỨC (BÀI HỌC ĐÃ CHỌN):
-        {lesson_text}
+        1. NGUỒN DỮ LIỆU THAM KHẢO (CHƯƠNG TRÌNH HỌC/BỘ SÁCH):
+        Dưới đây là dữ liệu chương trình học dạng JSON. Hãy chọn lọc các kiến thức phù hợp trong này để ra đề:
+        {lesson_text[:30000]} 
         
         2. YÊU CẦU CHUYÊN MÔN:
-        - Hãy sử dụng kiến thức chuẩn của Chương trình GDPT 2018 liên quan đến các bài học trên.
+        - Hãy sử dụng kiến thức chuẩn của Chương trình GDPT 2018.
         - Ngôn ngữ trong sáng, phù hợp lứa tuổi học sinh tiểu học.
         
         {ref_instruction}
@@ -185,7 +187,6 @@ def call_ai_generate(api_key, info, lessons, uploaded_ref):
         return text, "Không tìm thấy dấu tách. AI trả về toàn bộ nội dung."
         
     except Exception as e:
-        # Trả về thông báo lỗi chi tiết hơn
         return None, f"Lỗi gọi AI ({model_name}): {str(e)}. Hãy thử Kiểm tra Model ở menu bên trái."
 
 # ==========================================
@@ -203,7 +204,6 @@ with st.sidebar:
     api_key = st.text_input("Google API Key:", type="password")
     st.info("Nhập API Key để AI hoạt động.")
     
-    # --- TÍNH NĂNG MỚI: KIỂM TRA MODEL ---
     if api_key:
         if st.button("Kiểm tra Model khả dụng"):
             try:
@@ -213,7 +213,6 @@ with st.sidebar:
                 st.code("\n".join(models), language="text")
             except Exception as e:
                 st.error(f"Lỗi API Key: {e}")
-    # -------------------------------------
 
     st.divider()
     school_name = st.text_input("Trường:", "TH PTDTBT GIÀNG CHU PHÌN")
@@ -255,37 +254,30 @@ elif st.session_state.step == 'config':
     
     col_left, col_right = st.columns([1, 1.2])
     
-    # CỘT TRÁI: CHỌN NỘI DUNG TỪ DATA
+    # ---------------------------------------------------------
+    # THAY ĐỔI: HIỂN THỊ DỮ LIỆU THAY VÌ CHỌN BÀI HỌC
+    # ---------------------------------------------------------
+    
+    # Lấy dữ liệu của Khối/Môn hiện tại
+    current_data = DATA_DB.get(subj, {}).get(grade, {})
+
+    # CỘT TRÁI: HIỂN THỊ DỮ LIỆU NGUỒN
     with col_left:
-        st.info("📚 A. Chọn Nội dung / Bài học (Từ dữ liệu chuẩn)")
-        db_grade = DATA_DB.get(subj, {}).get(grade, {})
-        
-        if not db_grade:
-            st.warning("Đang tải dữ liệu bộ sách...")
-            books = ["Kết nối tri thức với cuộc sống", "Chân trời sáng tạo", "Cánh Diều"]
+        st.info("📚 A. Dữ liệu chương trình (Xem trước)")
+        if not current_data:
+            st.warning("Chưa có dữ liệu chi tiết cho môn này trong hệ thống. AI sẽ tự động ra đề dựa trên kiến thức chung.")
+            # Tạo dữ liệu giả lập để không bị lỗi
+            current_data = f"Kiến thức chuẩn môn {subj} lớp {grade}"
         else:
-            books = list(db_grade.keys())
+            st.markdown("Dưới đây là các nội dung/bộ sách có trong hệ thống:")
+            # Hiển thị JSON để người dùng xem cấu trúc
+            st.json(current_data, expanded=False)
             
-        sel_book = st.selectbox("Bộ sách:", books)
-        
-        topics = []
-        if db_grade and sel_book in db_grade:
-            topics = list(db_grade[sel_book].keys())
-        
-        sel_topic = st.selectbox("Chủ đề:", topics) if topics else None
-        
-        lesson_opts = []
-        if sel_topic:
-            raw_lessons = db_grade[sel_book][sel_topic]
-            lesson_opts = [f"{l['topic']} ({l['periods']} tiết)" for l in raw_lessons]
-            
-        sel_lessons = st.multiselect("Chọn các bài học cần kiểm tra:", lesson_opts, default=lesson_opts)
-        
     # CỘT PHẢI: UPLOAD FILE ĐẶC TẢ
     with col_right:
         st.info("📂 B. Tải lên Ma trận / Đặc tả (Tùy chọn)")
         st.markdown('<div class="upload-area">', unsafe_allow_html=True)
-        st.write("Tải file PDF, Word, hoặc Excel chứa Ma trận đặc tả đề thi. AI sẽ đọc file này để ra đề đúng cấu trúc bạn muốn.")
+        st.write("Tải file PDF, Word, hoặc Excel chứa Ma trận đặc tả đề thi.")
         uploaded_file = st.file_uploader("Chọn file...", type=['pdf', 'docx', 'xlsx'])
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -299,49 +291,4 @@ elif st.session_state.step == 'config':
 
     st.markdown("---")
     if st.button("🚀 SOẠN ĐỀ THI (XEM TRƯỚC)", type="primary", use_container_width=True):
-        if not api_key:
-            st.error("Vui lòng nhập Google API Key ở cột bên trái!")
-        elif not sel_lessons:
-            st.warning("Vui lòng chọn ít nhất 1 bài học!")
-        else:
-            with st.spinner(f"AI đang kết hợp dữ liệu bài học và file đặc tả để soạn đề..."):
-                info = {"subj": subj, "grade": grade, "book": sel_book}
-                body, key = call_ai_generate(api_key, info, sel_lessons, ref_content)
-                
-                if body:
-                    st.session_state.preview_body = body
-                    st.session_state.preview_key = key
-                    st.session_state.info = info
-                    st.session_state.step = 'preview'
-                    st.rerun()
-                else:
-                    st.error(key)
-
-# --- PREVIEW ---
-elif st.session_state.step == 'preview':
-    c1, c2 = st.columns([1, 5])
-    if c1.button("⬅️ Chỉnh sửa yêu cầu", on_click=lambda: st.session_state.update(step='config')): pass
-    
-    c2.markdown("### 👁️ XEM TRƯỚC VÀ CHỈNH SỬA")
-    
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        st.markdown("**Nội dung Đề thi:**")
-        new_body = st.text_area("Body", value=st.session_state.preview_body, height=600, label_visibility="collapsed")
-    with col_p2:
-        st.markdown("**Đáp án & Hướng dẫn chấm:**")
-        new_key = st.text_area("Key", value=st.session_state.preview_key, height=600, label_visibility="collapsed")
-        
-    st.markdown("---")
-    if st.button("💾 TẢI FILE WORD (.DOCX)", type="primary", use_container_width=True):
-        f = create_docx_final(school_name, exam_name, st.session_state.info, new_body, new_key)
-        st.download_button(
-            label="📥 Click để tải về máy",
-            data=f,
-            file_name=f"De_{st.session_state.info['subj']}_{st.session_state.info['grade']}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
-
-# Footer
-st.markdown('<div style="margin-bottom: 60px;"></div>', unsafe_allow_html=True)
-st.markdown('<div class="footer">© 2025 - Trần Ngọc Hải - Trường PTDTBT Tiểu học Giàng Chu Phìn - ĐT: 0944 134 973</div>', unsafe_allow_html=True)
+        if
