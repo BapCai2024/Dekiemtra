@@ -107,7 +107,7 @@ def create_docx_final(school, exam, info, body, key):
     doc.add_paragraph()
     p_title = doc.add_paragraph(); p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_title.add_run(f"{exam.upper()}").bold = True; p_title.font.size = Pt(14)
-    # Sửa lại hiển thị info vì giờ info không còn chứa tên bộ sách cụ thể nếu lấy tất cả
+    
     book_display = info.get('book', 'Tổng hợp')
     doc.add_paragraph(f"Môn: {info['subj']} - Lớp: {info['grade']} ({book_display})").alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph(f"Thời gian làm bài: 40 phút").alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -133,16 +133,41 @@ def create_docx_final(school, exam, info, body, key):
     bio.seek(0)
     return bio
 
+def get_best_available_model():
+    """Hàm tự động tìm model tốt nhất hiện có trong API Key"""
+    try:
+        # Lấy danh sách model hỗ trợ generateContent
+        models = [m for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        
+        # Ưu tiên tìm Flash hoặc Pro mới nhất
+        for m in models:
+            if 'flash' in m.name.lower() and '1.5' in m.name: return m.name # Ưu tiên 1.5 Flash
+        
+        for m in models:
+            if 'flash' in m.name.lower(): return m.name # Các bản Flash khác
+            
+        for m in models:
+            if 'pro' in m.name.lower() and '1.5' in m.name: return m.name # Ưu tiên 1.5 Pro
+            
+        # Nếu không tìm thấy ưu tiên, lấy cái đầu tiên tìm được
+        if models:
+            return models[0].name
+            
+        return 'gemini-1.5-flash' # Fallback cứng nếu không list được
+    except:
+        return 'gemini-1.5-flash' # Fallback mặc định
+
 def call_ai_generate(api_key, info, lessons, uploaded_ref):
     genai.configure(api_key=api_key)
     
-    # Sử dụng tên model ổn định
-    model_name = 'gemini-1.5-flash-latest' 
+    # --- TỰ ĐỘNG CHỌN MODEL ---
+    # Thay vì fix cứng tên, ta tìm model khả dụng
+    model_name = get_best_available_model()
+    # --------------------------
     
     try:
         model = genai.GenerativeModel(model_name)
         
-        # lessons bây giờ có thể là một chuỗi JSON lớn
         lesson_text = str(lessons)
         
         ref_instruction = ""
@@ -187,7 +212,7 @@ def call_ai_generate(api_key, info, lessons, uploaded_ref):
         return text, "Không tìm thấy dấu tách. AI trả về toàn bộ nội dung."
         
     except Exception as e:
-        return None, f"Lỗi gọi AI ({model_name}): {str(e)}. Hãy thử Kiểm tra Model ở menu bên trái."
+        return None, f"Lỗi gọi AI (Model: {model_name}): {str(e)}. Hãy kiểm tra lại API Key hoặc quyền truy cập."
 
 # ==========================================
 # 3. GIAO DIỆN CHÍNH
@@ -254,10 +279,6 @@ elif st.session_state.step == 'config':
     
     col_left, col_right = st.columns([1, 1.2])
     
-    # ---------------------------------------------------------
-    # THAY ĐỔI: HIỂN THỊ DỮ LIỆU THAY VÌ CHỌN BÀI HỌC
-    # ---------------------------------------------------------
-    
     # Lấy dữ liệu của Khối/Môn hiện tại
     current_data = DATA_DB.get(subj, {}).get(grade, {})
 
@@ -265,12 +286,10 @@ elif st.session_state.step == 'config':
     with col_left:
         st.info("📚 A. Dữ liệu chương trình (Xem trước)")
         if not current_data:
-            st.warning("Chưa có dữ liệu chi tiết cho môn này trong hệ thống. AI sẽ tự động ra đề dựa trên kiến thức chung.")
-            # Tạo dữ liệu giả lập để không bị lỗi
+            st.warning("Chưa có dữ liệu chi tiết cho môn này. AI sẽ tự động ra đề dựa trên kiến thức chung.")
             current_data = f"Kiến thức chuẩn môn {subj} lớp {grade}"
         else:
-            st.markdown("Dưới đây là các nội dung/bộ sách có trong hệ thống:")
-            # Hiển thị JSON để người dùng xem cấu trúc
+            st.markdown("Dưới đây là các nội dung có trong hệ thống:")
             st.json(current_data, expanded=False)
             
     # CỘT PHẢI: UPLOAD FILE ĐẶC TẢ
@@ -290,15 +309,13 @@ elif st.session_state.step == 'config':
                     st.text(ref_content[:500] + "...")
 
     st.markdown("---")
+    
     if st.button("🚀 SOẠN ĐỀ THI (XEM TRƯỚC)", type="primary", use_container_width=True):
         if not api_key:
             st.error("Vui lòng nhập Google API Key ở cột bên trái!")
         else:
             with st.spinner(f"AI đang phân tích dữ liệu và file đặc tả để soạn đề..."):
-                # Gửi toàn bộ dữ liệu JSON vào làm context cho AI
                 info = {"subj": subj, "grade": grade, "book": "Tổng hợp"}
-                
-                # Chuyển đổi dữ liệu JSON thành chuỗi để gửi cho AI
                 data_context = json.dumps(current_data, ensure_ascii=False) if isinstance(current_data, dict) else str(current_data)
                 
                 body, key = call_ai_generate(api_key, info, data_context, ref_content)
