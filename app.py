@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import requests # Dùng requests để kiểm soát hoàn toàn kết nối
+import requests
 import json
 import time
 from io import BytesIO
@@ -16,11 +16,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-title { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;}
-    .grade-1 { background-color: #FFCDD2; padding: 5px; border-radius: 5px; color: #B71C1C; font-weight: bold; text-align: center;}
-    .grade-2 { background-color: #FFE0B2; padding: 5px; border-radius: 5px; color: #E65100; font-weight: bold; text-align: center;}
-    .grade-3 { background-color: #FFF9C4; padding: 5px; border-radius: 5px; color: #F57F17; font-weight: bold; text-align: center;}
-    .grade-4 { background-color: #C8E6C9; padding: 5px; border-radius: 5px; color: #1B5E20; font-weight: bold; text-align: center;}
-    .grade-5 { background-color: #B3E5FC; padding: 5px; border-radius: 5px; color: #01579B; font-weight: bold; text-align: center;}
+    .grade-box { padding: 5px; border-radius: 5px; font-weight: bold; text-align: center; color: white;}
     .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #f8f9fa; text-align: center; padding: 10px; border-top: 1px solid #ddd; z-index: 99;}
     footer {visibility: hidden;}
 </style>
@@ -34,7 +30,6 @@ SUBJECTS_DB = {
     "Lớp 4": [("Tiếng Việt", "📖"), ("Toán", "✖️"), ("Tiếng Anh", "🇬🇧"), ("Lịch sử & Địa lí", "🌏"), ("Khoa học", "🔬"), ("Tin học", "💻"), ("Công nghệ", "🛠️")],
     "Lớp 5": [("Tiếng Việt", "📖"), ("Toán", "✖️"), ("Tiếng Anh", "🇬🇧"), ("Lịch sử & Địa lí", "🌏"), ("Khoa học", "🔬"), ("Tin học", "💻"), ("Công nghệ", "🛠️")]
 }
-GRADE_COLORS = {"Lớp 1": "grade-1", "Lớp 2": "grade-2", "Lớp 3": "grade-3", "Lớp 4": "grade-4", "Lớp 5": "grade-5"}
 
 # --- HÀM 1: ĐỌC FILE UPLOAD ---
 def read_file_content(uploaded_file):
@@ -43,7 +38,7 @@ def read_file_content(uploaded_file):
         if uploaded_file.name.endswith('.pdf'):
             import PyPDF2
             reader = PyPDF2.PdfReader(uploaded_file)
-            return "\n".join([page.extract_text() for page in reader.pages])
+            return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
         elif uploaded_file.name.endswith(('.docx', '.doc')):
             import docx
             doc = docx.Document(uploaded_file)
@@ -55,81 +50,88 @@ def read_file_content(uploaded_file):
         return f"Lỗi đọc file: {e}"
     return ""
 
-# --- HÀM 2: TỰ ĐỘNG TÌM MODEL HỢP LỆ (KHẮC PHỤC LỖI 404) ---
+# --- HÀM 2: TỰ ĐỘNG TÌM MODEL ---
 def find_working_model(api_key):
-    # API để lấy danh sách các model
     list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
         response = requests.get(list_url)
         if response.status_code == 200:
             models = response.json().get('models', [])
-            # Lọc ra các model có khả năng tạo nội dung (generateContent)
             chat_models = [m['name'] for m in models if 'generateContent' in m.get('supportedGenerationMethods', [])]
-            
-            # Ưu tiên các model xịn theo thứ tự
             preferred = ['models/gemini-1.5-pro', 'models/gemini-1.5-flash', 'models/gemini-pro', 'models/gemini-1.0-pro']
-            
-            # Tìm xem có model ưu tiên nào trong danh sách không
             for p in preferred:
-                # Tìm tương đối (vì google hay thêm version phía sau)
                 for real_model in chat_models:
-                    if p in real_model:
-                        return real_model
-            
-            # Nếu không tìm thấy model ưu tiên, lấy cái đầu tiên tìm được
-            if chat_models:
-                return chat_models[0]
-                
-        return None # Không lấy được danh sách hoặc Key sai
+                    if p in real_model: return real_model
+            if chat_models: return chat_models[0]
+        return None
     except:
         return None
 
-# --- HÀM 3: GỌI AI ĐỂ TẠO ĐỀ ---
+# --- HÀM 3: GỌI AI VỚI CƠ CHẾ CHỐNG LỖI 429 ---
 def generate_exam_final(api_key, grade, subject, content):
-    clean_key = api_key.strip() # Xóa khoảng trắng thừa
+    clean_key = api_key.strip()
     if not clean_key: return "⚠️ Chưa nhập API Key."
 
-    # Bước 1: Tìm model phù hợp
-    with st.spinner("Đang tìm Model phù hợp với Key của bạn..."):
+    with st.spinner("Đang kết nối máy chủ Google..."):
         model_name = find_working_model(clean_key)
     
     if not model_name:
-        return "❌ LỖI KẾT NỐI: API Key không đúng hoặc không lấy được danh sách Model. Vui lòng kiểm tra lại Key."
+        return "❌ Lỗi Key hoặc Mạng. Vui lòng kiểm tra lại API Key."
 
-    # Bước 2: Gọi API tạo đề
     url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={clean_key}"
     headers = {'Content-Type': 'application/json'}
     
+    # PROMPT ĐƯỢC CẬP NHẬT: Yêu cầu bám sát file và xuất cả ma trận
     prompt = f"""
-    Đóng vai trò: Giáo viên trường TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN.
-    Nhiệm vụ: Ra đề thi môn {subject} lớp {grade}.
+    Bạn là Tổ trưởng chuyên môn trường TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN.
     
-    DỮ LIỆU ĐẦU VÀO:
+    NHIỆM VỤ:
+    Dựa TUYỆT ĐỐI vào nội dung văn bản (Ma trận/Đặc tả) tôi cung cấp dưới đây để ra đề thi môn {subject} lớp {grade}.
+    
+    NỘI DUNG VĂN BẢN ĐẦU VÀO:
+    --------------------------
     {content}
+    --------------------------
     
-    YÊU CẦU CỤ THỂ:
-    1. **Bám sát Yêu cầu cần đạt:** Của chương trình GDPT 2018 môn {subject} lớp {grade}.
-    2. **Nguồn dữ liệu:** Chỉ dùng kiến thức trong SGK (Cánh Diều, Chân Trời ST, Kết Nối Tri Thức).
-    3. **Ma trận:** Đảm bảo 3 mức độ (M1: Nhận biết, M2: Kết nối, M3: Vận dụng).
-    4. **Văn phong:** Dễ hiểu, phù hợp học sinh vùng cao.
-    5. **Tiêu đề:** Bắt buộc có dòng: "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN".
+    YÊU CẦU BẮT BUỘC:
+    1. **NỘI DUNG:** Chỉ được sử dụng các đơn vị kiến thức có trong văn bản đầu vào ở trên. KHÔNG được tự ý bịa ra kiến thức nằm ngoài file này.
+    2. **CẤU TRÚC:** Đề thi phải đúng theo các mức độ (M1, M2, M3) đã mô tả trong văn bản đầu vào.
+    3. **ĐỐI TƯỢNG:** Ngôn ngữ trong sáng, ngắn gọn, phù hợp học sinh vùng cao.
+    4. **ĐỊNH DẠNG ĐẦU RA:** Phải trình bày thành 2 phần rõ ràng:
+       - PHẦN 1: ĐỀ KIỂM TRA (Có tiêu đề "TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN" ở trên cùng).
+       - PHẦN 2: HƯỚNG DẪN CHẤM VÀ MA TRẬN ĐỀ (Liệt kê đáp án đúng và ma trận câu hỏi tương ứng).
     """
     
     data = {"contents": [{"parts": [{"text": prompt}]}]}
 
-    try:
-        with st.spinner(f"Đang tạo đề bằng model {model_name}..."):
+    # CƠ CHẾ RETRY (THỬ LẠI KHI GẶP LỖI 429)
+    max_retries = 3 # Số lần thử lại tối đa
+    
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                st.toast(f"Hệ thống đang bận, đang thử lại lần {attempt+1}...")
+                time.sleep(3 + (attempt * 2)) # Chờ 3s, 5s... tăng dần
+
             response = requests.post(url, headers=headers, json=data)
             
             if response.status_code == 200:
                 try:
                     return response.json()['candidates'][0]['content']['parts'][0]['text']
                 except:
-                    return "⚠️ AI không trả về nội dung (Block an toàn). Hãy thử lại."
+                    return "⚠️ AI không trả về nội dung. Hãy thử file khác."
+            
+            elif response.status_code == 429:
+                # Nếu gặp lỗi 429 (Too Many Requests), vòng lặp sẽ tiếp tục thử lại
+                continue 
+            
             else:
                 return f"⚠️ Lỗi từ Google ({response.status_code}): {response.text}"
-    except Exception as e:
-        return f"Lỗi mạng: {e}"
+                
+        except Exception as e:
+            return f"Lỗi mạng: {e}"
+
+    return "⚠️ Hệ thống Google đang quá tải (Lỗi 429). Vui lòng đợi 1-2 phút sau rồi ấn lại nút Tạo đề."
 
 # --- GIAO DIỆN CHÍNH ---
 st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
@@ -146,22 +148,25 @@ with st.sidebar:
         else:
             found_model = find_working_model(clean_k)
             if found_model:
-                st.success(f"✅ Kết nối tốt! (Sử dụng: {found_model})")
+                st.success(f"✅ Ổn định! ({found_model})")
             else:
-                st.error("❌ Không kết nối được. Kiểm tra lại Key (Key sai hoặc hết hạn).")
+                st.error("❌ Key sai hoặc lỗi mạng.")
                 
     st.markdown("---")
-    st.info("Lưu ý: Hệ thống sẽ tự động chọn Model tốt nhất mà Key của bạn hỗ trợ.")
+    st.info("Hệ thống đã tích hợp cơ chế chống nghẽn mạng (Anti-429 Error).")
 
 # BƯỚC 1: CHỌN LỚP & MÔN
 st.subheader("1. Chọn Lớp & Môn Học")
 selected_grade = st.radio("Chọn khối:", list(SUBJECTS_DB.keys()), horizontal=True)
-st.markdown(f"<div class='{GRADE_COLORS[selected_grade]}'>Đang chọn: {selected_grade}</div>", unsafe_allow_html=True)
+
+# Hiển thị màu lớp đẹp hơn
+colors = {"Lớp 1": "#D32F2F", "Lớp 2": "#E65100", "Lớp 3": "#F57F17", "Lớp 4": "#2E7D32", "Lớp 5": "#1565C0"}
+st.markdown(f"<div style='background-color:{colors[selected_grade]}; color:white; padding:5px; border-radius:5px; text-align:center;'>Đang làm việc với: {selected_grade}</div>", unsafe_allow_html=True)
 
 # Lấy môn học
 subjects_list = [f"{s[1]} {s[0]}" for s in SUBJECTS_DB[selected_grade]]
 selected_subject_full = st.selectbox("Chọn môn:", subjects_list)
-selected_subject = selected_subject_full.split(" ", 1)[1] # Lấy tên môn bỏ icon
+selected_subject = selected_subject_full.split(" ", 1)[1]
 
 st.markdown("---")
 
@@ -170,15 +175,19 @@ c1, c2 = st.columns([1, 1], gap="large")
 
 with c1:
     st.subheader("2. Dữ liệu đầu vào")
+    st.info("💡 Lưu ý: AI sẽ chỉ lấy kiến thức CÓ TRONG FILE này để ra đề.")
     uploaded_file = st.file_uploader("Upload Ma trận/Đặc tả (PDF, Word, Excel)", type=['pdf','docx','doc','xlsx'])
     
     file_txt = ""
     if uploaded_file:
         file_txt = read_file_content(uploaded_file)
-        st.success(f"Đã đọc file: {len(file_txt)} ký tự")
+        if len(file_txt) > 50:
+            st.success(f"✅ Đã đọc nội dung file ({len(file_txt)} ký tự)")
+        else:
+            st.warning("⚠️ File trống hoặc không đọc được chữ. Hãy kiểm tra lại.")
     
     st.write("")
-    btn_run = st.button("🚀 TẠO ĐỀ THI NGAY", type="primary", use_container_width=True)
+    btn_run = st.button("🚀 TẠO ĐỀ VÀ MA TRẬN", type="primary", use_container_width=True)
 
 with c2:
     st.subheader("3. Kết quả")
@@ -188,15 +197,18 @@ with c2:
         st.session_state.result_exam = ""
         
     if btn_run:
-        if not uploaded_file and len(file_txt) < 10:
+        if not uploaded_file:
             st.warning("⚠️ Vui lòng upload file ma trận trước!")
+        elif len(file_txt) < 50:
+             st.error("⚠️ Nội dung file quá ngắn hoặc không đọc được.")
         else:
             st.session_state.result_exam = generate_exam_final(api_key_input, selected_grade, selected_subject, file_txt)
 
     # Hiển thị
     if st.session_state.result_exam:
         container.markdown(st.session_state.result_exam)
-        st.download_button("📥 Tải về máy (.txt)", st.session_state.result_exam, f"De_thi_{selected_subject}.txt")
+        # Nút tải xuống cập nhật tên
+        st.download_button("📥 Tải xuống (Đề + Ma trận)", st.session_state.result_exam, f"De_va_Matran_{selected_subject}.txt")
 
 # FOOTER
 st.markdown("<br><br>", unsafe_allow_html=True)
