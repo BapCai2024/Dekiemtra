@@ -80,7 +80,7 @@ def generate_exam(api_key, grade, subject, content):
         return "⚠️ Vui lòng nhập Google Gemini API Key để tiếp tục."
     
     genai.configure(api_key=api_key)
-   model = genai.GenerativeModel("gemini-2.5-flash") # hoặc "gemini-2.5-pro"
+   model = genai.GenerativeModel("gemini-2.5-flash") # hoặc ("gemini-2.5-pro")
 
     # PROMPT KỸ THUẬT (SYSTEM INSTRUCTION)
     prompt = f"""
