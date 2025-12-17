@@ -63,31 +63,8 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# --- HÀM XỬ LÝ TÁCH BÀI HỌC TỰ ĐỘNG ---
-# Hàm này sẽ chạy khi khởi động để tách chuỗi bài học thành list
-def process_curriculum_data(raw_db):
-    processed_db = {}
-    for grade, subjects in raw_db.items():
-        processed_db[grade] = {}
-        for subject, content in subjects.items():
-            processed_db[grade][subject] = []
-            # Content là một list các dict
-            for item in content:
-                topic = item["Chủ đề"]
-                raw_lessons = item["Bài học"]
-                # Tách chuỗi bài học dựa trên dấu chấm phẩy
-                lesson_list = [l.strip() for l in raw_lessons.split(';') if l.strip()]
-                
-                # Tạo ra các mục riêng cho từng bài học nhỏ
-                for lesson in lesson_list:
-                    processed_db[grade][subject].append({
-                        "Chủ đề": topic,
-                        "Bài học": lesson
-                    })
-    return processed_db
-
-# DỮ LIỆU GỐC (Dạng chuỗi dài)
-RAW_CURRICULUM_DB = {
+# DỮ LIỆU GỐC (Dạng chuỗi dài - Đã phục hồi đầy đủ môn học)
+CURRICULUM_DB = {
     "Lớp 1": {
         "Tiếng Việt": [
             {"Chủ đề": "Làm quen với tiếng việt", "Bài học": "Bài 1A: a, b; Bài 1B: c, o; Bài 1C: ô, ơ; Bài 1D: d, đ; Bài 1E: Ôn tập; Bài 2A: e, ê; Bài 2B: h, i; Bài 2C: g, gh; Bài 2D: k, kh; Bài 2E: Ôn tập; Bài 3A: l, m; Bài 3B: n, nh; Bài 3C: ng, ngh; Bài 3D: u, ư; Bài 3E: Ôn tập; Bài 4A: q - qu, gi; Bài 4B: p - ph; Bài 4C: r , s; Bài 4D: t , th; Bài 4E: Ôn tập"},
@@ -129,6 +106,10 @@ RAW_CURRICULUM_DB = {
             {"Chủ đề": "Phép cộng, phép trừ trong phạm vi 1000 (HKII)", "Bài học": "Bài 59: Phép cộng (không nhớ); Bài 60: Phép cộng (có nhớ); Bài 61: Phép trừ (không nhớ); Bài 62: Phép trừ (có nhớ); Bài 63: Luyện tập chung"},
             {"Chủ đề": "Làm quen với thống kê xuất sắc (HKII)", "Bài học": "Bài 64: Thu thập, phân loại, kiểm đếm số liệu; Bài 65: Biểu đồ tranh; Bài 66: Chắc chắn, có thể, không thể; Bài 67: Thực hành và trải nghiệm thu thập, phân loại, kiểm đếm số liệu"},
             {"Chủ đề": "Ôn tập cuối năm (HKII)", "Bài học": "Bài 68: Ôn tập các số trong phạm vi 1000; Bài 69: Ôn tập phép cộng. phép trừ trong phạm vi 100; Bài 70: ÔT phép +, phép - trong pv 1000; Bài 71: ÔT phép nhân, phép chia; Bài 72: Ôn tập hình học; Bài 73: ÔT đo lường; Bài 74: ÔTKT số liệu và lựa chọn KN; Bài 75: Ôn tập chung"}
+        ],
+        "Công nghệ": [
+            {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1: Tự nhiên và công nghệ (HĐ1, HĐ2, HĐ3); Bài 2: Sử dụng đèn học (HĐ 1, HĐ 2, HĐ 3); Bài 3: Sử dụng quạt điện (HĐ1, HĐ2, HĐ3); Bài 4: Sử dụng máy thu thanh (HĐ1, HĐ2, HĐ3, HĐ4); Bài 5: Sử dụng máy thu hình (HĐ1, HĐ2, HĐ3, HĐ4); Bài 6: An toàn với môi trường công nghệ trong gia đình (HĐ1, HĐ2, HĐ3)"},
+            {"Chủ đề": "Thủ công kĩ thuật (P2 - HKII)", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công; Bài 8: Làm đồ dùng học tập; Bài 9: Làm biển báo giao thông; Bài 10: Làm đồ chơi; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
         ]
     },
     "Lớp 3": {
@@ -151,10 +132,6 @@ RAW_CURRICULUM_DB = {
             {"Chủ đề": "Phép nhân, phép chia trong phạm vi 1000", "Bài học": "Bài 36: Nhân số có ba chữ số với số có một chữ số; Bài 37: Chia số có 3 chữ số cho số có một chữ số; Bài 38: Làm quen với biểu thức/Tính giá trị của biểu thức; Bài 39: So sánh số lớn gấp mấy lần số bé; Bài 40: Luyện tập"},
             {"Chủ đề": "Ôn tập và Ôn tập cuối năm (HKII)", "Bài học": "Bài 45: Số có 4 chữ số/Số 10.000; Bài 47: Làm quen với chữ số La Mã; Bài 48: Làm tròn số đến hàng chục, hàng trăm; Bài 50: Chu vi hình tam giác, hình tứ giác; Bài 51: Diện tích của một hình/Xăng ti mét vuông; Bài 52: DT hình chữ nhật/DT hình vuông; Bài 54: Phép cộng trong phạm vi 10 000; Bài 55: Phép trừ trong phạm vi 10 000; Bài 56: Nhân số có 4 chữ số cho số có một chữ số; Bài 57: Chia số có 4 chữ số cho số có một chữ số; Bài 59: Số có 5 chữ số/Số 100 000; Bài 60: So sánh các số trong pv 100 000; Bài 61: Làm tròn các số đến hàng nghìn, hàng chục nghìn; Bài 63: Phép cộng trong phạm vi 100 000; Bài 64: Phép trừ trong phạm vi 100 000; Bài 66: Xem đồng hồ. Tháng – năm; Bài 68: Tiền Việt Nam; Bài 70: Nhân số có 5 chữ số với số có một chữ số; Bài 71: Chia số có năm chữ số cho số có một chữ số; Bài 73: Thu thập, phân loại, ghi chép số liệu. bảng số liệu; Bài 74: Khả năng xảy ra của một sự kiện"}
         ],
-        "Công nghệ": [
-            {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1: Tự nhiên và công nghệ (HĐ1, HĐ2, HĐ3); Bài 2: Sử dụng đèn học (HĐ 1, HĐ 2, HĐ 3); Bài 3: Sử dụng quạt điện (HĐ1, HĐ2, HĐ3); Bài 4: Sử dụng máy thu thanh (HĐ1, HĐ2, HĐ3, HĐ4); Bài 5: Sử dụng máy thu hình (HĐ1, HĐ2, HĐ3, HĐ4); Bài 6: An toàn với môi trường công nghệ trong gia đình (HĐ1, HĐ2, HĐ3)"},
-            {"Chủ đề": "Thủ công kĩ thuật (P2 - HKII)", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công; Bài 8: Làm đồ dùng học tập; Bài 9: Làm biển báo giao thông; Bài 10: Làm đồ chơi; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
-        ],
         "Tin học": [
             {"Chủ đề": "Máy tính và em", "Bài học": "Bài 1. Thông tin và quyết định; Bài 2. Xử lí thông tin; Bài 3. Máy tính và em; Bài 4. Làm việc với máy tính; Bài 5. Sử dụng bàn phím"},
             {"Chủ đề": "Mạng máy tính và Internet", "Bài học": "Bài 6. Khám phá thông tin trên Internet"},
@@ -162,6 +139,10 @@ RAW_CURRICULUM_DB = {
             {"Chủ đề": "Đạo đức, pháp luật và văn hoá trong môi trường số", "Bài học": "Bài 10. Bảo vệ thông tin khi dùng máy tính"},
             {"Chủ đề": "Ứng dụng tin học", "Bài học": "Bài 12. Tìm hiểu về thế giới tự nhiên; Bài 11. Bài trình chiếu của em"},
             {"Chủ đề": "Giải quyết vấn đề với sự trợ giúp của máy tính", "Bài học": "Bài 14. Em thực hiện công việc như thế nào?; Bài 15. Công việc được thực hiện theo điều kiện; Bài 16. Công việc của em và sự trợ giúp của máy tính"}
+        ],
+        "Công nghệ": [
+            {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1: Tự nhiên và công nghệ (HĐ1, HĐ2, HĐ3); Bài 2: Sử dụng đèn học (HĐ 1, HĐ 2, HĐ 3); Bài 3: Sử dụng quạt điện (HĐ1, HĐ2, HĐ3); Bài 4: Sử dụng máy thu thanh (HĐ1, HĐ2, HĐ3, HĐ4); Bài 5: Sử dụng máy thu hình (HĐ1, HĐ2, HĐ3, HĐ4); Bài 6: An toàn với môi trường công nghệ trong gia đình (HĐ1, HĐ2, HĐ3)"},
+            {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công; Bài 8: Làm đồ dùng học tập; Bài 9: Làm biển báo giao thông; Bài 10: Làm đồ chơi; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
         ]
     },
     "Lớp 4": {
@@ -185,33 +166,33 @@ RAW_CURRICULUM_DB = {
             {"Chủ đề": "Phép nhân, phép chia phân số (HKII)", "Bài học": "Bài 63: Phép nhân phân số; Bài 64: Phép chia phân số; Bài 65: Tìm phân số của một số; Bài 66: Luyện tập chung"},
             {"Chủ đề": "Ôn tập cuối năm (HKII)", "Bài học": "Bài 67: Ôn tập số tự nhiên; Bài 68: Ôn tập phép tính với số tự nhiên; Bài 69: Ôn tập phân số; Bài 70: Ôn tập phép tính với phân số; Bài 71: Ôn tập hình học và đo lường; Bài 72: Ôn tập một số yếu tố thống kê và xác suất; Bài 73: Ôn tập chung"}
         ],
-        "Lịch sử và Địa lí": [
-            {"Chủ đề": "Địa phương em", "Bài học": "Bài 2. Thiên nhiên và con người ở địa phương em; Bài 3. Lịch sử và văn hoá truyền thống địa phương em"},
-            {"Chủ đề": "Trung du và vùng núi Bắc Bộ", "Bài học": "Bài 4: Thiên nhiên vùng Trung du và miền núi Bắc bộ; Bài 5: Dân cư, hoạt động sản xuất ở vùng Trung du và miền núi Bắc bộ; Bài 6: Một số nét văn hóa ở vùng Trung du và miền núi Bắc bộ; Bài 7: Đền Hùng và lễ giỗ Tổ Hùng Vương"},
-            {"Chủ đề": "Đồng bằng Bắc Bộ", "Bài học": "Bài 8: Thiên nhiên vùng đồng bằng Bắc Bộ; Bài 9: Dân cư, hoạt động sản xuất ở vùng Đồng bằng Bắc Bộ; Bài 10: Một số nét văn hóa ở vùng Đồng bằng Bắc Bộ; Bài 11: Sông Hồng và văn minh sông Hồng; Bài 12: Thăng Long – Hà Nội; Bài 13: Văn Miếu – Quốc tử giám"},
-            {"Chủ đề": "Duyên hải miền Trung (HKII)", "Bài học": "Bài 15: Thiên nhiên vùng duyên hải miền Trung; Bài 16: Dân cư, hoạt động sản xuất ở vùng duyên hải miền Trung; Bài 17: Một số nét văn hóa ở vùng duyên hải miền Trung; Bài 18: Cố đô Huế; Bài 19: Phố cổ Hội An"},
-            {"Chủ đề": "Tây Nguyên (HKII)", "Bài học": "Bài 20: Thiên nhiên vùng Tây Nguyên; Bài 21: Dân cư, hoạt động sản xuất ở vùng Tây Nguyên; Bài 22: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Tây Nguyên; Bài 23: Lễ hội cồng chiêng Tây Nguyên"},
-            {"Chủ đề": "Nam Bộ (HKII)", "Bài học": "Bài 24: Thiên nhiên vùng Nam Bộ; Bài 25: Dân cư, hoạt động sản xuất vùng Nam Bộ; Bài 26: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Nam Bộ; Bài 27: Thành phố Hồ Chí Minh; Bài 28: Địa đạo củ chi"}
-        ],
         "Khoa học": [
             {"Chủ đề": "Chất (HKI)", "Bài học": "Bài 1: Tính chất của nước và nước với cuộc sống; Bài 2: Sự chuyển thể của nước và vòng tuần hoàn của nước trong tự nhiên; Bài 3: Sự ô nhiễm và bảo vệ nguồn nước, một số cách làm sạch nước; Bài 4: Không khí có ở đâu?, Thành phần và tính chất của không khí; Bài 5: Vai trò của không khí và bảo vệ bầu không khí trong lành; Bài 6: Gió, bão và phòng chống bão; Bài 7: Ôn tập chủ đề: Chất"},
-            {"Chủ đề": "Năng lượng (HKI)", "Bài học": "Bài 7: Vai trò của năng lượng; Bài 8: Sử dụng năng lượng điện; Bài 9: Mạch điện đơn giản, vật dẫn điện và vật cách điện; Bài 10: Năng lượng chất đốt; Bài 11: Sử dụng năng lượng mặt trời, năng lượng gió, năng lượng nước chảy; Bài 12: Ôn tập chủ đề năng lượng"},
-            {"Chủ đề": "Thực vật và động vật (HKI)", "Bài học": "Bài 13: Sinh sản của thực vật có hoa; Bài 14: Sự phát triển của cây con; Bài 15: Sinh sản của thực vật có hoa; Bài 16: Vòng đời và sự phát triển của động vật; Bài 17: ôn tập chủ đề thực vật và động vật"},
+            {"Chủ đề": "Năng lượng (HKI)", "Bài học": "Bài 8: Ánh sáng và sự truyền ánh sáng; Bài 9: Vai trò của ánh sáng; Bài 10: Âm thanh và sự truyền âm thanh; Bài 11: Âm thanh trong cuộc sống; Bài 12: Nhiệt độ và sự truyền nhiệt; Bài 13: Vật dẫn nhiệt tốt, vật dẫn nhiệt kém; Bài 14: Ôn tập chủ đề Năng lượng"},
+            {"Chủ đề": "Thực vật và động vật (HKI)", "Bài học": "Bài 15: Thực vật cần gì để sống?; Bài 16: Động vật cần gì để sống?; Bài 17: Chăm sóc cây trồng, vật nuôi; Bài 18: Ôn tập chủ đề Thực vật và động vật"},
             {"Chủ đề": "Nấm (HKII)", "Bài học": "Bài 19: Đặc điểm chung của nấm; Bài 20: Nấm ăn và nấm trong chế biến thực phẩm; Bài 21: Nấm gây hỏng thức ăn và nấm độc; Bài 22: Ôn tập chủ đề Nấm"},
             {"Chủ đề": "Con người và sức khoẻ (HKII)", "Bài học": "Bài 23: Vai trò của chất dinh dưỡng đối với cơ thể; Bài 24: Chế độ ăn uống cân bằng; Bài 25: Một số bệnh liên quan đến dinh dưỡng; Bài 26: Thực phẩm an toàn; Bài 27: Phòng tránh đuối nước; Bài 28: Ôn tập chủ đề Con người và sức khoẻ"},
-            {"Chủ đề": "Sinh vật và môi trường (HKII)", "Bài học": "Bài 28: Chức năng của môi trường đối với sinh vật; Bài 29: Tác động của con người và một số biện pháp bảo vệ môi trường; Bài 30: ôn tập chủ đề sinh vật và môi trường"}
+            {"Chủ đề": "Sinh vật và môi trường (HKII)", "Bài học": "Bài 29: Chuỗi thức ăn trong tự nhiên; Bài 30: Vai trò của thực vật trong chuỗi thức ăn; Bài 31: Ôn tập chủ đề Sinh vật và môi trường"}
+        ],
+        "Lịch sử & Địa lí": [
+            {"Chủ đề": "ĐỊA PHƯƠNG EM", "Bài học": "Bài 2. Thiên nhiên và con người ở địa phương em; Bài 3. Lịch sử và văn hoá truyền thống địa phương em"},
+            {"Chủ đề": "TRUNG DU VÀ VÙNG NÚI BẮC BỘ", "Bài học": "Bài 4: Thiên nhiên vùng Trung du và miền núi Bắc bộ; Bài 5: Dân cư, hoạt động sản xuất ở vùng Trung du và miền núi Bắc bộ; Bài 6: Một số nét văn hóa ở vùng Trung du và miền núi Bắc bộ; Bài 7: Đền Hùng và lễ giỗ Tổ Hùng Vương"},
+            {"Chủ đề": "ĐỒNG BẰNG BẮC BỘ", "Bài học": "Bài 8: Thiên nhiên vùng đồng bằng Bắc Bộ; Bài 9: Dân cư, hoạt động sản xuất ở vùng Đồng bằng Bắc Bộ; Bài 10: Một số nét văn hóa ở vùng Đồng bằng Bắc Bộ; Bài 11: Sông Hồng và văn minh sông Hồng; Bài 12: Thăng Long – Hà Nội; Bài 13: Văn Miếu – Quốc tử giám"},
+            {"Chủ đề": "DUYÊN HẢI MIỀN TRUNG", "Bài học": "Bài 15: Thiên nhiên vùng duyên hải miền Trung; Bài 16: Dân cư, hoạt động sản xuất ở vùng duyên hải miền Trung; Bài 17: Một số nét văn hóa ở vùng duyên hải miền Trung; Bài 18: Cố đô Huế; Bài 19: Phố cổ Hội An"},
+            {"Chủ đề": "TÂY NGUYÊN", "Bài học": "Bài 20: Thiên nhiên vùng Tây Nguyên; Bài 21: Dân cư, hoạt động sản xuất ở vùng Tây Nguyên; Bài 22: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Tây Nguyên; Bài 23: Lễ hội cồng chiêng Tây Nguyên"},
+            {"Chủ đề": "NAM BỘ", "Bài học": "Bài 24: Thiên nhiên vùng Nam Bộ; Bài 25: Dân cư, hoạt động sản xuất vùng Nam Bộ; Bài 26: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Nam Bộ; Bài 27: Thành phố Hồ Chí Minh; Bài 28: Địa đạo củ chi"}
         ],
         "Tin học": [
-            {"Chủ đề": "Máy tính và em", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
-            {"Chủ đề": "Mạng máy tính và Internet", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
-            {"Chủ đề": "Tổ chức lưu trữ, tìm kiếm và trao đổi thông tin", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
-            {"Chủ đề": "Đạo đức, pháp luật và văn hoá trong môi trường số", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
-            {"Chủ đề": "Ứng dụng tin học", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"},
-            {"Chủ đề": "Giải quyết vấn đề với sự trợ giúp của máy tính (HKII)", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
+            {"Chủ đề": "MÁY TÍNH VÀ EM", "Bài học": "Bài 1: Phần cứng và phần mềm máy tính; Bài 2: Gõ các phím trên hàng phím số"},
+            {"Chủ đề": "MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 3: Thông tin trên trang web"},
+            {"Chủ đề": "TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 4: Tìm kiếm thông tin trên Internet; Bài 5: Thực hành tìm kiếm thông tin trên Internet; Bài 6: Thao tác với thư mục và tệp"},
+            {"Chủ đề": "ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 7: Bản quyền phần mềm"},
+            {"Chủ đề": "ỨNG DỤNG TIN HỌC", "Bài học": "Bài 8: Tạo bài trình chiếu; Bài 9: Định dạng văn bản trong trang trình chiếu; Bài 10: Hiệu ứng chuyển trang; Bài 16: Luyện tập gõ bàn phím"},
+            {"Chủ đề": "GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 17: Làm quen với lập trình; Bài 18: Lệnh sự kiện và hành động; Bài 19: Nhóm lệnh bút vẽ - lệnh ẩn, hiện; Bài 20: Lệnh xoay trái, xoay phải"}
         ],
         "Công nghệ": [
-            {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"},
-            {"Chủ đề": "Thủ công kĩ thuật (P2 - HKII)", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
+            {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1: Lợi ích của hoa, cây cảnh đối với đời sống; Bài 2: Một số loại hoa, cây cảnh phổ biến; Bài 3: Vật liệu và dụng cụ trồng hoa, cây; Bài 4: Gieo hạt hoa, cây cảnh trong chậu; Bài 5: Trồng hoa, cây cảnh trong chậu; Bài 6: Chăm sóc hoa, cây cảnh trong chậu"},
+            {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Giới thiệu bộ lắp ghép mô hình kĩ thuật; Bài 8: Lắp ghép mô hình bập bênh; Bài 9: Lắp ghép mô hình robot; Bài 10: Đồ chơi dân gian; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
         ]
     },
     "Lớp 5": {
@@ -235,6 +216,34 @@ RAW_CURRICULUM_DB = {
             {"Chủ đề": "DIỆN TÍCH VÀ THỂ TÍCH CỦA MỘT SỐ HÌNH KHỐI (HKII)", "Bài học": "Bài 49. Hình khai triển; Bài 50. Diện tích xung quanh và DT toàn phần của hình hộp chữ nhật; Bài 51. DT xung quanh và DT toàn phần của hình lập phương; Bài 52. Thể tích của hình hộp chữ nhật; Bài 53. Thể tích của hình lập phương; Bài 54. Thực hành tính toán và ước lượng thể tích; Bài 55. Luyện tập chung"},
             {"Chủ đề": "SỐ ĐO THỜI GIAN. VẬN TỐC. CÁC BÀI TOÁN LIÊN QUAN ĐẾN CHUYỂN ĐỘNG ĐỀU (HKII)", "Bài học": "Bài 56. Các đơn vị đo thời gian; Bài 57. Cộng, trừ số đo thời gian; Bài 58. Nhân, chia số đo thời gian với một số; Bài 59. Vận tốc của một chuyển động đều; Bài 60. Quãng đường, thời gian của một chuyển động đều; Bài 61. Thực hành tính toán và ước lượng; Bài 62. Luyện tập chung"},
             {"Chủ đề": "MỘT SỐ YẾU TỐ THỐNG KÊ VÀ XÁC SUẤT (HKII)", "Bài học": "Bài 63. Thu thập, phân loại, sắp xếp các số liệu; Bài 64. Biểu đồ hình quạt tròn; Bài 65. Tỉ số của số lần lặp lại một sự kiện; Bài 66. Thực hành và trải nghiệm thu thập, phân tích, biểu diễn các số liệu thống kê; Bài 67. Luyện tập chung"}
+        ],
+        "Khoa học": [
+            {"Chủ đề": "CHẤT", "Bài học": "Bài 1: Thành phần và vai trò của đất đối với cây trồng; Bài 2: Ô nhiễm, xói mòn đất và bảo vệ môi trường đất; Bài 3: Hỗn hợp và dung dịch; Bài 4: Đặc điểm của chất ở trạng thái rắn, lỏng, khí. Sự biến đổi trạng thái của chất; Bài 5: Sự biến đổi hóa học của chất; Bài 6: Ôn tập chủ đề chất"},
+            {"Chủ đề": "NĂNG LƯỢNG", "Bài học": "Bài 7: Vai trò của năng lượng; Bài 8: Sử dụng năng lượng điện; Bài 9: Mạch điện đơn giản, vật dẫn điện và vật cách điện; Bài 10: Năng lượng chất đốt; Bài 11: Sử dụng năng lượng mặt trời, năng lượng gió, năng lượng nước chảy; Bài 12: Ôn tập chủ đề năng lượng"},
+            {"Chủ đề": "THỰC VẬT VÀ ĐỘNG VẬT", "Bài học": "Bài 13: Sinh sản của thực vật có hoa; Bài 14: Sự phát triển của cây con; Bài 15: Sinh sản của thực vật có hoa; Bài 16: Vòng đời và sự phát triển của động vật; Bài 17: ôn tập chủ đề thực vật và động vật"},
+            {"Chủ đề": "VI KHUẨN", "Bài học": "Bài 18: Vi khuẩn xung quanh chúng ta; Bài 19: Vi khuẩn có ích trong chế biến thực phẩm; Bài 20: Vi khuẩn gây bệnh ở người và cách phòng tránh; Bài 21: Ôn tập chủ đề vi khuẩn"},
+            {"Chủ đề": "CON NGƯỜI VÀ SỨC KHỎE", "Bài học": "Bài 22: Sự hình thành cơ thể người; Bài 23: Các giai đoạn phát triển chính của con người; Bài 24: Nam và nữ; Bài 25: Chăm sóc sức khoẻ tuổi dậy thì; Bài 26: Phòng tránh bị xâm hại; Bài 27: Ôn tập chủ đề con người và sức khoẻ"},
+            {"Chủ đề": "SINH VẬT VÀ MÔI TRƯỜNG", "Bài học": "Bài 28: Chức năng của môi trường đối với sinh vật; Bài 29: Tác động của con người và một số biện pháp bảo vệ môi trường; Bài 30: ôn tập chủ đề sinh vật và môi trường"}
+        ],
+        "Lịch sử và Địa lí": [
+            {"Chủ đề": "ĐẤT NƯỚC VÀ CON NGƯỜI VIỆT NAM", "Bài học": "Bài 1: Vị trí địa lí, lãnh thổ, đơn vị hành chính, Quốc kì, Quốc huy, Quốc ca; Bài 2: Thiên nhiên Việt Nam; Bài 3: Biển, đảo Việt Nam; Bài 4: Dân cư và dân tộc ở Việt Nam"},
+            {"Chủ đề": "NHỮNG QUỐC GIA ĐẦU TIÊN TRÊN LÃNH THỔ VIỆT NAM", "Bài học": "Bài 5: Nhà nước Văn Lang, Nhà nước Âu Lạc; Bài 6: Vương quốc Phù Nam; Bài 7: Vương quốc Chăm-pa"},
+            {"Chủ đề": "XÂY DỰNG VÀ BẢO VỆ ĐẤT NƯỚC VIỆT NAM", "Bài học": "Bài 8: Đấu tranh giành độc lập thời kì Bắc thuộc; Bài 9: Triều Lý và việc định đô ở Thăng Long; Bài 10: Triều Trần xây dựng đất nước và kháng chiến chống quân Mông – Nguyên xâm lược; Bài 12: Khởi nghĩa Lam Sơn và Triều Hậu Lê; Bài 13: Triều Nguyễn; Bài 14: Cách mạng tháng Tám năm 1945; Bài 15: Chiến dịch Điện Biên Phủ năm 1954; Bài 16: Chiến dịch Hồ Chí Minh năm 1975; Bài 17: Đất nước đổi mới"},
+            {"Chủ đề": "CÁC NƯỚC LÁNG GIỀNG", "Bài học": "Bài 18: Nước Cộng hoà Nhân dân Trung Hoa; Bài 19: Cộng hoà Dân chủ Nhân dân Lào; Bài 20: Vương quốc Cam-pu-chia; Bài 21: Hiệp hội các quốc gia Đông Nam Á"},
+            {"Chủ đề": "TÌM HIỂU THẾ GIỚI", "Bài học": "Bài 22: Các châu lục và đại dương trên thế giới; Bài 23: Dân số và các chủng tộc trên thế giới; Bài 24: Văn minh Ai Cập; Bài 25: Văn minh Hy Lạp"},
+            {"Chủ đề": "CHUNG TAY XÂY DỰNG THẾ GIỚI", "Bài học": "Bài 26: Xây dựng thế giới xanh – sạch – đẹp; Bài 27: Xây dựng thế giới hoà bình"}
+        ],
+        "Tin học": [
+            {"Chủ đề": "MÁY TÍNH VÀ EM", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
+            {"Chủ đề": "MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
+            {"Chủ đề": "TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
+            {"Chủ đề": "ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
+            {"Chủ đề": "ỨNG DỤNG TIN HỌC", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"},
+            {"Chủ đề": "GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
+        ],
+        "Công nghệ": [
+            {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"},
+            {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
         ]
     }
 }
