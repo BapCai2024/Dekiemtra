@@ -68,8 +68,6 @@ SUBJECTS_DB = {
 }
 
 # [YÊU CẦU 2] CƠ SỞ DỮ LIỆU YCCĐ CHUẨN GDPT 2018 & TT32 (MẪU)
-# Đây là cơ chế ánh xạ tự động: Môn -> Từ khóa bài học -> YCCĐ.
-# Bạn cần cập nhật đầy đủ nội dung chính xác từ văn bản chương trình vào đây.
 YCCD_DB = {
     "Toán": {
         "số tự nhiên": "Đọc, viết, so sánh các số tự nhiên; thực hiện được các phép tính cộng, trừ, nhân, chia với số tự nhiên. Vận dụng giải quyết vấn đề đơn giản.",
@@ -110,10 +108,8 @@ YCCD_DB = {
 }
 
 def get_yccd_auto(subject, lesson_name):
-    # Logic tìm kiếm YCCĐ tự động dựa trên từ khóa trong tên bài học
-    # Ưu tiên tìm trong môn học tương ứng
     subject_data = YCCD_DB.get(subject, {})
-    if not subject_data: # Nếu không tìm thấy môn, thử tìm trong tất cả (phòng trường hợp tên môn hơi khác)
+    if not subject_data:
         for s, data in YCCD_DB.items():
             if s in subject or subject in s:
                 subject_data = data
@@ -126,7 +122,7 @@ def get_yccd_auto(subject, lesson_name):
             
     return "Thực hiện được các yêu cầu cơ bản về kiến thức và kĩ năng của bài học theo Chương trình GDPT 2018."
 
-# DỮ LIỆU GỐC (Đã cập nhật đầy đủ từ file chuẩn)
+# DỮ LIỆU GỐC (Đầy đủ)
 CURRICULUM_DB = {
     "Lớp 1": {
         "Tiếng Việt": [
@@ -204,8 +200,8 @@ CURRICULUM_DB = {
             {"Chủ đề": "Giải quyết vấn đề với sự trợ giúp của máy tính", "Bài học": "Bài 14. Em thực hiện công việc như thế nào?; Bài 15. Công việc được thực hiện theo điều kiện; Bài 16. Công việc của em và sự trợ giúp của máy tính"}
         ],
         "Công nghệ": [
-            {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1: Tự nhiên và công nghệ (HĐ1, HĐ2, HĐ3); Bài 2: Sử dụng đèn học (HĐ 1, HĐ 2, HĐ 3); Bài 3: Sử dụng quạt điện (HĐ1, HĐ2, HĐ3); Bài 4: Sử dụng máy thu thanh (HĐ1, HĐ2, HĐ3, HĐ4); Bài 5: Sử dụng máy thu hình (HĐ1, HĐ2, HĐ3, HĐ4); Bài 6: An toàn với môi trường công nghệ trong gia đình (HĐ1, HĐ2, HĐ3)"},
-            {"Chủ đề": "Thủ công kĩ thuật (P2 - HKII)", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công; Bài 8: Làm đồ dùng học tập; Bài 9: Làm biển báo giao thông; Bài 10: Làm đồ chơi; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
+            {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"},
+            {"Chủ đề": "Thủ công kĩ thuật (P2 - HKII)", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
         ]
     },
     "Lớp 4": {
@@ -246,12 +242,12 @@ CURRICULUM_DB = {
             {"Chủ đề": "Sinh vật và môi trường (HKII)", "Bài học": "Bài 28: Chức năng của môi trường đối với sinh vật; Bài 29: Tác động của con người và một số biện pháp bảo vệ môi trường; Bài 30: ôn tập chủ đề sinh vật và môi trường"}
         ],
         "Tin học": [
-            {"Chủ đề": "Máy tính và em", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
-            {"Chủ đề": "Mạng máy tính và Internet", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
-            {"Chủ đề": "Tổ chức lưu trữ, tìm kiếm và trao đổi thông tin", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
-            {"Chủ đề": "Đạo đức, pháp luật và văn hoá trong môi trường số", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
-            {"Chủ đề": "Ứng dụng tin học", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"},
-            {"Chủ đề": "Giải quyết vấn đề với sự trợ giúp của máy tính (HKII)", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
+            {"Chủ đề": "MÁY TÍNH VÀ EM", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
+            {"Chủ đề": "MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
+            {"Chủ đề": "TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
+            {"Chủ đề": "ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
+            {"Chủ đề": "ỨNG DỤNG TIN HỌC", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"},
+            {"Chủ đề": "GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH (HKII)", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
         ],
         "Công nghệ": [
             {"Chủ đề": "Công nghệ và đời sống (P1)", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"},
@@ -290,76 +286,60 @@ CURRICULUM_DB_PROCESSED = {}
 for grade, subjects in CURRICULUM_DB.items():
     CURRICULUM_DB_PROCESSED[grade] = {}
     for subject, semesters in subjects.items():
-        # Xử lý theo từng học kỳ
-        CURRICULUM_DB_PROCESSED[grade][subject] = {}
-        for semester, content in semesters.items():
+        if isinstance(semesters, list): # Trường hợp dữ liệu là list (không chia học kỳ)
             processed_topics = []
-            for item in content:
+            for item in semesters:
                 topic_name = item['Chủ đề']
                 raw_lessons_str = item['Bài học']
-                # Tách chuỗi dựa trên dấu chấm phẩy
                 lessons_list = [l.strip() for l in raw_lessons_str.split(';') if l.strip()]
-                
-                # Tạo structure mới: mỗi chủ đề chứa một list các bài học con
                 processed_topics.append({
                     'Chủ đề': topic_name,
-                    'Bài học': lessons_list # Đây giờ là một list các string
+                    'Bài học': lessons_list 
                 })
-            CURRICULUM_DB_PROCESSED[grade][subject][semester] = processed_topics
+            CURRICULUM_DB_PROCESSED[grade][subject] = processed_topics
+        else: # Trường hợp dữ liệu là dict (chia học kỳ)
+            CURRICULUM_DB_PROCESSED[grade][subject] = {}
+            for semester, content in semesters.items():
+                processed_topics = []
+                for item in content:
+                    topic_name = item['Chủ đề']
+                    raw_lessons_str = item['Bài học']
+                    lessons_list = [l.strip() for l in raw_lessons_str.split(';') if l.strip()]
+                    processed_topics.append({
+                        'Chủ đề': topic_name,
+                        'Bài học': lessons_list 
+                    })
+                CURRICULUM_DB_PROCESSED[grade][subject][semester] = processed_topics
 
 # --- 5. HỆ THỐNG API MỚI (CHỐNG LỖI 404 VÀ 429) ---
 def generate_content_with_rotation(api_key, prompt):
     genai.configure(api_key=api_key)
-    
-    # 1. LẤY DANH SÁCH MODEL THỰC TẾ TỪ GOOGLE (Tránh lỗi 404 do sai tên)
     try:
         all_models = list(genai.list_models())
     except Exception as e:
         return f"Lỗi kết nối lấy danh sách model: {e}", None
 
-    # Lọc ra các model có thể tạo văn bản
-    valid_models = [
-        m.name for m in all_models 
-        if 'generateContent' in m.supported_generation_methods
-    ]
-    
-    if not valid_models:
-        return "Lỗi: API Key đúng nhưng không tìm thấy model nào hỗ trợ tạo văn bản (generateContent).", None
+    valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
+    if not valid_models: return "Lỗi: API Key đúng nhưng không tìm thấy model.", None
 
-    # 2. SẮP XẾP ƯU TIÊN (Flash > Pro)
-    # Chúng ta sẽ tạo một danh sách ưu tiên dựa trên những gì thực tế ĐANG CÓ
     priority_order = []
-    
-    # Tìm các bản Flash trước
     for m in valid_models:
-        if 'flash' in m.lower() and '1.5' in m:
-            priority_order.append(m)
-            
-    # Tìm các bản Pro
+        if 'flash' in m.lower() and '1.5' in m: priority_order.append(m)
     for m in valid_models:
-        if 'pro' in m.lower() and '1.5' in m and m not in priority_order:
-            priority_order.append(m)
-            
-    # Các model còn lại (như gemini-pro cũ, gemini-1.0...)
+        if 'pro' in m.lower() and '1.5' in m and m not in priority_order: priority_order.append(m)
     for m in valid_models:
-        if m not in priority_order:
-            priority_order.append(m)
+        if m not in priority_order: priority_order.append(m)
 
-    # 3. THỬ LẦN LƯỢT (Cơ chế chống lỗi 429)
     last_error = ""
-    
     for model_name in priority_order:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text, model_name
         except Exception as e:
-            error_msg = str(e)
-            last_error = error_msg
-            # Gặp lỗi (429, 500, v.v.) thì thử model tiếp theo ngay
+            last_error = str(e)
             time.sleep(1) 
             continue
-
     return f"Hết model khả dụng. Lỗi cuối cùng: {last_error}", None
 
 # --- 6. HÀM HỖ TRỢ FILE ---
@@ -392,7 +372,6 @@ def create_word_from_question_list(school_name, subject, exam_list):
     doc = Document()
     set_font_style(doc)
     
-    # Header
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
     table.columns[0].width = Cm(7)
@@ -413,7 +392,6 @@ def create_word_from_question_list(school_name, subject, exam_list):
 
     doc.add_paragraph()
     
-    # PHẦN 1: MA TRẬN ĐỀ THI
     h1 = doc.add_heading('I. MA TRẬN ĐỀ THI', level=1)
     h1.runs[0].font.name = 'Times New Roman'
     h1.runs[0].font.color.rgb = None
@@ -439,7 +417,6 @@ def create_word_from_question_list(school_name, subject, exam_list):
 
     doc.add_paragraph()
 
-    # PHẦN 2: NỘI DUNG ĐỀ THI
     h2 = doc.add_heading('II. NỘI DUNG ĐỀ THI', level=1)
     h2.runs[0].font.name = 'Times New Roman'
     h2.runs[0].font.color.rgb = None
@@ -463,6 +440,7 @@ def create_word_from_question_list(school_name, subject, exam_list):
     buffer.seek(0)
     return buffer
 
+# [YÊU CẦU 3 & 4] HÀM TẠO FILE WORD MA TRẬN ĐẶC TẢ (TAB 3)
 def create_matrix_document(exam_list, subject_name, grade_name):
     doc = Document()
     
@@ -619,7 +597,7 @@ def main():
 
     tab1, tab2, tab3 = st.tabs(["📁 TẠO ĐỀ TỪ FILE (UPLOAD)", "✍️ SOẠN TỪNG CÂU (CSDL)", "📊 MA TRẬN ĐỀ THI"])
 
-    # ========================== TAB 1 ==========================
+    # ========================== TAB 1: UPLOAD & TẠO ĐỀ ==========================
     with tab1:
         st.header("Tạo đề thi từ file Ma trận có sẵn")
         col1, col2 = st.columns([1, 2])
@@ -693,9 +671,16 @@ def main():
             
             col_a, col_b = st.columns(2)
             with col_a:
-                all_terms = list(raw_data.keys())
-                selected_term = st.selectbox("Chọn Học kỳ:", all_terms, key="t2_term")
-                lessons_in_term = raw_data[selected_term]
+                # Xử lý Dropdown Học kỳ
+                if isinstance(raw_data, list):
+                    # Nếu dữ liệu là list phẳng
+                    lessons_in_term = raw_data
+                    selected_term = "Cả năm"
+                else:
+                    # Nếu dữ liệu là dict phân chia học kỳ
+                    all_terms = list(raw_data.keys())
+                    selected_term = st.selectbox("Chọn Học kỳ:", all_terms, key="t2_term")
+                    lessons_in_term = raw_data[selected_term]
 
                 unique_topics = sorted(list(set([l['Chủ đề'] for l in lessons_in_term])))
                 selected_topic = st.selectbox("Chọn Chủ đề:", unique_topics, key="t2_topic")
@@ -744,14 +729,14 @@ def main():
                         YÊU CẦU ĐẶC BIỆT CHO DẠNG NỐI CỘT:
                         - Tạo 2 cột nội dung: Cột A (đánh số 1, 2, 3...) và Cột B (đánh chữ a, b, c...).
                         - Nội dung hai cột phải liên quan logic để học sinh nối.
-                        - Phần Đáp án phải ghi rõ các cặp nối đúng (Ví dụ: 1-b, 2-c...).
+                        - Phần Đáp án phải ghi rõ các cặp nối đúng (Ví dụ: 1->b, 2->c...).
                         """
                     elif q_type == "Trắc nghiệm nhiều lựa chọn":
                         specific_instruction = """
                         YÊU CẦU ĐẶC BIỆT CHO TRẮC NGHIỆM:
-                        - Tạo câu hỏi có 4 phương án lựa chọn được đánh dấu A, B, C, D.
+                        - Tạo câu hỏi có 4 phương án lựa chọn được đánh dấu A., B., C., D. rõ ràng.
                         - Chỉ có duy nhất 1 phương án đúng.
-                        - Trình bày rõ ràng từng phương án xuống dòng.
+                        - Trình bày mỗi phương án trên một dòng riêng biệt.
                         """
                     
                     prompt_q = f"""
@@ -797,7 +782,7 @@ def main():
                         st.success("Đã thêm vào danh sách!")
                         st.rerun()
                 with col_btn2:
-                    if st.button("🔄 Tạo câu hỏi khác", key="t2_regen"):
+                    if st.button("🔄 Tạo lại câu khác", key="t2_regen"):
                         generate_question()
                         st.rerun()
 
