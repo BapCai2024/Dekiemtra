@@ -2,12 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 import pandas as pd
 from docx import Document
-from docx.shared import Pt, Cm, Inches
+from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.oxml.ns import qn
 import io
 import time
-import requests
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -25,7 +23,6 @@ st.markdown("""
     .success-box { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 5px; margin-bottom: 10px; }
     
     /* Tab 2 Style */
-    .main-title { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;}
     .question-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #1565C0; margin-bottom: 10px; }
     
     /* Footer */
@@ -36,6 +33,18 @@ st.markdown("""
         border-top: 1px solid #ddd; z-index: 100;
     }
     .content-container { padding-bottom: 60px; }
+    
+    /* Tiêu đề chính */
+    .main-header {
+        text-align: center; 
+        color: #1565C0; 
+        font-weight: bold; 
+        font-size: 28px; 
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -55,22 +64,6 @@ SUBJECTS_DB = {
 }
 
 CURRICULUM_DB = {
-    # (Dữ liệu CSDL của bạn giữ nguyên, không thay đổi để tiết kiệm không gian hiển thị ở đây)
-    "Lớp 1": {
-        "Toán": {
-            "Học kỳ I": [
-                {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 1: Các số 0, 1, 2, 3, 4, 5 (3 tiết)", "YCCĐ": "Đếm, đọc, viết các số trong phạm vi 5."},
-                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 8: Phép cộng trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép cộng; hiểu ý nghĩa thêm vào/gộp lại."}
-            ]
-        },
-        "Tiếng Việt": { "Học kỳ I": [{"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 1: A a", "YCCĐ": "Nhận biết âm a"}] }
-    },
-    # ... (Code giả định bạn vẫn giữ nguyên data cũ, nếu cần data đầy đủ hãy paste lại phần data từ code cũ vào đây) ...
-}
-# (Lưu ý: Để code chạy được ngay, tôi sẽ dùng một bản rút gọn của CURRICULUM_DB ở trên làm ví dụ. 
-# Khi chạy thực tế, bạn hãy dùng lại khối CURRICULUM_DB đầy đủ của bạn).
-# KHÔI PHỤC DATA ĐẦY ĐỦ ĐỂ BẠN COPY CHO TIỆN:
-CURRICULUM_DB = {
     "Lớp 1": {
         "Toán": {
             "Học kỳ I": [
@@ -85,8 +78,6 @@ CURRICULUM_DB = {
     "Lớp 4": {"Toán": {"Học kỳ I": [{"Chủ đề": "Số tự nhiên", "Bài học": "Bài 5: Dãy số tự nhiên", "YCCĐ": "Nhận biết dãy số"}]}},
     "Lớp 5": {"Toán": {"Học kỳ I": [{"Chủ đề": "Số thập phân", "Bài học": "Bài 8: Số thập phân", "YCCĐ": "Đọc viết số thập phân"}]}}
 }
-# (Bạn vui lòng thay thế bằng bộ CURRICULUM_DB đầy đủ 500 dòng của bạn nếu cần chi tiết hơn)
-
 
 # --- 5. HỆ THỐNG API MỚI ---
 def generate_content_with_rotation(api_key, prompt):
@@ -173,9 +164,8 @@ def create_word_from_question_list(school_name, subject, exam_list):
     # PHẦN 1: MA TRẬN ĐỀ THI
     h1 = doc.add_heading('I. MA TRẬN ĐỀ THI', level=1)
     h1.runs[0].font.name = 'Times New Roman'
-    h1.runs[0].font.color.rgb = None # Màu đen
+    h1.runs[0].font.color.rgb = None
     
-    # Tạo bảng ma trận
     matrix_table = doc.add_table(rows=1, cols=6)
     matrix_table.style = 'Table Grid'
     hdr_cells = matrix_table.rows[0].cells
@@ -203,70 +193,51 @@ def create_word_from_question_list(school_name, subject, exam_list):
     h2.runs[0].font.color.rgb = None
     
     for idx, q in enumerate(exam_list):
-        # Tiêu đề câu hỏi
         p = doc.add_paragraph()
         run_title = p.add_run(f"Câu {idx + 1} ({q['points']} điểm): ")
         run_title.bold = True
         
-        # Nội dung câu hỏi (Xử lý xuống dòng)
         content_lines = q['content'].split('\n')
         for line in content_lines:
             if line.strip():
                 if line.startswith("**Câu hỏi:**") or line.startswith("**Đáp án:**"):
-                    pass # Bỏ qua label của AI nếu có
+                    pass 
                 else:
                     doc.add_paragraph(line)
-        
-        doc.add_paragraph() # Khoảng cách
+        doc.add_paragraph() 
 
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
 
-# Hàm tạo file word cho Tab 1 (Giữ nguyên logic cơ bản, chỉnh font)
 def create_word_file_simple(school_name, exam_name, content):
     doc = Document()
     set_font_style(doc)
     
-    # Căn lề
     sections = doc.sections
     for section in sections:
-        section.top_margin = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin = Cm(3)
-        section.right_margin = Cm(2)
+        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
+        section.left_margin = Cm(3); section.right_margin = Cm(2)
 
-    table = doc.add_table(rows=1, cols=2)
-    table.autofit = False
-    table.columns[0].width = Cm(7)
-    table.columns[1].width = Cm(9)
+    table = doc.add_table(rows=1, cols=2); table.autofit = False
+    table.columns[0].width = Cm(7); table.columns[1].width = Cm(9)
 
-    cell_1 = table.cell(0, 0)
-    p1 = cell_1.paragraphs[0]
-    run_s = p1.add_run(f"{school_name.upper()}")
-    run_s.bold = True
-    run_s.font.size = Pt(12)
+    cell_1 = table.cell(0, 0); p1 = cell_1.paragraphs[0]
+    run_s = p1.add_run(f"{school_name.upper()}"); run_s.bold = True; run_s.font.size = Pt(12)
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    cell_2 = table.cell(0, 1)
-    p2 = cell_2.paragraphs[0]
-    run_e = p2.add_run(f"{exam_name.upper()}\n")
-    run_e.bold = True
-    run_e.font.size = Pt(12)
-    run_y = p2.add_run("Năm học: ..........")
-    run_y.font.size = Pt(13)
+    cell_2 = table.cell(0, 1); p2 = cell_2.paragraphs[0]
+    run_e = p2.add_run(f"{exam_name.upper()}\n"); run_e.bold = True; run_e.font.size = Pt(12)
+    run_y = p2.add_run("Năm học: .........."); run_y.font.size = Pt(13)
     p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     doc.add_paragraph()
     for line in content.split('\n'):
         if line.strip():
-            p = doc.add_paragraph(line)
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p = doc.add_paragraph(line); p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
+    buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
     return buffer
 
 # --- 7. MAIN APP ---
@@ -279,13 +250,10 @@ def main():
     # --- SIDEBAR CHUNG ---
     with st.sidebar:
         st.header("🔑 CẤU HÌNH HỆ THỐNG")
-        
-        # [YÊU CẦU 3] THÊM DÒNG HỖ TRỢ
         st.subheader("HỖ TRỢ RA ĐỀ CẤP TIỂU HỌC")
-        
         api_key = st.text_input("Nhập API Key Google:", type="password")
         
-        # [YÊU CẦU 4] THÊM NÚT KIỂM TRA API
+        # NÚT KIỂM TRA API
         if st.button("🔌 Kiểm tra kết nối API"):
             if not api_key:
                 st.warning("Vui lòng nhập API Key trước.")
@@ -305,13 +273,15 @@ def main():
         st.warning("Vui lòng nhập API Key để bắt đầu.")
         return
 
+    # [YÊU CẦU 3] THÊM TIÊU ĐỀ LỚN Ở GIAO DIỆN CHÍNH
+    st.markdown('<div class="main-header">HỖ TRỢ RA ĐỀ THI CẤP TIỂU HỌC</div>', unsafe_allow_html=True)
+
     # --- TABS GIAO DIỆN ---
     tab1, tab2 = st.tabs(["📁 TẠO ĐỀ TỪ FILE (UPLOAD)", "✍️ SOẠN TỪNG CÂU (CSDL)"])
 
     # ========================== TAB 1: UPLOAD & TẠO ĐỀ ==========================
     with tab1:
         st.header("Tạo đề thi từ file Ma trận có sẵn")
-        
         col1, col2 = st.columns([1, 2])
         with col1:
             st.subheader("1. Chọn Lớp")
@@ -322,25 +292,21 @@ def main():
             sub_name_t1 = st.selectbox("Môn học:", [s[0] for s in subjects_t1], key="t1_sub")
             icon_t1 = next(i for n, i in subjects_t1 if n == sub_name_t1)
             st.markdown(f"<div class='subject-card'><h3>{icon_t1} {sub_name_t1}</h3></div>", unsafe_allow_html=True)
-            
             exam_term_t1 = st.selectbox("Kỳ thi:", 
                 ["ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ I", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ I",
                 "ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ II", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ II"], key="t1_term")
-            
             school_name_t1 = st.text_input("Tên trường:", value="TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", key="t1_school")
 
         st.subheader("3. Upload Ma trận")
         st.info("💡 File upload nên chứa bảng ma trận có các cột: Mạch kiến thức, Mức độ, Số câu, Số điểm.")
         uploaded = st.file_uploader("Chọn file (.xlsx, .docx, .pdf)", type=['xlsx', 'docx', 'pdf'], key="t1_up")
 
-        # [YÊU CẦU 6] TỐI ƯU HÓA PROMPT CHO TAB 1
         if uploaded and st.button("🚀 TẠO ĐỀ THI NGAY", type="primary", key="t1_btn"):
             content = read_uploaded_file(uploaded)
             if content:
                 with st.spinner("Đang phân tích ma trận và tạo đề..."):
                     prompt = f"""
                     Bạn là chuyên gia giáo dục tiểu học. Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1} dựa CHÍNH XÁC vào nội dung file tải lên dưới đây.
-                    
                     YÊU CẦU BẮT BUỘC:
                     1. Tuân thủ tuyệt đối cấu trúc ma trận/bảng đặc tả trong văn bản cung cấp.
                     2. Hiển thị rõ ràng theo định dạng:
@@ -348,7 +314,6 @@ def main():
                        (Xuống dòng) Đáp án: ...
                     3. Không được bịa ra các bài học không có trong file.
                     4. Sắp xếp câu hỏi từ Mức 1 đến Mức 3 (hoặc theo thứ tự trong file).
-                    
                     Dữ liệu đầu vào:
                     {content}
                     """
@@ -369,8 +334,6 @@ def main():
     # ========================== TAB 2: SOẠN TỪNG CÂU ==========================
     with tab2:
         st.header("Soạn thảo từng câu hỏi theo CSDL")
-        
-        # CHỌN LỚP - MÔN
         col1, col2 = st.columns(2)
         with col1:
             selected_grade = st.selectbox("Chọn Khối Lớp:", list(SUBJECTS_DB.keys()), key="t2_grade")
@@ -386,7 +349,6 @@ def main():
         else:
             st.markdown("---")
             st.subheader("🛠️ Soạn thảo câu hỏi")
-
             col_a, col_b = st.columns(2)
             with col_a:
                 all_terms = list(raw_data.keys())
@@ -410,7 +372,8 @@ def main():
             with col_z:
                 points = st.number_input("Điểm số:", min_value=0.25, max_value=10.0, step=0.25, value=1.0, key="t2_pt")
 
-            if st.button("✨ Tạo câu hỏi (Preview)", type="primary", key="t2_preview"):
+            # HÀM TẠO CÂU HỎI (Dùng chung cho nút Tạo và Tạo lại)
+            def generate_question():
                 with st.spinner("AI đang viết..."):
                     prompt_q = f"""
                     Đóng vai chuyên gia giáo dục Tiểu học. Soạn **1 CÂU HỎI KIỂM TRA** môn {selected_subject} Lớp {selected_grade}.
@@ -428,48 +391,60 @@ def main():
                         "type": q_type, "level": level, "points": points, "content": preview_content
                     }
 
+            if st.button("✨ Tạo câu hỏi (Xem trước)", type="primary", key="t2_preview"):
+                generate_question()
+
             if st.session_state.current_preview:
                 st.markdown(f"<div class='question-box'>{st.session_state.current_preview}</div>", unsafe_allow_html=True)
-                if st.button("✅ Thêm vào đề thi", key="t2_add"):
-                    st.session_state.exam_list.append(st.session_state.temp_question_data)
-                    st.session_state.current_preview = ""
-                    st.success("Đã thêm vào danh sách!")
-                    st.rerun()
+                
+                # [YÊU CẦU 2] NÚT BẤM LINH HOẠT
+                col_btn1, col_btn2 = st.columns([1, 1])
+                with col_btn1:
+                    if st.button("✅ Thêm vào đề thi", key="t2_add"):
+                        st.session_state.exam_list.append(st.session_state.temp_question_data)
+                        st.session_state.current_preview = ""
+                        st.success("Đã thêm vào danh sách!")
+                        st.rerun()
+                with col_btn2:
+                    if st.button("🔄 Tạo lại câu khác", key="t2_regen"):
+                        generate_question()
+                        st.rerun()
 
             # --- DANH SÁCH & THỐNG KÊ ---
             if len(st.session_state.exam_list) > 0:
                 st.markdown("---")
                 
-                # [YÊU CẦU 1] THÊM PHẦN THỐNG KÊ
-                st.subheader(f"📊 Thống kê đề thi ({len(st.session_state.exam_list)} câu)")
-                df_preview = pd.DataFrame(st.session_state.exam_list)
-                
-                stat1, stat2, stat3 = st.columns(3)
-                stat1.metric("Tổng số câu", len(df_preview))
-                stat2.metric("Tổng điểm", df_preview['points'].sum())
-                stat3.bar_chart(df_preview['level'].value_counts())
+                # [YÊU CẦU 1] THỐNG KÊ NHỎ GỌN
+                st.markdown(f"📊 **Thống kê:** {len(st.session_state.exam_list)} câu hỏi | Tổng điểm: {sum(item['points'] for item in st.session_state.exam_list)}")
 
-                # [YÊU CẦU 2] HIỂN THỊ DANH SÁCH CÓ STT VÀ MỨC ĐỘ
-                st.markdown("#### 📋 Chi tiết danh sách")
-                # Thêm cột STT (Số thứ tự)
-                df_display = df_preview.copy()
-                df_display.insert(0, 'STT', [f"Câu {i+1}" for i in range(len(df_display))])
-                # Đổi tên cột cho đẹp
-                df_display = df_display.rename(columns={'lesson': 'Bài học', 'type': 'Dạng', 'level': 'Mức độ', 'points': 'Điểm'})
-                st.dataframe(df_display[['STT', 'Bài học', 'Dạng', 'Mức độ', 'Điểm']], use_container_width=True)
+                # [YÊU CẦU 1] HIỂN THỊ DANH SÁCH ĐỂ CHỈNH SỬA
+                st.markdown("#### 📝 Chỉnh sửa chi tiết đề thi")
                 
+                # Duyệt qua từng câu để hiển thị ô nhập liệu
+                for i, item in enumerate(st.session_state.exam_list):
+                    with st.expander(f"Câu {i+1} ({item['points']} điểm) - {item['type']}"):
+                        # Cho phép sửa nội dung
+                        new_content = st.text_area(
+                            f"Nội dung câu {i+1}:", 
+                            value=item['content'], 
+                            height=150, 
+                            key=f"edit_q_{i}"
+                        )
+                        # Cập nhật lại vào session_state khi người dùng sửa
+                        st.session_state.exam_list[i]['content'] = new_content
+                        
+                        # Nút xóa từng câu
+                        if st.button("🗑️ Xóa câu này", key=f"del_q_{i}"):
+                            st.session_state.exam_list.pop(i)
+                            st.rerun()
+
                 col_act1, col_act2 = st.columns(2)
-                with col_act1:
-                    if st.button("❌ Xóa câu cuối cùng", key="t2_del"):
-                        st.session_state.exam_list.pop()
-                        st.rerun()
-                
                 with col_act2:
-                     if st.button("🗑️ Xóa toàn bộ", key="t2_clear"):
+                     if st.button("❌ Xóa toàn bộ đề", key="t2_clear"):
                         st.session_state.exam_list = []
                         st.rerun()
 
-                # [YÊU CẦU 5] TẢI XUỐNG DẠNG WORD (BAO GỒM MA TRẬN)
+                # TẢI XUỐNG DẠNG WORD
                 docx_file = create_word_from_question_list("TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", selected_subject, st.session_state.exam_list)
                 st.download_button(
                     label="📥 TẢI ĐỀ THI & MA TRẬN (WORD)", 
