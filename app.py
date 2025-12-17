@@ -466,35 +466,12 @@ def create_word_from_question_list(school_name, subject, exam_list):
 
     doc.add_paragraph()
     
-    # PHẦN 1: MA TRẬN ĐỀ THI (Dựa trên exam_list hiện tại)
-    # Lưu ý: Đây là bảng ma trận tóm tắt, bảng chi tiết ở Tab 3 sẽ export riêng
-    h1 = doc.add_heading('I. MA TRẬN ĐỀ THI', level=1)
-    h1.runs[0].font.name = 'Times New Roman'
-    h1.runs[0].font.color.rgb = None
-    
-    matrix_table = doc.add_table(rows=1, cols=6)
-    matrix_table.style = 'Table Grid'
-    hdr_cells = matrix_table.rows[0].cells
-    headers = ["STT", "Chủ đề / Bài học", "Dạng bài", "Mức độ", "Điểm", "Ghi chú"]
-    for i, text in enumerate(headers):
-        hdr_cells[i].text = text
-        hdr_cells[i].paragraphs[0].runs[0].font.bold = True
-        hdr_cells[i].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    for idx, q in enumerate(exam_list):
-        row_cells = matrix_table.add_row().cells
-        row_cells[0].text = str(idx + 1)
-        row_cells[1].text = str(q.get('lesson', ''))
-        row_cells[2].text = str(q.get('type', ''))
-        row_cells[3].text = str(q.get('level', ''))
-        row_cells[4].text = str(q.get('points', ''))
-        row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        row_cells[4].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    doc.add_paragraph()
+    # [YÊU CẦU 5: BỎ BẢNG MA TRẬN, CHỈ ĐỂ ĐỀ]
+    # PHẦN 1: MA TRẬN ĐỀ THI - ĐÃ BỎ THEO YÊU CẦU
 
     # PHẦN 2: NỘI DUNG ĐỀ THI
-    h2 = doc.add_heading('II. NỘI DUNG ĐỀ THI', level=1)
+    # Sửa tiêu đề cho phù hợp
+    h2 = doc.add_heading('ĐỀ BÀI', level=1)
     h2.runs[0].font.name = 'Times New Roman'
     h2.runs[0].font.color.rgb = None
     
@@ -731,6 +708,7 @@ def main():
             if content:
                 with st.spinner("Đang phân tích ma trận và tạo đề từ nguồn GDPT 2018..."):
                     # [YÊU CẦU 1: Tạo đề từ AI lấy nguồn GDPT 2018, đặc biệt môn Tin học]
+                    # [SỬA LỖI HÌNH 11111: Prompt rõ ràng hơn để tạo đề ngay]
                     prompt = f"""
                     Bạn là chuyên gia giáo dục tiểu học Việt Nam. 
                     Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1}.
@@ -740,12 +718,17 @@ def main():
                     2. KHÔNG lấy kiến thức ngoài chương trình hoặc các sách giáo khoa cũ (trước 2018).
                     3. Đối với môn Tin học: Phải bám sát chuẩn kiến thức kĩ năng mới nhất của Bộ GD&ĐT.
                     
-                    YÊU CẦU VỀ CẤU TRÚC:
-                    1. Tham khảo cấu trúc ma trận/số lượng câu hỏi trong file tải lên (nếu có):
+                    YÊU CẦU VỀ CẤU TRÚC VÀ ĐẦU RA (TẠO ĐỀ NGAY LẬP TỨC):
+                    1. Tham khảo cấu trúc ma trận trong file:
                     {content}
                     
-                    2. Hiển thị kết quả rõ ràng theo định dạng:
+                    2. TẠO NGAY ĐỀ THI (Không trả lời kiểu "Tôi sẽ làm...", hãy làm ngay).
+                    3. Hiển thị kết quả rõ ràng theo định dạng:
                        **Câu [Số thứ tự]** ([Số điểm] đ) - [Mức độ]: [Nội dung câu hỏi]
+                       A. ...
+                       B. ...
+                       C. ...
+                       D. ...
                        (Xuống dòng) Đáp án: ...
                     
                     3. Sắp xếp câu hỏi từ Mức 1 đến Mức 3.
@@ -810,11 +793,23 @@ def main():
                 # Dropdown chọn bài học
                 selected_lesson_name = st.selectbox("Chọn Bài học:", all_lessons_in_topic, key="t2_lesson")
                 
-                # [YÊU CẦU 3 & 4: Tự động lấy YCCĐ, bỏ nút bấm]
-                # Kiểm tra xem bài học có thay đổi không, nếu có thì tự gọi API
+                # [YÊU CẦU 2: SỬA LỖI HÌNH 22222: YCCĐ LẤY ĐÚNG THEO CHUẨN]
                 if st.session_state.last_lesson_selected != selected_lesson_name:
-                    with st.spinner("AI đang tự động tra cứu YCCĐ chuẩn chương trình..."):
-                        yccd_prompt = f"Hãy đưa ra Yêu cầu cần đạt chuẩn theo chương trình GDPT 2018 cho bài học: '{selected_lesson_name}' thuộc chủ đề '{selected_topic}', môn {selected_subject}, lớp {selected_grade}. Chỉ đưa ra nội dung YCCĐ ngắn gọn."
+                    with st.spinner("Đang tra cứu YCCĐ chuẩn GDPT 2018 (Chế độ chuyên gia)..."):
+                        # Prompt được tối ưu để đóng vai ChatGPT chuyên gia
+                        yccd_prompt = f"""
+                        Đóng vai chuyên gia giáo dục hàng đầu về Chương trình GDPT 2018 (tương tự khả năng của ChatGPT).
+                        Nhiệm vụ: Trích xuất chính xác Yêu cầu cần đạt (YCCĐ) cho bài học sau:
+                        - Bài học: '{selected_lesson_name}'
+                        - Chủ đề: '{selected_topic}'
+                        - Môn: {selected_subject}
+                        - Lớp: {selected_grade}
+                        
+                        Yêu cầu:
+                        1. Chỉ đưa ra nội dung cốt lõi, ngắn gọn, súc tích.
+                        2. Phải chính xác với văn bản quy định của Bộ GD&ĐT.
+                        3. Không thêm lời dẫn.
+                        """
                         ai_yccd, _ = generate_content_with_rotation(api_key, yccd_prompt)
                         if ai_yccd:
                             st.session_state.auto_yccd_content = ai_yccd
@@ -853,15 +848,33 @@ def main():
             def generate_question():
                 with st.spinner("AI đang viết..."):
                     random_seed = random.randint(1, 100000)
+                    # [SỬA LỖI HÌNH 3333 VÀ 4444: TỐI ƯU HÓA PROMPT TẠO CÂU HỎI]
                     prompt_q = f"""
                     Đóng vai chuyên gia giáo dục Tiểu học. Soạn **1 CÂU HỎI KIỂM TRA** môn {selected_subject} Lớp {selected_grade}.
                     - Chủ đề: {current_lesson_data['Chủ đề']}
                     - Bài học cụ thể: {current_lesson_data['Bài học']}
                     - YCCĐ: {current_lesson_data['YCCĐ']}
                     - Dạng: {q_type} - Mức độ: {level} - Điểm: {points}
-                    - Seed ngẫu nhiên: {random_seed} (Hãy tạo câu hỏi khác biệt so với lần trước nếu có)
+                    - Seed ngẫu nhiên: {random_seed}
+                    
+                    YÊU CẦU ĐỊNH DẠNG NGHIÊM NGẶT (SỬA LỖI HIỂN THỊ):
+                    1. KHÔNG được nhắc lại tên bài học hay ngữ cảnh mở đầu (ví dụ: "Trong bài học X..."). Vào thẳng nội dung câu hỏi.
+                    
+                    2. VỚI DẠNG "Trắc nghiệm (4 lựa chọn)":
+                       - Phải hiển thị 4 đáp án A. B. C. D. riêng biệt xuống dòng.
+                       - Chỉ ra đáp án đúng ở cuối.
+                    
+                    3. VỚI DẠNG "Ghép nối (Nối cột)":
+                       - Phải liệt kê nội dung Cột A (1, 2,...) và Cột B (a, b,...) rõ ràng.
+                       - Phần đáp án mô phỏng kết quả nối (ví dụ: 1-b, 2-a).
+                    
+                    4. VỚI DẠNG "Điền khuyết" hoặc "Tự luận":
+                       - Câu hỏi phải chừa chỗ trống bằng dấu ".........." để học sinh điền.
+                       - Hiển thị đáp án gợi ý ở cuối.
+
                     OUTPUT CHỈ GHI NỘI DUNG, KHÔNG CẦN LỜI DẪN:
-                    Nội dung câu hỏi...
+                    [Nội dung câu hỏi và các lựa chọn]
+                    
                     Đáp án: ...
                     """
                     preview_content, _ = generate_content_with_rotation(api_key, prompt_q)
