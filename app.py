@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import time
+import random
 
 # --- 1. CẤU HÌNH TRANG ---
 st.set_page_config(
@@ -28,8 +29,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CƠ SỞ DỮ LIỆU CHƯƠNG TRÌNH HỌC (DATA CHI TIẾT - ĐẦY ĐỦ CÁC BÀI TỪ CODE 2) ---
-
+# --- 3. CƠ SỞ DỮ LIỆU CHƯƠNG TRÌNH HỌC (FULL DATA) ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📖"), ("Toán", "✖️")],
     "Lớp 2": [("Tiếng Việt", "📖"), ("Toán", "✖️")],
@@ -39,407 +39,373 @@ SUBJECTS_DB = {
 }
 
 CURRICULUM_DB = {
-
-# =================================================================================
-# KHỐI LỚP 1 (KNTT) - Dựa trên K1.pdf
-# =================================================================================
-
-"Lớp 1": {
-
-"Toán": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 1: Các số 0, 1, 2, 3, 4, 5 (Tr8) (1 tiết)", "YCCĐ": "Đếm, đọc, viết các số trong phạm vi 10."},
-        {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 2: Các số 6, 7, 8, 9, 10 (Tr14) (1 tiết)", "YCCĐ": "Đếm, đọc, viết các số trong phạm vi 10."},
-        {"Chủ đề": "1. Các số từ 0 đến 10", "Bài học": "Bài 3: Nhiều hơn, ít hơn, bằng nhau (Tr20) (1 tiết)", "YCCĐ": "Nhận biết cách so sánh số PV 10,."},
-        {"Chủ đề": "2. Làm quen với hình phẳng", "Bài học": "Hình vuông, hình tròn, hình TG, hình CN (Tr48) (1 tiết)", "YCCĐ": "Nhận dạng được hình vuông, tròn, tam giác, chữ nhật,."},
-        {"Chủ đề": "3. Phép cộng, phép trừ trong phạm vi 10", "Bài học": "Phép cộng trong phạm vi 10 (T56) (1 tiết)", "YCCĐ": "Nhận biết ý nghĩa, thực hiện cộng không nhớ PV 10,."},
-        {"Chủ đề": "3. Phép cộng, phép trừ trong phạm vi 10", "Bài học": "Phép trừ trong phạm vi 10 (T68) (1 tiết)", "YCCĐ": "Thực hiện phép trừ không nhớ PV 10."},
-        {"Chủ đề": "4. Làm quen với một số hình khối", "Bài học": "Khối lập phương, khối hộp CN (Tr92) (2 tiết)", "YCCĐ": "Nhận dạng được khối lập phương, khối hộp chữ nhật."},
-        {"Chủ đề": "5. Ôn tập học kì 1", "Bài học": "Ôn tập các số trong phạm vi 10 (Tr102) (1 tiết)", "YCCĐ": "Ôn tập phép cộng, phép trừ không nhớ PV 10."},
-    ],
-
-    "Học kỳ II": [
-        {"Chủ đề": "5. Các số đến 100", "Bài học": "Bài 21: Số có hai chữ số (Tr4) (1 tiết)", "YCCĐ": "Nhận biết được chục và đơn vị, số tròn chục,."},
-        {"Chủ đề": "7. Độ dài và đo độ dài", "Bài học": "Bài 26: Xăng - ti - mét (Tr34) (1 tiết)", "YCCĐ": "Đọc và viết được số đo độ dài trong phạm vi 100 cm."},
-        {"Chủ đề": "8. Phép cộng và phép trừ (không nhớ) trong pv100", "Bài học": "Bài 29: Phép cộng số có hai chữ số với số có một chữ số (Tr44) (2 tiết)", "YCCĐ": "Thực hiện được phép cộng không nhớ PV 100,."},
-        {"Chủ đề": "9. Thời gian: Giờ và lịch", "Bài học": "Bài 34: Xem giờ đúng trên đồng hồ (Tr72) (1 tiết)", "YCCĐ": "Nhận biết và đọc được giờ đúng trên đồng hồ."},
-        {"Chủ đề": "10. Ôn tập cuối năm", "Bài học": "Bài 39: ÔT các số và PT trong PV 100 (Tr94) (1 tiết)", "YCCĐ": "Ôn tập các số và phép tính trong phạm vi 100,."},
-    ]
-},
-
-"Tiếng Việt": {
-    "Học kỳ I": [
-        {"Chủ đề": "Làm quen với tiếng việt", "Bài học": "Bài 1A: a, b (2 tiết)", "YCCĐ": "Học chữ ghi âm."},
-        {"Chủ đề": "Học chữ ghi âm", "Bài học": "Bài 1C: ô, ơ (2 tiết)", "YCCĐ": "Viết đúng chữ thường, chữ số."},
-        {"Chủ đề": "Học chữ ghi âm", "Bài học": "Bài 2C: g, gh (2 tiết)", "YCCĐ": "Tăng số lần đọc cá nhân và luyện viết."},
-        {"Chủ đề": "Học chữ ghi vần", "Bài học": "Bài 5C: ua, ưa, ia (2 tiết)", "YCCĐ": "Tích hợp học thông qua chơi."},
-        {"Chủ đề": "Học chữ ghi vần", "Bài học": "Bài 7C: êu, iu, ưu (3 tiết)", "YCCĐ": "Nói rõ ràng, thành câu, nhìn vào người nghe khi nói,."},
-        {"Chủ đề": "Ôn tập", "Bài học": "Bài 9C: ôn tập giữa học kì I (2 tiết)", "YCCĐ": "Ôn tập, thực hành học thông qua chơi."},
-        {"Chủ đề": "Ôn tập", "Bài học": "Bài 18: Ôn tập cuối học kì I (2 tiết)", "YCCĐ": "Ôn tập cuối HK I."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Trường em", "Bài học": "Bài 19A: Tới trường (Tiết 1, 3)", "YCCĐ": "Đọc đúng 40-50 tiếng/phút; Trả lời câu hỏi đơn giản,."},
-        {"Chủ đề": "Em là búp măng non", "Bài học": "Bài 20A: Bạn bè tuổi thơ (Tiết 1, 3)", "YCCĐ": "Viết đúng chính tả đoạn văn 30-40 chữ,."},
-        {"Chủ đề": "Cuộc sống quanh em", "Bài học": "Bài 21A: Những âm thanh kì diệu (Tiết 1, 3)", "YCCĐ": "Giới thiệu ngắn về bản thân, gia đình,."},
-        {"Chủ đề": "Gia đình em", "Bài học": "Bài 22A: Con yêu mẹ (Tiết 1, 3)", "YCCĐ": "Tích hợp học thông qua chơi và bình đẳng giới."},
-        {"Chủ đề": "Cuộc sống quanh em", "Bài học": "Bài 25D: Những con vật thông minh (Tiết 1, 3)", "YCCĐ": "Đọc đúng và rõ ràng đoạn văn ngắn,."},
-        {"Chủ đề": "Ôn tập", "Bài học": "Bài 34D: Em được yêu thương + Ôn tập (Tiết 1, 3)", "YCCĐ": "Ôn tập cuối năm."},
-    ]
-}
-},
-
-# =================================================================================
-# KHỐI LỚP 2 (KNTT) - Dựa trên K2.pdf
-# =================================================================================
-
-"Lớp 2": {
-"Toán": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 1: Ôn tập các số đến 100 (3 tiết)", "YCCĐ": "Củng cố chục, đơn vị, so sánh, cộng, trừ PV 100,."},
-        {"Chủ đề": "2. Phép cộng, phép trừ trong phạm vi 20", "Bài học": "Bài 7: Phép cộng (qua10) trong pv 20 (5 tiết)", "YCCĐ": "Thực hiện phép cộng có nhớ PV 20,."},
-        {"Chủ đề": "2. Phép cộng, phép trừ trong phạm vi 20", "Bài học": "Bài 11: Phép trừ (qua 10) trong pv 20 (5 tiết)", "YCCĐ": "Thực hiện phép trừ có nhớ PV 20."},
-        {"Chủ đề": "3. Làm quen với khối lượng, dung tích", "Bài học": "Bài 15: Nặng hơn, nhẹ hơn. Ki - lô- gam (3 tiết)", "YCCĐ": "Nhận biết Nặng hơn, nhẹ hơn, Ki-lô-Gam."},
-        {"Chủ đề": "4. Phép cộng, phép trừ có nhớ trong phạm vi 100", "Bài học": "Bài 20: Phép cộng (có nhớ) số có hai chữ số với số có hai chữ số (5 tiết)", "YCCĐ": "Thực hiện phép cộng có nhớ PV 100."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "8. Phép nhân, phép chia", "Bài học": "Bài 39: Bảng nhân 2 (2 tiết)", "YCCĐ": "Vận dụng được bảng nhân 2 trong tính toán."},
-        {"Chủ đề": "8. Phép nhân, phép chia", "Bài học": "Bài 43: Bảng chia 2 (2 tiết)", "YCCĐ": "Vận dụng được bảng chia 2 trong tính toán."},
-        {"Chủ đề": "10. Các số trong phạm vi 1000", "Bài học": "Bài 48: Đơn vị, chục, trăm, nghìn (2 tiết)", "YCCĐ": "Nhận biết đơn vị, chục, trăm, nghìn."},
-        {"Chủ đề": "11. Độ dài và đơn vị đo độ dài. Tiền VN", "Bài học": "Bài 55: Đề - xi - mét. Mét. Ki-lô-mét (3 tiết)", "YCCĐ": "Đọc và mô tả được các số liệu."},
-        {"Chủ đề": "12. Phép cộng, phép trừ trong phạm vi 1000", "Bài học": "Bài 60: Phép cộng (có nhớ) trong phạm vi 1000 (4 tiết)", "YCCĐ": "Thực hiện phép cộng có nhớ PV 1000."},
-    ]
-},
-"Tiếng Việt": {
-    "Học kỳ I": [
-        {"Chủ đề": "EM LỚN LÊN TỪNG NGÀY", "Bài học": "Bài 1: Tôi là học sinh lớp 2 (4 tiết)", "YCCĐ": "Biết nêu và trả lời câu hỏi về nội dung văn bản."},
-        {"Chủ đề": "ĐI HỌC VUI SAO", "Bài học": "Bài 7: Cây xấu hổ (4 tiết)", "YCCĐ": "Tích hợp KNS: GDHS mạnh dạn tự tin."},
-        {"Chủ đề": "NIỀM VUI TUỔI THƠ", "Bài học": "Bài 24: Nặn đồ chơi (6 tiết)", "YCCĐ": "Mở rộng vốn từ đồ chơi; Dấu phẩy. Viết đoạn văn tả đồ chơi."},
-        {"Chủ đề": "MÁI ẤM GIA ĐÌNH", "Bài học": "Bài 28: Trò chơi của bố (6 tiết)", "YCCĐ": "Viết đoạn văn thể hiện tình cảm với người thân."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "VẺ ĐẸP QUANH EM", "Bài học": "Bài 1: Chuyện bốn mùa (4 tiết)", "YCCĐ": "GDHS có ý thức giữ gìn bảo vệ thiên nhiên."},
-        {"Chủ đề": "HÀNH TRÌNH XANH CỦA EM", "Bài học": "Bài 10: Khủng long (6 tiết)", "YCCĐ": "Viết đoạn văn giới thiệu tranh ảnh về một con vật."},
-        {"Chủ đề": "GIAO TIẾP VÀ KẾT NỐI", "Bài học": "Bài 18: Thư viện biết đi (6 tiết)", "YCCĐ": "Viết đoạn văn giới thiệu một đồ dùng học tập,."},
-        {"Chủ đề": "VIỆT NAM QUÊ HƯƠNG EM", "Bài học": "Bài 25: Đất nước chúng mình (4 tiết)", "YCCĐ": "Kể chuyện Thánh Gióng."},
-    ]
-}
-},
-
-# =================================================================================
-# KHỐI LỚP 3 (KNTT) - Dựa trên K3.pdf
-# =================================================================================
-
-"Lớp 3": {
-"Toán": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 3: Tìm số hạng trong một tổng; Tìm số bị trừ, số trừ (2 tiết)", "YCCĐ": "Tìm được số hạng chưa biết, số bị trừ, số trừ."},
-        {"Chủ đề": "2. Bảng nhân, bảng chia", "Bài học": "Bài 9: Bảng nhân 6, bảng chia 6 (1 tiết)", "YCCĐ": "Hình thành bảng nhân, chia và vận dụng tính nhẩm."},
-        {"Chủ đề": "3. Làm quen với hình phẳng, hình khối", "Bài học": "Bài 17: Hình tròn. Tâm, bán kính, đường kính (1 tiết)", "YCCĐ": "Nhận biết hình tròn, tâm, bán kính, đường kính,."},
-        {"Chủ đề": "4. Phép nhân, phép chia trong phạm vi 100", "Bài học": "Bài 28: Bài toán giải bằng hai phép tính (1 tiết)", "YCCĐ": "Vận dụng giải các bài toán liên quan."},
-        {"Chủ đề": "5. Một số đơn vị đo độ dài, khối lượng, dung tích, nhiệt độ", "Bài học": "Bài 33: Nhiệt độ. Đv đo nhiệt độ (1 tiết)", "YCCĐ": "Sử dụng được đơn vị đo mm, kg, ml để đo."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "8. Các số đến 10 000", "Bài học": "Bài 45: Số có 4 chữ số (1 tiết)", "YCCĐ": "Đọc, viết được các số trong phạm vi 10 000."},
-        {"Chủ đề": "9. Chu vi, diện tích một số hình phẳng", "Bài học": "Bài 50: Chu vi hình tam giác, hình tứ giác (1 tiết)", "YCCĐ": "Tính được chu vi các hình."},
-        {"Chủ đề": "11. Các số đến 100 000", "Bài học": "Bài 59: Số có 5 chữ số (1 tiết)", "YCCĐ": "Biết cách đọc, viết và so sánh các số có năm chữ số."},
-        {"Chủ đề": "13. Xem đồng hồ. Tháng - năm. Tiền Việt Nam", "Bài học": "Bài 67: Thực hành xem đồng hồ, xem lịch (2 tiết)", "YCCĐ": "Đọc được giờ chính xác đến từng phút."},
-        {"Chủ đề": "15. Làm quen với yếu tố thống kê, xác suất", "Bài học": "Bài 74: Khả năng xảy ra của một sự kiện (1 tiết)", "YCCĐ": "Nhận biết cách thu thập, phân loại, ghi chép số liệu,."},
-    ]
-},
-"Tiếng Việt": {
-    "Học kỳ I": [
-        {"Chủ đề": "Những trải nghiệm thú vị", "Bài học": "B1: Ngày gặp lại (Tr10) (3 tiết)", "YCCĐ": "Nghe - viết: Em yêu mùa hè. Viết tin nhắn,."},
-        {"Chủ đề": "Công trường rộng mở", "Bài học": "Bài 11: Lời giải toán đặc biệt (3 tiết)", "YCCĐ": "Nghe - viết: Lời giải toán đặc biệt. Kể chuyện Đội viên tương lai."},
-        {"Chủ đề": "Mái nhà yêu thương", "Bài học": "B17: Ngưỡng cửa (Tr82) (3 tiết)", "YCCĐ": "Nghe - viết: Đồ đạc trong nhà. Kể chuyện Sự tích nhà sàn,."},
-        {"Chủ đề": "Mái ấm gia đình", "Bài học": "Bài 31: Người làm đồ chơi (Trang 137) (3 tiết)", "YCCĐ": "Nghe - viết: Người làm đồ chơi. Viết thư."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Những sắc màu TN", "Bài học": "Bài 5: ngày hội rừng xanh (Trang 23) (3 tiết)", "YCCĐ": "Nghe - viết: Chim chích bông. Nói và nghe: Rừng."},
-        {"Chủ đề": "Bài học từ cuộc sống", "Bài học": "Bài 13: Mèo đi câu cá (Trang 55) (3 tiết)", "YCCĐ": "Nghe - viết: Bài học của gấu. Nói và nghe: Cùng vui làm việc."},
-        {"Chủ đề": "Đất nước ngàn năm", "Bài học": "Bài 23: Hai bà trưng (Trang 102) (3 tiết)", "YCCĐ": "Nghe - viết: Hai Bà Trưng. Kể chuyện Hai Bà Trưng."},
-        {"Chủ đề": "Trái đất của chúng mình", "Bài học": "B28: Những điều nhỏ tớ làm cho trái đất (Tr122) (4 tiết)", "YCCĐ": "Viết đoạn văn kể lại một việc làm góp phần bảo vệ môi trường,."},
-    ]
-},
-"Tin học": {
-    "Học kỳ I": [
-        {"Chủ đề": "Máy tính và em", "Bài học": "Bài 1. Thông tin và quyết định (2 tiết)", "YCCĐ": "Hiểu thông tin và xử lí thông tin."},
-        {"Chủ đề": "Máy tính và em", "Bài học": "Bài 4. Làm việc với máy tính (3 tiết)", "YCCĐ": "Thực hành làm việc với máy tính."},
-        {"Chủ đề": "Mạng máy tính và Internet", "Bài học": "Bài 6. Khám phá thông tin trên Internet (2 tiết)", "YCCĐ": "Xem tin và giải trí trên trang web."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Tổ chức lưu trữ, tìm kiếm và trao đổi thông tin", "Bài học": "Bài 8. Sơ đồ hình cây. Tổ chức thông tin trong máy tính (2 tiết)", "YCCĐ": "Làm quen với thư mục lưu trữ thông tin."},
-        {"Chủ đề": "Ứng dụng tin học", "Bài học": "Bài 11. Bài trình chiếu của em (2 tiết)", "YCCĐ": "Làm quen với bài trình chiếu đơn giản."},
-        {"Chủ đề": "Giải quyết vấn đề với sự trợ giúp của máy tính", "Bài học": "Bài 15. Công việc được thực hiện theo điều kiện (2 tiết)", "YCCĐ": "Thực hiện công việc theo các bước."},
-    ]
-},
-"Công nghệ": {
-    "Học kỳ I": [
-        {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1: Tự nhiên và công nghệ (2 tiết)", "YCCĐ": "Kể tên và nêu công dụng sản phẩm công nghệ."},
-        {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 3: Sử dụng quạt điện (2 tiết)", "YCCĐ": "Sử dụng quạt điện đúng cách và an toàn."},
-        {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 5: Sử dụng máy thu hình (3 tiết)", "YCCĐ": "Tác dụng của máy thu hình."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công (3 tiết)", "YCCĐ": "Sử dụng dụng cụ làm thủ công."},
-        {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 8: Làm đồ dùng học tập (3 tiết)", "YCCĐ": "Làm thước kẻ."},
-        {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 9: Làm biển báo giao thông (3 tiết)", "YCCĐ": "Tìm hiểu và làm mô hình biển báo giao thông."},
-    ]
-}
-},
-
-# =================================================================================
-# KHỐI LỚP 4 (KNTT) - Dựa trên K4.pdf
-# =================================================================================
-
-"Lớp 4": {
-
-"Toán": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 4: Biểu thức chứa chữ (3 tiết)", "YCCĐ": "Nhận biết biểu thức chứa chữ."},
-        {"Chủ đề": "2. Góc và đơn vị đo góc", "Bài học": "Bài 8: Góc nhọn, góc tù, góc bẹt (3 tiết)", "YCCĐ": "Dạy học STEM: Góc biến hình."},
-        {"Chủ đề": "3. Số có nhiều chữ số", "Bài học": "Bài 14: So sánh các số có nhiều chữ số (2 tiết)", "YCCĐ": "So sánh các số có nhiều chữ số."},
-        {"Chủ đề": "4. Một số đơn vị đo đại lượng", "Bài học": "Bài 19: Giây, thế kỉ (2 tiết)", "YCCĐ": "Nhận biết Giây, thế kỉ."},
-        {"Chủ đề": "5. Phép cộng và phép trừ", "Bài học": "Bài 25: Tìm hai số khi biết tổng và hiệu của hai số đó (2 tiết)", "YCCĐ": "Tìm hai số khi biết tổng và hiệu,."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "8. Phép nhân, phép chia", "Bài học": "Bài 43: Nhân với số có hai chữ số (3 tiết)", "YCCĐ": "Thực hiện Nhân với số có hai chữ số."},
-        {"Chủ đề": "9. Làm quen với yếu tố thống kê, xác suất", "Bài học": "Bài 50: Biểu đồ cột (2 tiết)", "YCCĐ": "Đọc và mô tả được các số liệu ở dạng biểu đồ cột."},
-        {"Chủ đề": "10. Phân số, khái niệm phân số", "Bài học": "Bài 56: Rút gọn phân số (2 tiết)", "YCCĐ": "Thực hiện Rút gọn phân số."},
-        {"Chủ đề": "11. Phép cộng, phép trừ phân số", "Bài học": "Bài 60: Phép cộng phân số (4 tiết)", "YCCĐ": "Cộng hai phân số có cùng/khác mẫu số."},
-        {"Chủ đề": "13. Ôn tập cuối năm", "Bài học": "Bài 71: Ôn tập hình học và đo lường (2 tiết)", "YCCĐ": "Ôn tập diện tích, chu vi các hình; đo lường."},
-    ]
-},
-
-"Tiếng Việt": {
-    "Học kỳ I": [
-        {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Bài 1: Đọc: Điều kì diệu (1 tiết)", "YCCĐ": "Đọc đúng 80-90 tiếng/phút; Nhận biết Danh từ,."},
-        {"Chủ đề": "Trải nghiệm và khám phá", "Bài học": "Bài 12: Đọc: Nhà phát minh 6 tuổi (2 tiết)", "YCCĐ": "Tìm hiểu cách viết bài văn kể lại 1 câu chuyện."},
-        {"Chủ đề": "Niềm vui sáng tạo", "Bài học": "Bài 18: Đọc: Đồng cỏ nở hoa (2 tiết)", "YCCĐ": "Nhận biết Biện pháp nhân hoá."},
-        {"Chủ đề": "Chắp cánh ước mơ", "Bài học": "Bài 25: Đọc: Bay cùng ước mơ (1 tiết)", "YCCĐ": "Kể về ước mơ của mình."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Sống để yêu thương", "Bài học": "Bài 4: Đọc: Quả ngọt cuối mùa (2 tiết)", "YCCĐ": "Viết đoạn văn nêu tình cảm, cảm xúc về một nhân vật,."},
-        {"Chủ đề": "Uống nước nhớ nguồn", "Bài học": "Bài 9: Đọc: Sự tích con Rồng, cháu Tiên (1 tiết)", "YCCĐ": "Luyện tập về hai thành phần chính của câu."},
-        {"Chủ đề": "Quê hương trong tôi", "Bài học": "Bài 17: Đọc: Cây đa quê hương (1 tiết)", "YCCĐ": "Nhận biết Trạng ngữ chỉ phương tiện. Viết văn miêu tả cây cối,."},
-        {"Chủ đề": "Vì một thế giới bình yên", "Bài học": "Bài 25: Đọc: Khu bảo tồn động vật hoang dã Ngô rông- gô – rô (1 tiết)", "YCCĐ": "Tích hợp ND BVMT: Cần phải bảo vệ các loài động vật hoang dã,."},
-    ]
-},
-
-"Khoa học": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Chất", "Bài học": "Bài 1: Tính chất của nước và nước với cuộc sống (2 tiết)", "YCCĐ": "Nêu tính chất của nước và vai trò của nó."},
-        {"Chủ đề": "1. Chất", "Bài học": "Bài 6: Gió, bão và phòng chống bão (2 tiết)", "YCCĐ": "Hiểu về Gió, bão và cách phòng chống."},
-        {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 8: Ánh sáng và sự truyền ánh sáng (2 tiết)", "YCCĐ": "Hiểu về Ánh sáng và sự truyền ánh sáng."},
-        {"Chủ đề": "3. Thực vật và động vật", "Bài học": "Bài 16: Động vật cần gì để sống? (3 tiết)", "YCCĐ": "Nhận diện những hủ tục trong chăn nuôi tại địa phương."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "4. Nấm", "Bài học": "Bài 19: Đặc điểm chung của nấm (2 tiết)", "YCCĐ": "Nhận biết Đặc điểm chung của nấm."},
-        {"Chủ đề": "5. Con người và sức khoẻ", "Bài học": "Bài 24: Chế độ ăn uống cân bằng (3 tiết)", "YCCĐ": "Xây dựng Chế độ ăn uống cân bằng."},
-        {"Chủ đề": "5. Con người và sức khoẻ", "Bài học": "Bài 27: Phòng tránh đuối nước (2 tiết)", "YCCĐ": "Phòng tránh đuối nước."},
-        {"Chủ đề": "6. Sinh vật và môi trường", "Bài học": "Bài 30: Vai trò của thực vật trong chuỗi thức ăn (3 tiết)", "YCCĐ": "Vai trò của thực vật trong chuỗi thức ăn."},
-    ]
-},
-
-"Lịch sử và Địa lí": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Địa phương em", "Bài học": "Bài 2. Thiên nhiên và con người ở địa phương em (2 tiết)", "YCCĐ": "Biết về Thiên nhiên và con người địa phương."},
-        {"Chủ đề": "2. Trung du và vùng núi Bắc Bộ", "Bài học": "Bài 7: Đền Hùng và lễ giỗ Tổ Hùng Vương (2 tiết)", "YCCĐ": "Tuyên truyền một số lễ hội dân tộc ở nơi em ở."},
-        {"Chủ đề": "3. Đồng bằng Bắc Bộ", "Bài học": "Bài 12: Thăng Long – Hà Nội (3 tiết)", "YCCĐ": "Nắm được sự kiện, lịch sử Thăng Long – Hà Nội,."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "4. Duyên hải miền Trung", "Bài học": "Bài 18: Cố đô Huế (2 tiết)", "YCCĐ": "Tìm hiểu và bảo vệ quần thể di tích cố đô Huế."},
-        {"Chủ đề": "5. Tây Nguyên", "Bài học": "Bài 23: Lễ hội cồng chiêng Tây Nguyên (2 tiết)", "YCCĐ": "Kể tên các lễ hội tại địa phương em."},
-        {"Chủ đề": "6. Nam Bộ", "Bài học": "Bài 27: Thành phố Hồ Chí Minh (2 tiết)", "YCCĐ": "Lịch sử Thành phố Hồ Chí Minh."},
-    ]
-},
-
-"Tin học": {
-    "Học kỳ I": [
-        {"Chủ đề": "CHỦ ĐỀ A: MÁY TÍNH VÀ EM", "Bài học": "Bài 1: Phần cứng và phần mềm máy tính (2 tiết)", "YCCĐ": "Luyện tập về phần cứng và phần mềm."},
-        {"Chủ đề": "CHỦ ĐỀ B: MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 3: Thông tin trên trang web (2 tiết)", "YCCĐ": "Lí thuyết về thông tin trên trang web."},
-        {"Chủ đề": "CHỦ ĐỀ D: ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 7: Bản quyền phần mềm (1 tiết)", "YCCĐ": "Lí thuyết về Bản quyền phần mềm."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "CHỦ ĐỀ E: ỨNG DỤNG TIN HỌC", "Bài học": "Bài 8: Tạo bài trình chiếu (2 tiết)", "YCCĐ": "Lý thuyết và thực hành Tạo bài trình chiếu."},
-        {"Chủ đề": "CHỦ ĐỀ CON E 2 (LỰA CHỌN)", "Bài học": "Bài 16: Luyện tập gõ bàn phím (1 tiết)", "YCCĐ": "Thực hành Luyện tập gõ bàn phím."},
-        {"Chủ đề": "CHỦ ĐỀ F: GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 17: Làm quen với lập trình (2 tiết)", "YCCĐ": "Lý thuyết và thực hành Làm quen với lập trình."},
-    ]
-},
-
-"Công nghệ": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 1: Lợi ích của hoa, cây cảnh đối với đời sống (3 tiết)", "YCCĐ": "Nêu được lợi ích của hoa và cây cảnh."},
-        {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 4: Gieo hạt hoa, cây cảnh trong chậu (3 tiết)", "YCCĐ": "Tóm tắt được nội dung các bước gieo hạt."},
-        {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 6: Chăm sóc hoa, cây cảnh trong chậu (3 tiết)", "YCCĐ": "Thực hiện được các công việc chủ yếu để chăm sóc."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 7: Giới thiệu bộ lắp ghép mô hình kĩ thuật (2 tiết)", "YCCĐ": "Kể tên, nhận biết các chi tiết của bộ lắp ghép."},
-        {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 9: Lắp ghép mô hình robot (3 tiết)", "YCCĐ": "Lựa chọn và sử dụng được chi tiết để lắp ghép."},
-        {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 12: Làm chuồn chuồn thăng bằng (2 tiết)", "YCCĐ": "Làm được đồ chơi dân gian."},
-    ]
-},
-},
-
-# =================================================================================
-# KHỐI LỚP 5 (KNTT) - Dựa trên K5.pdf
-# =================================================================================
-
-"Lớp 5": {
-
-"Toán": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 4: Phân số thập phân (1 tiết)", "YCCĐ": "Ôn tập về phân số thập phân."},
-        {"Chủ đề": "2. Số thập phân", "Bài học": "Bài 10. Khái niệm số thập phân (3 tiết)", "YCCĐ": "Biết khái niệm, cách so sánh các số thập phân."},
-        {"Chủ đề": "4. CÁC PHÉP TÍNH VỚI SỐ THẬP PHÂN", "Bài học": "Bài 20. Phép trừ số thập phân (2 tiết)", "YCCĐ": "Thực hiện được phép trừ số thập phân."},
-        {"Chủ đề": "5. MỘT SỐ HÌNH PHẲNG. CHU VI VÀ DIỆN TÍCH", "Bài học": "Bài 25. Hình tam giác. Diện tích hình tam giác (4 tiết)", "YCCĐ": "Biết đặc điểm của hình tam giác, cách tính diện tích."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "7. TỈ SỐ VÀ CÁC BÀI TOÁN LIÊN QUAN", "Bài học": "Bài 41. Tìm giá trị phần trăm của một số (2 tiết)", "YCCĐ": "Tìm được giá trị phần trăm của một số."},
-        {"Chủ đề": "9. DIỆN TÍCH VÀ THỂ TÍCH CỦA MỘT SỐ HÌNH KHỐI", "Bài học": "Bài 53. Thể tích của hình lập phương (2 tiết)", "YCCĐ": "Tính được thể tích của hình lập phương."},
-        {"Chủ đề": "10. SỐ ĐO THỜI GIAN. VẬN TỐC. CÁC BÀI TOÁN LIÊN QUAN ĐẾN CHUYỂN ĐỘNG ĐỀU", "Bài học": "Bài 60. Quãng đường, thời gian của một chuyển động đều (3 tiết)", "YCCĐ": "Tính toán Quãng đường, thời gian, vận tốc."},
-        {"Chủ đề": "11. MỘT SỐ YẾU TỐ THỐNG KÊ VÀ XÁC SUẤT", "Bài học": "Bài 64. Biểu đồ hình quạt tròn (2 tiết)", "YCCĐ": "Thu thập, phân loại, sắp xếp các số liệu."},
-    ]
-},
-
-"Tiếng Việt": {
-    "Học kỳ I": [
-        {"Chủ đề": "Thế giới tuổi thơ", "Bài học": "Bài 1. Thanh âm của gió – Trang 8 (1 tiết)", "YCCĐ": "Quyền vui chơi của trẻ em. Yêu thiên nhiên, bảo vệ thiên nhiên."},
-        {"Chủ đề": "THIÊN NHIÊN KÌ THÚ", "Bài học": "Bài 9. Trước cổng trời – Trang 46 (1 tiết)", "YCCĐ": "Tích hợp về Công viên địa chất toàn cầu Cao nguyên đá Đồng Văn."},
-        {"Chủ đề": "Trên con đường học tập", "Bài học": "Bài 17. Thư gửi các học sinh – Trang 89 (1 tiết)", "YCCĐ": "Quyền học tập. Đạo đức Hồ Chí Minh."},
-        {"Chủ đề": "Nghệ thuật muôn màu", "Bài học": "Bài 27. Trí tưởng tượng phong phú – Trang 127 (2 tiết)", "YCCĐ": "Biết Biện pháp điệp từ, điệp ngữ."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "Vẻ đẹp cuộc sống", "Bài học": "Bài 4. Hộp quà màu thiên thanh (2 tiết)", "YCCĐ": "Viết bài văn tả người."},
-        {"Chủ đề": "Hương sắc trăm miền", "Bài học": "Bài 13. Đàn t'rưng – tiếng ca đại ngàn (1 tiết)", "YCCĐ": "Liên kết câu bằng từ ngữ thay thế."},
-        {"Chủ đề": "Tiếp bước cha ông", "Bài học": "Bài 20. Cụ Đồ Chiểu (2 tiết)", "YCCĐ": "Viết đoạn văn nêu ý kiến tán thành."},
-        {"Chủ đề": "Thế giới của chúng ta", "Bài học": "Bài 25. Bài ca trái đất (1 tiết)", "YCCĐ": "Tích hợp vệ sinh môi trường - GD Quốc phòng An ninh."},
-    ]
-},
-
-"Khoa học": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. CHẤT", "Bài học": "Bài 1: Thành phần và vai trò của đất đối với cây trồng (2 tiết)", "YCCĐ": "Biết các thành phần của đất và vai trò của nó với cây trồng."},
-        {"Chủ đề": "1. CHẤT", "Bài học": "Bài 4: Đặc điểm của chất ở trạng thái rắn, lỏng, khí (2 tiết)", "YCCĐ": "Đặc điểm của chất ở trạng thái rắn, lỏng, khí. Sự biến đổi trạng thái của chất."},
-        {"Chủ đề": "2. NĂNG LƯỢNG", "Bài học": "Bài 7: Vai trò của năng lượng (2 tiết)", "YCCĐ": "Một số nguồn năng lượng va vai trò của năng lượng."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "3. THỰC VẬT VÀ ĐỘNG VẬT", "Bài học": "Bài 16: Vòng đời và sự phát triển của động vật (2 tiết)", "YCCĐ": "Sự sinh sản vòng đời và sự phát triển của động vật."},
-        {"Chủ đề": "5. CON NGƯỜI VÀ SỨC KHỎE", "Bài học": "Bài 25: Chăm sóc sức khoẻ tuổi dậy thì (3 tiết)", "YCCĐ": "Chăm sóc sức khoẻ tuổi dậy thì."},
-        {"Chủ đề": "5. CON NGƯỜI VÀ SỨC KHỎE", "Bài học": "Bài 26: Phòng tránh bị xâm hại (4 tiết)", "YCCĐ": "Phòng tránh bị xâm hại. Quyền được an toàn."},
-    ]
-},
-
-"Lịch sử và Địa lí": {
-    "Học kỳ I": [
-        {"Chủ đề": "1. ĐẤT NƯỚC VÀ CON NGƯỜI VIỆT NAM", "Bài học": "Bài 1: Vị trí địa lí, lãnh thổ, đơn vị hành chính, Quốc kì, Quốc huy, Quốc ca (2 tiết)", "YCCĐ": "Ý nghĩa của Quốc kì, Quốc huy, Quốc ca."},
-        {"Chủ đề": "2. NHỮNG QUỐC GIA ĐẦU TIÊN TRÊN LÃNH THỔ VIỆT NAM", "Bài học": "Bài 5: Nhà nước Văn Lang, Nhà nước Âu Lạc (3 tiết)", "YCCĐ": "Sự ra đời của nước Văn Lang, Âu Lạc."},
-        {"Chủ đề": "3. XÂY DỰNG VÀ BẢO VỆ ĐẤT NƯỚC VIỆT NAM", "Bài học": "Bài 10: Triều Trần xây dựng đất nước và kháng chiến chống quân Mông – Nguyên xâm lược (4 tiết)", "YCCĐ": "Nét chính của các cuộc kháng chiến,."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "3. XÂY DỰNG VÀ BẢO VỆ ĐẤT NƯỚC VIỆT NAM", "Bài học": "Bài 15: Chiến dịch Điện Biên Phủ năm 1954 (2 tiết)", "YCCĐ": "Chiến dịch Điện Biên Phủ."},
-        {"Chủ đề": "4. CÁC NƯỚC LÁNG GIỀNG", "Bài học": "Bài 18: Nước Cộng hoà Nhân dân Trung Hoa (2 tiết)", "YCCĐ": "Vị trí địa lí, một số đặc điểm cơ bản của Trung Quốc."},
-        {"Chủ đề": "5. TÌM HIỂU THẾ GIỚI", "Bài học": "Bài 22: Các châu lục và đại dương trên thế giới (5 tiết)", "YCCĐ": "Vị trí địa lí của các châu lục, Đại dương,."},
-    ]
-},
-
-"Tin học": {
-    "Học kỳ I": [
-        {"Chủ đề": "CHỦ ĐỀ 1: MÁY TÍNH VÀ EM", "Bài học": "Bài 1. Em có thể làm gì với máy tính? (2 tiết)", "YCCĐ": "Ứng dụng của máy tính trong đời sống."},
-        {"Chủ đề": "CHỦ ĐỀ 3: TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 4. Cây thư mục (2 tiết)", "YCCĐ": "Tổ chức thông tin trong máy tính."},
-        {"Chủ đề": "CHỦ ĐỀ 5: ỨNG DỤNG TIN HỌC", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản (2 tiết)", "YCCĐ": "Định dạng các kí tự, trình bày văn bản."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "CHỦ ĐỀ 6: GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 11. Cấu trúc lặp (2 tiết)", "YCCĐ": "Lập trình trực quan, các cấu trúc trong vòng lặp."},
-        {"Chủ đề": "CHỦ ĐỀ 6: GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 14. Sử dụng biến trong chương trình (2 tiết)", "YCCĐ": "Sử dụng biến trong chương trình."},
-        {"Chủ đề": "CHỦ ĐỀ 6: GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 16. Từ kịch bản đến chương trình (2 tiết)", "YCCĐ": "Từ kịch bản đến chương trình."},
-    ]
-},
-
-"Công nghệ": {
-    "Học kỳ I": [
-        {"Chủ đề": "PHẦN MỘT. CÔNG NGHỆ VÀ ĐỜI SỐNG", "Bài học": "Bài 1. Vai trò của công nghệ (2 tiết)", "YCCĐ": "Vai trò của công nghệ."},
-        {"Chủ đề": "PHẦN MỘT. CÔNG NGHỆ VÀ ĐỜI SỐNG", "Bài học": "Bài 4. Thiết kế sản phẩm (4 tiết)", "YCCĐ": "Tìm hiểu cách thiết kế các loại sản phẩm."},
-        {"Chủ đề": "PHẦN MỘT. CÔNG NGHỆ VÀ ĐỜI SỐNG", "Bài học": "Bài 6. Sử dụng tủ lạnh (3 tiết)", "YCCĐ": "Sử dụng tủ lạnh."},
-    ],
-    "Học kỳ II": [
-        {"Chủ đề": "PHẦN II: THỦ CÔNG KĨ THUẬT", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin (4 tiết)", "YCCĐ": "Quy trình lắp ráp mô hình kĩ thuật,."},
-        {"Chủ đề": "PHẦN II: THỦ CÔNG KĨ THUẬT", "Bài học": "Bài 9. Mô hình điện mặt trời (4 tiết)", "YCCĐ": "Lắp ráp mô hình điện mặt trời."},
-    ]
-},
-
-}
-
-}
-# --- 4. CÁC HÀM XỬ LÝ (GIỮ NGUYÊN) ---
-
-def find_working_model(api_key):
-    # ... (code for finding model omitted) ...
-    preferred_models = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro',
-        'gemini-1.5-pro-latest',
-        'gemini-1.0-pro',
-        'gemini-pro'
-    ]
-    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-    try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            data = response.json()
-            available_models = [
-                m['name'].replace('models/', '')
-                for m in data.get('models', [])
-                if 'generateContent' in m.get('supportedGenerationMethods', [])
+    # ========================== KHỐI LỚP 1 ==========================
+    "Lớp 1": {
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 1: Các số 0, 1, 2, 3, 4, 5 (3 tiết)", "YCCĐ": "Đếm, đọc, viết các số trong phạm vi 5."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 2: Các số 6, 7, 8, 9, 10 (4 tiết)", "YCCĐ": "Đếm, đọc, viết các số từ 6 đến 10."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 3: Nhiều hơn, ít hơn, bằng nhau (2 tiết)", "YCCĐ": "So sánh số lượng giữa hai nhóm đối tượng."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 4: So sánh số (2 tiết)", "YCCĐ": "Sử dụng dấu >, <, = để so sánh các số PV 10."},
+                {"Chủ đề": "1. Các số đến 10", "Bài học": "Bài 5: Mấy và mấy (2 tiết)", "YCCĐ": "Làm quen với tách số và gộp số."},
+                {"Chủ đề": "2. Làm quen với hình phẳng", "Bài học": "Bài 7: Hình vuông, hình tròn, hình tam giác, hình chữ nhật (3 tiết)", "YCCĐ": "Nhận dạng và gọi tên đúng các hình phẳng."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 8: Phép cộng trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép cộng; hiểu ý nghĩa thêm vào/gộp lại."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 9: Phép trừ trong phạm vi 10 (3 tiết)", "YCCĐ": "Thực hiện phép trừ; hiểu ý nghĩa bớt đi/tách ra."},
+                {"Chủ đề": "3. Phép cộng, trừ PV 10", "Bài học": "Bài 10: Luyện tập chung (3 tiết)", "YCCĐ": "Vận dụng cộng trừ giải quyết tình huống thực tế."},
+                {"Chủ đề": "4. Làm quen khối hình", "Bài học": "Bài 14: Khối lập phương, khối hộp chữ nhật (2 tiết)", "YCCĐ": "Nhận dạng khối lập phương, khối hộp chữ nhật."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "5. Các số đến 100", "Bài học": "Bài 21: Số có hai chữ số (3 tiết)", "YCCĐ": "Đọc, viết, nhận biết cấu tạo số có hai chữ số."},
+                {"Chủ đề": "5. Các số đến 100", "Bài học": "Bài 22: So sánh số có hai chữ số (2 tiết)", "YCCĐ": "Biết cách so sánh hai số có hai chữ số."},
+                {"Chủ đề": "5. Các số đến 100", "Bài học": "Bài 23: Bảng các số từ 1 đến 100 (2 tiết)", "YCCĐ": "Nhận biết thứ tự số; số liền trước, liền sau."},
+                {"Chủ đề": "6. Cộng, trừ PV 100", "Bài học": "Bài 29: Phép cộng số có hai chữ số với số có một chữ số (2 tiết)", "YCCĐ": "Cộng không nhớ; đặt tính rồi tính."},
+                {"Chủ đề": "6. Cộng, trừ PV 100", "Bài học": "Bài 30: Phép cộng số có hai chữ số với số có hai chữ số (2 tiết)", "YCCĐ": "Cộng không nhớ số có 2 chữ số."},
+                {"Chủ đề": "6. Cộng, trừ PV 100", "Bài học": "Bài 32: Phép trừ số có hai chữ số cho số có một chữ số (2 tiết)", "YCCĐ": "Trừ không nhớ; đặt tính rồi tính."},
+                {"Chủ đề": "7. Thời gian, Đo lường", "Bài học": "Bài 35: Các ngày trong tuần (1 tiết)", "YCCĐ": "Biết thứ tự các ngày trong tuần; đọc thời khóa biểu."},
+                {"Chủ đề": "7. Thời gian, Đo lường", "Bài học": "Bài 36: Thực hành xem lịch và giờ (2 tiết)", "YCCĐ": "Xem giờ đúng trên đồng hồ; xem lịch tờ."},
+                {"Chủ đề": "8. Ôn tập cuối năm", "Bài học": "Bài 38: Ôn tập các số và phép tính (3 tiết)", "YCCĐ": "Tổng hợp kiến thức số học và phép tính."},
+                {"Chủ đề": "8. Ôn tập cuối năm", "Bài học": "Bài 39: Ôn tập hình học và đo lường (2 tiết)", "YCCĐ": "Tổng hợp kiến thức hình học, đo lường, giải toán."}
             ]
-            for p in preferred_models:
-                if p in available_models:
-                    return p
-            if available_models:
-                return available_models
-            return None
-        return None
-    except:
-        return None
+        },
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 1: A a (2 tiết)", "YCCĐ": "Nhận biết, đọc, viết đúng âm a, chữ a."},
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 2: B b, dấu huyền (2 tiết)", "YCCĐ": "Đọc đúng âm b, thanh huyền; tiếng bà."},
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 3: C c, dấu sắc (2 tiết)", "YCCĐ": "Đọc đúng âm c, thanh sắc; tiếng cá."},
+                {"Chủ đề": "Làm quen chữ cái", "Bài học": "Bài 4: E e, Ê ê (2 tiết)", "YCCĐ": "Phân biệt e và ê; tiếng bè, bê."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài 16: M m, N n (2 tiết)", "YCCĐ": "Đọc, viết đúng âm m, n và từ ngữ ứng dụng."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài 25: ng, ngh (2 tiết)", "YCCĐ": "Phân biệt quy tắc chính tả ng/ngh."},
+                {"Chủ đề": "Học vần", "Bài học": "Bài 36: am, ap (2 tiết)", "YCCĐ": "Đọc trơn, hiểu nghĩa từ ngữ chứa vần am, ap."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Chủ điểm: Gia đình", "Bài học": "Bài đọc: Ngôi nhà (2 tiết)", "YCCĐ": "Đọc trơn bài thơ; hiểu tình cảm yêu thương gia đình."},
+                {"Chủ đề": "Chủ điểm: Gia đình", "Bài học": "Bài đọc: Quà của bố (2 tiết)", "YCCĐ": "Hiểu tình cảm của người bố qua những món quà đơn sơ."},
+                {"Chủ đề": "Chủ điểm: Thiên nhiên", "Bài học": "Bài đọc: Hoa kết trái (2 tiết)", "YCCĐ": "Nhận biết tên gọi, đặc điểm các loại hoa quả."},
+                {"Chủ đề": "Chủ điểm: Nhà trường", "Bài học": "Bài đọc: Trường em (2 tiết)", "YCCĐ": "Hiểu vẻ đẹp ngôi trường và tình cảm thầy trò."},
+                {"Chủ đề": "Chủ điểm: Bác Hồ", "Bài học": "Bài đọc: Bác Hồ và thiếu nhi (2 tiết)", "YCCĐ": "Cảm nhận tình thương yêu của Bác dành cho thiếu nhi."},
+                {"Chủ đề": "Chủ điểm: Đất nước", "Bài học": "Bài đọc: Hồ Gươm (2 tiết)", "YCCĐ": "Biết truyền thuyết Hồ Gươm và vẻ đẹp thủ đô."}
+            ]
+        }
+    },
 
-def generate_single_question(api_key, grade, subject, lesson_info, q_type, level, points):
-    clean_key = api_key.strip()
-    if not clean_key: return "⚠️ Chưa nhập API Key."
+    # ========================== KHỐI LỚP 2 ==========================
+    "Lớp 2": {
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Ôn tập và bổ sung", "Bài học": "Bài 1: Ôn tập các số đến 100 (2 tiết)", "YCCĐ": "Củng cố đọc, viết, so sánh số trong phạm vi 100."},
+                {"Chủ đề": "2. Phép cộng, trừ qua 10", "Bài học": "Bài 6: Bảng cộng (qua 10) (3 tiết)", "YCCĐ": "Thực hiện thành thạo cộng qua 10 trong phạm vi 20."},
+                {"Chủ đề": "2. Phép cộng, trừ qua 10", "Bài học": "Bài 7: Bảng trừ (qua 10) (3 tiết)", "YCCĐ": "Thực hiện thành thạo trừ qua 10 trong phạm vi 20."},
+                {"Chủ đề": "2. Phép cộng, trừ qua 10", "Bài học": "Bài 13: Bài toán về nhiều hơn, ít hơn (2 tiết)", "YCCĐ": "Giải bài toán có lời văn dạng nhiều hơn/ít hơn."},
+                {"Chủ đề": "3. Hình học", "Bài học": "Bài 18: Đường thẳng, đường cong (1 tiết)", "YCCĐ": "Nhận biết, phân biệt đường thẳng và đường cong."},
+                {"Chủ đề": "3. Hình học", "Bài học": "Bài 19: Điểm, đoạn thẳng (1 tiết)", "YCCĐ": "Nhận biết điểm, đoạn thẳng; đo độ dài đoạn thẳng."},
+                {"Chủ đề": "4. Đo lường", "Bài học": "Bài 22: Ngày, tháng (2 tiết)", "YCCĐ": "Biết xem lịch tháng; số ngày trong các tháng."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 40: Bảng nhân 2 (2 tiết)", "YCCĐ": "Thành lập và học thuộc bảng nhân 2."},
+                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 41: Bảng nhân 5 (2 tiết)", "YCCĐ": "Thành lập và học thuộc bảng nhân 5."},
+                {"Chủ đề": "5. Phép nhân, chia", "Bài học": "Bài 45: Bảng chia 2 (2 tiết)", "YCCĐ": "Dựa vào bảng nhân 2 lập bảng chia 2; tính nhẩm."},
+                {"Chủ đề": "6. Các số đến 1000", "Bài học": "Bài 48: Đơn vị, chục, trăm, nghìn (2 tiết)", "YCCĐ": "Nhận biết hàng đơn vị, chục, trăm của số có 3 chữ số."},
+                {"Chủ đề": "6. Các số đến 1000", "Bài học": "Bài 59: Phép cộng (có nhớ) trong PV 1000 (3 tiết)", "YCCĐ": "Thực hiện cộng có nhớ số có 3 chữ số."},
+                {"Chủ đề": "6. Các số đến 1000", "Bài học": "Bài 62: Phép trừ (có nhớ) trong PV 1000 (3 tiết)", "YCCĐ": "Thực hiện trừ có nhớ số có 3 chữ số."},
+                {"Chủ đề": "7. Ôn tập cuối năm", "Bài học": "Bài 70: Ôn tập chung (3 tiết)", "YCCĐ": "Hệ thống kiến thức toán học cả năm."}
+            ]
+        },
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Tôi là học sinh lớp 2 (2 tiết) [KNTT]", "YCCĐ": "Hiểu sự thay đổi, trưởng thành khi lên lớp 2."},
+                {"Chủ đề": "Em là học sinh", "Bài học": "Đọc: Ngày hôm qua đâu rồi? (2 tiết) [KNTT]", "YCCĐ": "Hiểu giá trị thời gian; biết làm việc có ích."},
+                {"Chủ đề": "Bạn bè", "Bài học": "Đọc: Út Tin (2 tiết) [CTST]", "YCCĐ": "Nhận biết đặc điểm ngoại hình, tính cách nhân vật."},
+                {"Chủ đề": "Bạn bè", "Bài học": "Đọc: Tóc xoăn và tóc thẳng (2 tiết) [CTST]", "YCCĐ": "Tôn trọng sự khác biệt của bạn bè."},
+                {"Chủ đề": "Thầy cô", "Bài học": "Đọc: Cô giáo lớp em (2 tiết) [Cánh Diều]", "YCCĐ": "Cảm nhận tình yêu thương của cô giáo."},
+                {"Chủ đề": "Vòng tay yêu thương", "Bài học": "Đọc: Bà nội, bà ngoại (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận tình cảm bà cháu sâu sắc."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Mùa nước nổi (2 tiết) [CTST]", "YCCĐ": "Nhận biết vẻ đẹp thiên nhiên miền Tây mùa nước nổi."},
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Đường đến trường (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận vẻ đẹp thân thuộc cảnh vật đường đi học."},
+                {"Chủ đề": "Bốn mùa", "Bài học": "Đọc: Chuyện bốn mùa (2 tiết) [KNTT]", "YCCĐ": "Hiểu đặc điểm, ích lợi của Xuân, Hạ, Thu, Đông."},
+                {"Chủ đề": "Thiên nhiên", "Bài học": "Đọc: Loài chim học xây tổ (2 tiết) [KNTT]", "YCCĐ": "Hiểu tập tính của các loài chim; bài học về sự kiên trì."},
+                {"Chủ đề": "Bác Hồ", "Bài học": "Đọc: Ai ngoan sẽ được thưởng (2 tiết) [CTST]", "YCCĐ": "Hiểu bài học về lòng trung thực và tình cảm Bác Hồ."}
+            ]
+        }
+    },
 
-    model_name = find_working_model(clean_key)
-    if not model_name:
-        return "❌ Không tìm thấy model phù hợp. Vui lòng kiểm tra lại API Key hoặc thử lại sau."
+    # =================================================================================
+    # KHỐI LỚP 3
+    # =================================================================================
+    "Lớp 3": {
+        "Tin học": {
+            "Học kỳ I": [
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 1: Các thành phần của máy tính (1 tiết)", "YCCĐ": "Nhận diện, gọi tên: Thân máy, Màn hình, Bàn phím, Chuột."},
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 2: Chức năng các bộ phận máy tính (1 tiết)", "YCCĐ": "Biết chức năng cơ bản của thiết bị vào, ra, thân máy."},
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 3: Làm quen với chuột máy tính (2 tiết)", "YCCĐ": "Cầm chuột đúng; thao tác: di chuyển, nháy, kéo thả."},
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 4: Làm quen với bàn phím máy tính (2 tiết)", "YCCĐ": "Nhận biết khu vực phím chính; đặt tay đúng vị trí xuất phát."},
+                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 5: Xem tin tức, giải trí trên Internet (2 tiết)", "YCCĐ": "Truy cập trang web thiếu nhi; nêu ví dụ thông tin trên mạng."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Chủ đề C: Tổ chức lưu trữ", "Bài học": "Bài 6: Sắp xếp để tìm kiếm (1 tiết)", "YCCĐ": "Giải thích sự cần thiết của việc sắp xếp dữ liệu."},
+                {"Chủ đề": "Chủ đề C: Tổ chức lưu trữ", "Bài học": "Bài 7: Sơ đồ hình cây (1 tiết)", "YCCĐ": "Nhận biết cấu trúc cây thư mục; ổ đĩa, thư mục, tệp."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 8: Làm quen với soạn thảo văn bản (2 tiết)", "YCCĐ": "Kích hoạt phần mềm; gõ kí tự, dấu tiếng Việt (Telex/Vni)."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 9: Soạn thảo văn bản đơn giản (2 tiết)", "YCCĐ": "Gõ đoạn văn ngắn; di chuyển con trỏ; xóa sửa lỗi."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 11: Vẽ tranh đơn giản (2 tiết)", "YCCĐ": "Sử dụng công cụ vẽ (Paint) để vẽ hình cơ bản, tô màu."},
+                {"Chủ đề": "Chủ đề F: Giải quyết vấn đề", "Bài học": "Bài 13: Luyện tập sử dụng chuột (2 tiết)", "YCCĐ": "Thành thạo thao tác chuột qua phần mềm trò chơi."}
+            ]
+        },
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Bảng nhân, bảng chia", "Bài học": "Bài 5: Bảng nhân 6 (2 tiết)", "YCCĐ": "Thành lập và thuộc bảng nhân 6; vận dụng giải toán."},
+                {"Chủ đề": "1. Bảng nhân, bảng chia", "Bài học": "Bài 6: Bảng chia 6 (2 tiết)", "YCCĐ": "Dựa vào bảng nhân 6 lập bảng chia 6."},
+                {"Chủ đề": "1. Bảng nhân, bảng chia", "Bài học": "Bài 9: Bảng nhân 8 (2 tiết)", "YCCĐ": "Thành lập và thuộc bảng nhân 8; tính nhẩm chính xác."},
+                {"Chủ đề": "2. Góc và Hình", "Bài học": "Bài 15: Góc vuông, góc không vuông (1 tiết)", "YCCĐ": "Nhận biết góc vuông; dùng ê-ke kiểm tra."},
+                {"Chủ đề": "3. Phép chia số lớn", "Bài học": "Bài 38: Chia số có ba chữ số cho số có một chữ số (3 tiết)", "YCCĐ": "Thực hiện phép chia hết và chia có dư."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "4. Số đến 100.000", "Bài học": "Bài 45: Các số trong phạm vi 100000 (3 tiết)", "YCCĐ": "Đọc, viết, so sánh số có 5 chữ số."},
+                {"Chủ đề": "5. Diện tích", "Bài học": "Bài 51: Diện tích của một hình (1 tiết)", "YCCĐ": "Làm quen biểu tượng diện tích; so sánh diện tích các hình."},
+                {"Chủ đề": "5. Diện tích", "Bài học": "Bài 52: Diện tích hình chữ nhật (2 tiết)", "YCCĐ": "Vận dụng quy tắc tính diện tích hình chữ nhật."},
+                {"Chủ đề": "5. Diện tích", "Bài học": "Bài 53: Diện tích hình vuông (2 tiết)", "YCCĐ": "Vận dụng quy tắc tính diện tích hình vuông."},
+                {"Chủ đề": "6. Cộng trừ PV 100.000", "Bài học": "Bài 58: Phép cộng trong phạm vi 100000 (2 tiết)", "YCCĐ": "Đặt tính và tính đúng phép cộng có nhớ trong phạm vi 100.000."}
+            ]
+        },
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Măng non", "Bài học": "Đọc: Chiếc áo mùa thu (2 tiết) [CTST]", "YCCĐ": "Nhận biết biện pháp nhân hóa; vẻ đẹp mùa thu."},
+                {"Chủ đề": "Măng non", "Bài học": "Đọc: Ngày khai trường (2 tiết) [KNTT]", "YCCĐ": "Niềm vui, sự náo nức của học sinh ngày tựu trường."},
+                {"Chủ đề": "Cộng đồng", "Bài học": "Đọc: Lớp học trên đường (2 tiết) [Cánh Diều]", "YCCĐ": "Ý nghĩa, sự cần thiết của việc học tập."},
+                {"Chủ đề": "Cộng đồng", "Bài học": "Đọc: Khi cả nhà bé tí (2 tiết) [KNTT]", "YCCĐ": "Niềm vui sum họp gia đình qua trí tưởng tượng."},
+                {"Chủ đề": "Sáng tạo", "Bài học": "Đọc: Ông tổ nghề thêu (2 tiết) [Cánh Diều]", "YCCĐ": "Ca ngợi trí thông minh, sáng tạo của Trần Quốc Khái."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Lễ hội quê hương", "Bài học": "Đọc: Hội đua voi ở Tây Nguyên (2 tiết) [KNTT]", "YCCĐ": "Không khí tưng bừng, mạnh mẽ của lễ hội đua voi."},
+                {"Chủ đề": "Lễ hội quê hương", "Bài học": "Đọc: Đua ghe ngo (2 tiết) [CTST]", "YCCĐ": "Nét văn hóa lễ hội đặc sắc của đồng bào Khmer."},
+                {"Chủ đề": "Thiên nhiên kì thú", "Bài học": "Đọc: Cóc kiện Trời (2 tiết) [CTST]", "YCCĐ": "Giải thích hiện tượng mưa; ca ngợi sự đoàn kết."},
+                {"Chủ đề": "Thiên nhiên kì thú", "Bài học": "Đọc: Mưa (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận vẻ đẹp, sự sinh động của cơn mưa rào."}
+            ]
+        },
+        "Công nghệ": {
+            "Học kỳ I": [
+                {"Chủ đề": "Tự nhiên và Công nghệ", "Bài học": "Bài 1: Tự nhiên và Công nghệ (2 tiết)", "YCCĐ": "Phân biệt đối tượng tự nhiên và sản phẩm công nghệ."},
+                {"Chủ đề": "Sử dụng đồ dùng điện", "Bài học": "Bài 2: Sử dụng đèn học (2 tiết)", "YCCĐ": "Nhận biết bộ phận đèn học; sử dụng an toàn, đúng cách."},
+                {"Chủ đề": "Sử dụng đồ dùng điện", "Bài học": "Bài 3: Sử dụng quạt điện (2 tiết)", "YCCĐ": "Biết các loại quạt; sử dụng an toàn, tiết kiệm điện."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Làm đồ dùng học tập (3 tiết)", "YCCĐ": "Lựa chọn vật liệu, làm được ống đựng bút/thước kẻ."},
+                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 8: Làm biển báo giao thông (3 tiết)", "YCCĐ": "Làm mô hình biển báo giao thông từ vật liệu đơn giản."},
+                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 9: Làm đồ chơi đơn giản (3 tiết)", "YCCĐ": "Làm được đồ chơi (máy bay giấy/chong chóng) đúng quy trình."}
+            ]
+        }
+    },
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={clean_key}"
+    # =================================================================================
+    # KHỐI LỚP 4
+    # =================================================================================
+    "Lớp 4": {
+        "Tin học": {
+            "Học kỳ I": [
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 1: Các thiết bị phần cứng (1 tiết)", "YCCĐ": "Phân loại thiết bị gắn liền (thân, màn) và ngoại vi (chuột, bàn phím, máy in)."},
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 2: Phần cứng và phần mềm (1 tiết)", "YCCĐ": "Nêu được sơ lược về vai trò của phần cứng và phần mềm; mối quan hệ phụ thuộc giữa chúng."},
+                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 3: Thông tin trên trang web (2 tiết)", "YCCĐ": "Nhận biết được siêu văn bản, liên kết trên trang web; biết cách truy cập liên kết."},
+                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 4: Tìm kiếm thông tin trên Internet (2 tiết)", "YCCĐ": "Sử dụng máy tìm kiếm (Google) để tìm thông tin theo từ khóa đơn giản; lọc kết quả phù hợp."},
+                {"Chủ đề": "Chủ đề D: Đạo đức, pháp luật", "Bài học": "Bài 6: Bản quyền nội dung số (1 tiết)", "YCCĐ": "Giải thích được sơ lược vì sao cần tôn trọng bản quyền; không sao chép trái phép sản phẩm số."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 8: Làm quen với Scratch (2 tiết)", "YCCĐ": "Kích hoạt Scratch; nhận biết khu vực sân khấu, nhân vật, khu vực khối lệnh, kịch bản."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 9: Tạo chương trình đầu tiên (2 tiết)", "YCCĐ": "Lắp ghép khối lệnh đơn giản (sự kiện, hiển thị) để nhân vật nói và di chuyển."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 10: Điều khiển nhân vật (2 tiết)", "YCCĐ": "Sử dụng nhóm lệnh Motion (Di chuyển) và Looks (Hiển thị) kết hợp sự kiện bàn phím/chuột."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 13: Tạo bài trình chiếu (2 tiết)", "YCCĐ": "Tạo được bài trình chiếu đơn giản có tiêu đề và nội dung; chèn hình ảnh minh họa."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 14: Hiệu ứng chuyển trang (2 tiết)", "YCCĐ": "Chọn và áp dụng hiệu ứng chuyển slide (Transitions) phù hợp cho bài trình chiếu."}
+            ]
+        },
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Số tự nhiên", "Bài học": "Bài 5: Dãy số tự nhiên (1 tiết)", "YCCĐ": "Nhận biết đặc điểm của dãy số tự nhiên; số liền trước, số liền sau; không có số tự nhiên lớn nhất."},
+                {"Chủ đề": "1. Số tự nhiên", "Bài học": "Bài 6: Viết số tự nhiên trong hệ thập phân (1 tiết)", "YCCĐ": "Viết và đọc đúng số tự nhiên; nhận biết giá trị của chữ số theo vị trí."},
+                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 10: Góc nhọn, góc tù, góc bẹt (2 tiết)", "YCCĐ": "Nhận biết và phân biệt các loại góc bằng quan sát và kiểm tra bằng thước đo góc."},
+                {"Chủ đề": "2. Góc và Đơn vị", "Bài học": "Bài 11: Đơn vị đo góc. Độ (1 tiết)", "YCCĐ": "Biết đơn vị đo góc là độ; sử dụng thước đo góc để đo số đo góc."},
+                {"Chủ đề": "3. Phép tính số tự nhiên", "Bài học": "Bài 25: Phép chia cho số có hai chữ số (3 tiết)", "YCCĐ": "Thực hiện phép chia số có nhiều chữ số cho số có hai chữ số; biết cách ước lượng thương."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "4. Phân số", "Bài học": "Bài 40: Rút gọn phân số (2 tiết)", "YCCĐ": "Biết cách rút gọn phân số bằng cách chia cả tử và mẫu cho cùng một số tự nhiên lớn hơn 1."},
+                {"Chủ đề": "4. Phân số", "Bài học": "Bài 41: Quy đồng mẫu số các phân số (2 tiết)", "YCCĐ": "Thực hiện quy đồng mẫu số hai phân số trong trường hợp đơn giản."},
+                {"Chủ đề": "5. Phép tính phân số", "Bài học": "Bài 55: Phép cộng phân số (2 tiết)", "YCCĐ": "Thực hiện cộng hai phân số cùng mẫu và khác mẫu số (thông qua quy đồng)."},
+                {"Chủ đề": "5. Phép tính phân số", "Bài học": "Bài 57: Phép nhân phân số (2 tiết)", "YCCĐ": "Thực hiện nhân tử với tử, mẫu với mẫu; rút gọn kết quả nếu có thể."},
+                {"Chủ đề": "6. Hình học", "Bài học": "Bài 60: Hình bình hành (1 tiết)", "YCCĐ": "Nhận biết hình bình hành qua các đặc điểm: các cạnh đối diện song song và bằng nhau."}
+            ]
+        },
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Đọc: Điều ước của vua Mi-đát (2 tiết) [KNTT]", "YCCĐ": "Hiểu thông điệp: Hạnh phúc không nằm ở vàng bạc mà ở những điều giản dị quanh ta."},
+                {"Chủ đề": "Mỗi người một vẻ", "Bài học": "Đọc: Tiếng nói của cỏ cây (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận vẻ đẹp và sự sống động, có hồn của thế giới tự nhiên qua cái nhìn của nhân vật."},
+                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Tuổi ngựa (2 tiết) [CTST]", "YCCĐ": "Cảm nhận khát vọng đi xa, khám phá thế giới và tình yêu mẹ tha thiết của bạn nhỏ."},
+                {"Chủ đề": "Tuổi nhỏ chí lớn", "Bài học": "Đọc: Văn hay chữ tốt (2 tiết) [Cánh Diều]", "YCCĐ": "Ca ngợi tinh thần kiên trì, khổ luyện để thành tài của danh nhân Cao Bá Quát."},
+                {"Chủ đề": "Trải nghiệm", "Bài học": "Đọc: Ở Vương quốc Tương Lai (2 tiết) [KNTT]", "YCCĐ": "Đọc văn bản kịch; hiểu ước mơ sáng tạo của trẻ em."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Sầu riêng (2 tiết) [KNTT]", "YCCĐ": "Nhận biết nghệ thuật miêu tả hương vị, dáng vẻ đặc sắc của cây trái miền Nam."},
+                {"Chủ đề": "Vẻ đẹp quê hương", "Bài học": "Đọc: Chợ Tết (2 tiết) [CTST]", "YCCĐ": "Cảm nhận bức tranh giàu màu sắc, âm thanh và không khí vui tươi của phiên chợ Tết vùng cao."},
+                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Đường đi Sa Pa (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận vẻ đẹp biến đổi kì ảo, hùng vĩ của thiên nhiên Sa Pa."},
+                {"Chủ đề": "Khám phá thế giới", "Bài học": "Đọc: Hơn một ngàn ngày vòng quanh trái đất (2 tiết) [Cánh Diều]", "YCCĐ": "Hiểu về hành trình dũng cảm thám hiểm thế giới và khẳng định trái đất hình cầu của Ma-zen-lan."}
+            ]
+        },
+        "Khoa học": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 1: Tính chất của nước (2 tiết)", "YCCĐ": "Nêu tính chất không màu, không mùi, hòa tan."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 2: Sự chuyển thể của nước (2 tiết)", "YCCĐ": "Phân biệt lỏng, rắn, hơi; sự bay hơi/ngưng tụ."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 3: Vòng tuần hoàn của nước trong tự nhiên (2 tiết)", "YCCĐ": "Vẽ và chú thích được sơ đồ vòng tuần hoàn của nước; nêu ý nghĩa."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 5: Không khí (2 tiết)", "YCCĐ": "Nêu được các thành phần chính của không khí (Oxy, Nitơ...); vai trò của Oxy."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 8: Ánh sáng và bóng tối (2 tiết)", "YCCĐ": "Giải thích được nguyên nhân tạo ra bóng tối; sự thay đổi của bóng khi nguồn sáng thay đổi."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 10: Âm thanh (2 tiết)", "YCCĐ": "Nêu sự lan truyền âm thanh; vật phát ra âm thanh rung động."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 11: Nhiệt độ và nhiệt kế (2 tiết)", "YCCĐ": "Biết cách sử dụng nhiệt kế đo nhiệt độ cơ thể/không khí."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 16: Nhu cầu sống của thực vật (2 tiết)", "YCCĐ": "Cây cần nước, ánh sáng, không khí, chất khoáng để sống."},
+                {"Chủ đề": "3. Thực vật và Động vật", "Bài học": "Bài 20: Chuỗi thức ăn (2 tiết)", "YCCĐ": "Vẽ sơ đồ chuỗi thức ăn đơn giản trong tự nhiên."},
+                {"Chủ đề": "4. Nấm", "Bài học": "Bài 23: Các loại nấm (2 tiết)", "YCCĐ": "Phân biệt nấm ăn và nấm độc; nêu ích lợi của nấm trong đời sống."},
+                {"Chủ đề": "5. Con người và sức khỏe", "Bài học": "Bài 26: Các nhóm chất dinh dưỡng (2 tiết)", "YCCĐ": "Kể tên 4 nhóm chất dinh dưỡng; vai trò của từng nhóm đối với cơ thể."}
+            ]
+        },
+        "Lịch sử và Địa lí": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Địa phương em", "Bài học": "Bài 1: Làm quen với bản đồ (2 tiết)", "YCCĐ": "Nhận biết các kí hiệu bản đồ, xác định phương hướng."},
+                {"Chủ đề": "2. Trung du Bắc Bộ", "Bài học": "Bài 3: Thiên nhiên vùng Trung du và miền núi Bắc Bộ (2 tiết)", "YCCĐ": "Mô tả đặc điểm địa hình đồi núi, khí hậu lạnh vào mùa đông."},
+                {"Chủ đề": "2. Trung du Bắc Bộ", "Bài học": "Bài 5: Đền Hùng và lễ giỗ tổ (2 tiết)", "YCCĐ": "Kể lại truyền thuyết Hùng Vương; ý nghĩa lễ hội Đền Hùng."},
+                {"Chủ đề": "3. Đồng bằng Bắc Bộ", "Bài học": "Bài 8: Sông Hồng và văn minh lúa nước (2 tiết)", "YCCĐ": "Nêu vai trò sông Hồng; hệ thống đê điều."},
+                {"Chủ đề": "3. Đồng bằng Bắc Bộ", "Bài học": "Bài 10: Thăng Long - Hà Nội (2 tiết)", "YCCĐ": "Nêu các tên gọi của Hà Nội qua các thời kì; Văn Miếu."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "4. Duyên hải Miền Trung", "Bài học": "Bài 15: Biển đảo Việt Nam (2 tiết)", "YCCĐ": "Xác định vị trí quần đảo Hoàng Sa, Trường Sa trên bản đồ; ý thức chủ quyền biển đảo."},
+                {"Chủ đề": "4. Duyên hải Miền Trung", "Bài học": "Bài 16: Phố cổ Hội An (2 tiết)", "YCCĐ": "Mô tả kiến trúc, di sản văn hóa Phố cổ Hội An."},
+                {"Chủ đề": "5. Tây Nguyên", "Bài học": "Bài 18: Thiên nhiên vùng Tây Nguyên (2 tiết)", "YCCĐ": "Mô tả đặc điểm đất đỏ bazan và các cao nguyên xếp tầng."},
+                {"Chủ đề": "5. Tây Nguyên", "Bài học": "Bài 20: Văn hóa Cồng chiêng (2 tiết)", "YCCĐ": "Nêu giá trị di sản văn hóa phi vật thể Cồng chiêng."}
+            ]
+        },
+        "Công nghệ": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 1: Lợi ích của hoa và cây cảnh (2 tiết)", "YCCĐ": "Nêu lợi ích trang trí, làm đẹp."},
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 2: Các loại hoa phổ biến (2 tiết)", "YCCĐ": "Nhận biết tên gọi và đặc điểm đặc trưng của hoa hồng, hoa cúc, hoa đào, hoa mai."},
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 3: Các loại cây cảnh phổ biến (2 tiết)", "YCCĐ": "Nhận biết một số loại cây cảnh thông dụng; ý nghĩa trang trí của chúng."},
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 4: Trồng cây con trong chậu (3 tiết)", "YCCĐ": "Thực hiện đúng quy trình trồng cây con trong chậu."},
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 5: Trồng và chăm sóc hoa trong chậu (3 tiết)", "YCCĐ": "Tưới nước, bón phân cho hoa."},
+                {"Chủ đề": "1. Hoa và cây cảnh", "Bài học": "Bài 6: Chậu và giá thể trồng hoa (2 tiết)", "YCCĐ": "Chọn chậu và đất trồng phù hợp."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 7: Bộ lắp ghép mô hình kĩ thuật (2 tiết)", "YCCĐ": "Nhận biết các chi tiết trong bộ lắp ghép."},
+                {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 8: Lắp ghép mô hình cái đu (2 tiết)", "YCCĐ": "Lắp được cái đu đúng quy trình."},
+                {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 9: Lắp ghép mô hình rô-bốt (2 tiết)", "YCCĐ": "Lắp được rô-bốt đơn giản."},
+                {"Chủ đề": "2. Lắp ghép kĩ thuật", "Bài học": "Bài 10: Lắp ghép mô hình tự chọn (3 tiết)", "YCCĐ": "Sáng tạo mô hình mới."}
+            ]
+        }
+    },
+
+    # =================================================================================
+    # KHỐI LỚP 5
+    # =================================================================================
+    "Lớp 5": {
+        "Tin học": {
+            "Học kỳ I": [
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 1: Cây thư mục (1 tiết)", "YCCĐ": "Nhận biết cấu trúc cây thư mục; tạo, đổi tên, xóa thư mục hợp lí để quản lý tệp."},
+                {"Chủ đề": "Chủ đề A: Máy tính và em", "Bài học": "Bài 2: Tìm kiếm tệp và thư mục (1 tiết)", "YCCĐ": "Sử dụng công cụ tìm kiếm trong máy tính để tìm tệp."},
+                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 3: Thư điện tử (Email) (2 tiết)", "YCCĐ": "Biết cấu trúc địa chỉ email; thực hiện đăng nhập, soạn, gửi và nhận thư điện tử đơn giản."},
+                {"Chủ đề": "Chủ đề B: Mạng máy tính", "Bài học": "Bài 4: An toàn khi sử dụng Email (1 tiết)", "YCCĐ": "Nhận biết thư rác; không mở thư lạ; bảo mật mật khẩu."},
+                {"Chủ đề": "Chủ đề D: Đạo đức, pháp luật", "Bài học": "Bài 5: Bản quyền nội dung số (1 tiết)", "YCCĐ": "Hiểu khái niệm bản quyền; ý thức tôn trọng sản phẩm số và không vi phạm bản quyền."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học", "Bài học": "Bài 6: Định dạng văn bản nâng cao (2 tiết)", "YCCĐ": "Biết cách định dạng đoạn văn, căn lề, giãn dòng; chèn bảng biểu vào văn bản."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học (Scratch)", "Bài học": "Bài 9: Biến nhớ trong Scratch (3 tiết)", "YCCĐ": "Tạo được biến nhớ (Variable); sử dụng biến để lưu trữ điểm số hoặc thời gian trong trò chơi."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học (Scratch)", "Bài học": "Bài 10: Sử dụng biến trong tính toán (2 tiết)", "YCCĐ": "Sử dụng các phép toán cộng, trừ, nhân, chia với biến."},
+                {"Chủ đề": "Chủ đề E: Ứng dụng tin học (Scratch)", "Bài học": "Bài 12: Cấu trúc rẽ nhánh (3 tiết)", "YCCĐ": "Sử dụng thành thạo khối lệnh 'Nếu... thì...' và 'Nếu... thì... không thì...' để điều khiển nhân vật."},
+                {"Chủ đề": "Chủ đề F: Giải quyết vấn đề", "Bài học": "Bài 15: Dự án kể chuyện tương tác (4 tiết)", "YCCĐ": "Vận dụng tổng hợp kiến thức lập trình (sự kiện, hội thoại, biến, rẽ nhánh) để tạo một câu chuyện hoàn chỉnh."}
+            ]
+        },
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Số thập phân", "Bài học": "Bài 8: Số thập phân (3 tiết)", "YCCĐ": "Nhận biết, đọc, viết số thập phân; hiểu giá trị của chữ số ở phần nguyên và phần thập phân."},
+                {"Chủ đề": "1. Số thập phân", "Bài học": "Bài 10: So sánh các số thập phân (2 tiết)", "YCCĐ": "Biết cách so sánh hai số thập phân; sắp xếp các số theo thứ tự."},
+                {"Chủ đề": "2. Các phép tính số thập phân", "Bài học": "Bài 15: Cộng, trừ số thập phân (3 tiết)", "YCCĐ": "Đặt tính và thực hiện thành thạo phép cộng, trừ số thập phân; giải toán có lời văn."},
+                {"Chủ đề": "2. Các phép tính số thập phân", "Bài học": "Bài 18: Nhân số thập phân (3 tiết)", "YCCĐ": "Thực hiện nhân một số thập phân với một số tự nhiên và với một số thập phân."},
+                {"Chủ đề": "3. Hình học", "Bài học": "Bài 22: Hình tam giác (2 tiết)", "YCCĐ": "Nhận biết đặc điểm hình tam giác; phân biệt các loại tam giác; xác định đáy và đường cao tương ứng."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "4. Tỉ số phần trăm", "Bài học": "Bài 45: Tỉ số phần trăm (2 tiết)", "YCCĐ": "Hiểu ý nghĩa tỉ số phần trăm; biết viết phân số dưới dạng tỉ số phần trăm và ngược lại."},
+                {"Chủ đề": "4. Tỉ số phần trăm", "Bài học": "Bài 46: Giải toán về tỉ số phần trăm (3 tiết)", "YCCĐ": "Giải được 3 dạng toán cơ bản về tỉ số phần trăm (Tìm tỉ số, Tìm giá trị %, Tìm số khi biết giá trị %)."},
+                {"Chủ đề": "5. Thể tích", "Bài học": "Bài 50: Thể tích hình lập phương (2 tiết)", "YCCĐ": "Nhớ công thức V = a x a x a và tính được thể tích hình lập phương."},
+                {"Chủ đề": "5. Thể tích", "Bài học": "Bài 51: Thể tích hình hộp chữ nhật (2 tiết)", "YCCĐ": "Nhớ công thức V = a x b x c và tính được thể tích hình hộp chữ nhật."}
+            ]
+        },
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Việt Nam gấm vóc", "Bài học": "Đọc: Thư gửi các học sinh (2 tiết) [KNTT]", "YCCĐ": "Hiểu tình cảm yêu thương và sự kỳ vọng to lớn của Bác Hồ đối với thế hệ trẻ."},
+                {"Chủ đề": "Việt Nam gấm vóc", "Bài học": "Đọc: Quang cảnh làng mạc ngày mùa (2 tiết) [KNTT]", "YCCĐ": "Cảm nhận vẻ đẹp trù phú, màu sắc vàng rực rỡ và không khí đầm ấm của làng quê Việt Nam."},
+                {"Chủ đề": "Cánh chim hòa bình", "Bài học": "Đọc: Bài ca về trái đất (2 tiết) [KNTT]", "YCCĐ": "Hiểu thông điệp: Trái đất là ngôi nhà chung, trẻ em cần đoàn kết bảo vệ hòa bình."},
+                {"Chủ đề": "Môi trường xanh", "Bài học": "Đọc: Chuyện một khu vườn nhỏ (2 tiết) [Cánh Diều]", "YCCĐ": "Giáo dục ý thức yêu quý thiên nhiên và làm đẹp môi trường sống ngay tại gia đình."},
+                {"Chủ đề": "Môi trường xanh", "Bài học": "Đọc: Kỳ diệu rừng xanh (2 tiết) [CTST]", "YCCĐ": "Cảm nhận vẻ đẹp kì thú, bí ẩn của rừng xanh; ý thức bảo vệ rừng."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Người công dân", "Bài học": "Đọc: Người công dân số Một (2 tiết) [KNTT]", "YCCĐ": "Hiểu tâm trạng day dứt, trăn trở và khát vọng cứu nước của người thanh niên Nguyễn Tất Thành."},
+                {"Chủ đề": "Người công dân", "Bài học": "Đọc: Thái sư Trần Thủ Độ (2 tiết) [Cánh Diều]", "YCCĐ": "Ca ngợi tấm gương chí công vô tư, đặt lợi ích đất nước lên trên tình riêng của Trần Thủ Độ."},
+                {"Chủ đề": "Đất nước đổi mới", "Bài học": "Đọc: Trí dũng song toàn (2 tiết) [CTST]", "YCCĐ": "Ca ngợi sứ thần Giang Văn Minh vừa mưu trí vừa bất khuất để bảo vệ danh dự và quyền lợi đất nước."}
+            ]
+        },
+        "Khoa học": {
+            "Học kỳ I": [
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 1: Đất và bảo vệ đất (2 tiết)", "YCCĐ": "Nêu thành phần của đất; biện pháp bảo vệ đất."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 3: Hỗn hợp và dung dịch (2 tiết)", "YCCĐ": "Phân biệt hỗn hợp, dung dịch; tách chất."},
+                {"Chủ đề": "1. Chất", "Bài học": "Bài 5: Sự biến đổi hóa học (2 tiết)", "YCCĐ": "Phân biệt sự biến đổi lí học (giữ nguyên chất) và sự biến đổi hóa học (sinh ra chất mới)."},
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 8: Năng lượng mặt trời (2 tiết)", "YCCĐ": "Nêu vai trò của năng lượng mặt trời (chiếu sáng, sưởi ấm...); ứng dụng trong đời sống."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "2. Năng lượng", "Bài học": "Bài 12: Sử dụng năng lượng điện (2 tiết)", "YCCĐ": "Nêu các ứng dụng của điện; biện pháp an toàn điện và sử dụng tiết kiệm điện."},
+                {"Chủ đề": "3. Sự sinh sản", "Bài học": "Bài 18: Sự sinh sản của thực vật có hoa (2 tiết)", "YCCĐ": "Chỉ được cơ quan sinh sản của cây (nhị, nhụy); phân biệt hoa lưỡng tính và hoa đơn tính."},
+                {"Chủ đề": "3. Sự sinh sản", "Bài học": "Bài 19: Sự sinh sản của động vật (2 tiết)", "YCCĐ": "Phân biệt động vật đẻ trứng và đẻ con; sơ lược vòng đời của côn trùng."}
+            ]
+        },
+        "Lịch sử và Địa lí": {
+            "Học kỳ I": [
+                {"Chủ đề": "Xây dựng đất nước", "Bài học": "Bài 4: Nhà Nguyễn (2 tiết)", "YCCĐ": "Nêu được thời gian thành lập; một số đóng góp (về văn hóa, lãnh thổ) và hạn chế của nhà Nguyễn."},
+                {"Chủ đề": "Bảo vệ đất nước", "Bài học": "Bài 8: Phong trào chống Pháp cuối thế kỉ XIX (2 tiết)", "YCCĐ": "Kể lại được diễn biến cơ bản của phong trào Cần Vương; vai trò của Phan Đình Phùng, Hàm Nghi."},
+                {"Chủ đề": "Cách mạng VN", "Bài học": "Bài 12: Chiến dịch Điện Biên Phủ (3 tiết)", "YCCĐ": "Trình bày diễn biến, ý nghĩa lịch sử to lớn của chiến thắng Điện Biên Phủ 'lừng lẫy năm châu'."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Thế giới", "Bài học": "Bài 18: Các châu lục và đại dương (3 tiết)", "YCCĐ": "Nhận biết và chỉ đúng vị trí 6 châu lục và 4 đại dương trên lược đồ/quả địa cầu."},
+                {"Chủ đề": "Châu Á", "Bài học": "Bài 19: Châu Á (2 tiết)", "YCCĐ": "Nêu được đặc điểm vị trí, địa hình, khí hậu và dân cư tiêu biểu của Châu Á."}
+            ]
+        },
+        "Công nghệ": {
+            "Học kỳ I": [
+                {"Chủ đề": "Công nghệ đời sống", "Bài học": "Bài 1: Công nghệ trong đời sống (2 tiết)", "YCCĐ": "Vai trò của công nghệ."},
+                {"Chủ đề": "Sáng chế", "Bài học": "Bài 2: Sáng chế kĩ thuật (2 tiết)", "YCCĐ": "Quy trình sáng chế."},
+                {"Chủ đề": "Thiết kế", "Bài học": "Bài 3: Tìm hiểu về thiết kế (2 tiết)", "YCCĐ": "Ý tưởng và phác thảo."},
+                {"Chủ đề": "Thiết kế", "Bài học": "Bài 4: Thiết kế sản phẩm đơn giản (3 tiết)", "YCCĐ": "Thiết kế đồ chơi/đồ dùng."},
+                {"Chủ đề": "Thiết kế", "Bài học": "Bài 5: Dự án thiết kế của em (3 tiết)", "YCCĐ": "Thực hiện dự án nhóm."}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Sử dụng điện thoại", "Bài học": "Bài 6: Sử dụng điện thoại (2 tiết)", "YCCĐ": "Sử dụng điện thoại đúng cách, văn minh."},
+                {"Chủ đề": "Sử dụng tủ lạnh", "Bài học": "Bài 7: Sử dụng tủ lạnh (2 tiết)", "YCCĐ": "Bảo quản thực phẩm an toàn."},
+                {"Chủ đề": "Lắp ráp mô hình", "Bài học": "Bài 8: Lắp ráp mô hình xe điện chạy pin (4 tiết)", "YCCĐ": "Lắp ráp và vận hành mô hình xe."}
+            ]
+        }
+    }
+}
+
+# --- 4. CÁC HÀM XỬ LÝ (Cache & Logic) ---
+
+@st.cache_data(show_spinner=False)
+def query_gemini_with_cache(api_key, prompt, _seed):
+    """Hàm gọi API có cache và retry"""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
-    prompt = f"""
-Đóng vai chuyên gia giáo dục Tiểu học (Chương trình GDPT 2018).
-Hãy soạn **1 CÂU HỎI KIỂM TRA ĐỊNH KỲ** cho môn {subject} Lớp {grade}.
-THÔNG TIN CẤU TRÚC:
-- Bài học: {lesson_info['Bài học']}
-- Yêu cầu cần đạt (YCCĐ): {lesson_info['YCCĐ']}
-- Dạng câu hỏi: {q_type}
-- Mức độ: {level}
-- Điểm số: {points} điểm.
-YÊU CẦU NỘI DUNG:
-1. Nội dung phải chính xác, phù hợp với tâm lý lứa tuổi học sinh {grade}.
-2. Bám sát tuyệt đối vào YCCĐ đã cung cấp.
-3. Ngôn ngữ trong sáng, rõ ràng.
-4. Nếu là câu trắc nghiệm: Phải có 4 đáp án A, B, C, D (chỉ 1 đúng).
-5. Nếu là Tin học/Công nghệ: Câu hỏi phải thực tế, liên quan đến thao tác.
-OUTPUT TRẢ VỀ (Bắt buộc theo định dạng sau):
-**Câu hỏi:** [Nội dung câu hỏi đầy đủ]
-**Đáp án:** [Đáp án chi tiết và hướng dẫn chấm ngắn gọn]
-"""
     data = {"contents": [{"parts": [{"text": prompt}]}]}
-    max_retries = 3
+    
+    max_retries = 5
     base_delay = 2
+
     for attempt in range(max_retries):
         try:
             response = requests.post(url, headers=headers, json=data)
             if response.status_code == 200:
-                return response.json()['candidates']['content']['parts']['text']
-            elif response.status_code == 404:
-                return f"Lỗi Model (404): Model '{model_name}' không tìm thấy. Google có thể đã đổi tên model."
+                try:
+                    return response.json()['candidates'][0]['content']['parts'][0]['text']
+                except:
+                    return "Lỗi cấu trúc phản hồi từ Google."
             elif response.status_code == 429:
                 time.sleep(base_delay * (2 ** attempt))
                 continue
@@ -447,71 +413,69 @@ OUTPUT TRẢ VỀ (Bắt buộc theo định dạng sau):
                 return f"Lỗi API ({response.status_code}): {response.text}"
         except Exception as e:
             return f"Lỗi mạng: {e}"
-    return "⚠️ Hệ thống đang quá tải. Vui lòng đợi 1-2 phút rồi thử lại."
+    return "⚠️ Hệ thống quá tải (429). Vui lòng thử lại sau."
 
-# --- 5. QUẢN LÝ STATE (GIỮ NGUYÊN) ---
-
+# --- 5. STATE MANAGEMENT ---
 if "exam_list" not in st.session_state:
-    st.session_state.exam_list = []
+    st.session_state.exam_list = [] 
 if "current_preview" not in st.session_state:
-    st.session_state.current_preview = ""
+    st.session_state.current_preview = "" 
 if "temp_question_data" not in st.session_state:
-    st.session_state.temp_question_data = None
+    st.session_state.temp_question_data = None 
 
-# --- 6. GIAO DIỆN CHÍNH (THAY ĐỔI PHẦN TẢI XUỐNG) ---
+# --- 6. GIAO DIỆN CHÍNH ---
 
-st.markdown("""
-<div style='text-align: center; margin-bottom: 20px;'>
-    <h1 style='color: #007BFF;'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>
-    <i>Hệ thống hỗ trợ chuyên môn & Đổi mới kiểm tra đánh giá</i>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("<div class='content-container'>", unsafe_allow_html=True) 
+st.markdown("<h1 class='main-title'>HỖ TRỢ RA ĐỀ THI TIỂU HỌC 🏫</h1>", unsafe_allow_html=True)
 
-# SIDEBAR (GIỮ NGUYÊN)
+# SIDEBAR
 with st.sidebar:
     st.header("🔑 CẤU HÌNH")
     api_key_input = st.text_input("API Key Google:", type="password")
-    if st.button("Kiểm tra Key"):
-        if find_working_model(api_key_input):
-            st.success("Kết nối thành công!")
-        else:
-            st.error("Key lỗi.")
+    
     st.markdown("---")
     st.write("📊 **Thống kê đề hiện tại:**")
     total_q = len(st.session_state.exam_list)
     total_p = sum([q['points'] for q in st.session_state.exam_list])
+    
     if total_p == 10:
         st.success(f"Số câu: {total_q} | Tổng điểm: {total_p}/10 ✅")
     else:
         st.warning(f"Số câu: {total_q} | Tổng điểm: {total_p}/10")
+    
     if st.button("🗑️ Xóa làm lại từ đầu"):
         st.session_state.exam_list = []
         st.session_state.current_preview = ""
         st.rerun()
 
-# BƯỚC 1: CHỌN LỚP - MÔN (GIỮ NGUYÊN)
+# BƯỚC 1: CHỌN LỚP - MÔN
 col1, col2 = st.columns(2)
 with col1:
     selected_grade = st.selectbox("Chọn Khối Lớp:", list(SUBJECTS_DB.keys()))
 with col2:
-    subjects_list = [f"{s} {s}" for s in SUBJECTS_DB[selected_grade]]
+    subjects_list = [f"{s[1]} {s[0]}" for s in SUBJECTS_DB[selected_grade]]
     selected_subject_full = st.selectbox("Chọn Môn Học:", subjects_list)
-    selected_subject = selected_subject_full.split(" ", 1)
+    selected_subject = selected_subject_full.split(" ", 1)[1]
 
+# Lấy dữ liệu môn học
 raw_data = CURRICULUM_DB.get(selected_grade, {}).get(selected_subject, {})
+
 if not raw_data:
-    st.warning(f"⚠️ Dữ liệu cho môn {selected_subject} - {selected_grade} đang được cập nhật. Vui lòng chọn môn khác.")
+    st.warning(f"⚠️ Dữ liệu cho môn {selected_subject} - {selected_grade} đang được cập nhật.")
     st.stop()
 
-# BƯỚC 2: BỘ SOẠN CÂU HỎI (GIỮ NGUYÊN LOGIC)
+# BƯỚC 2: BỘ SOẠN CÂU HỎI
 st.markdown("---")
 st.subheader("🛠️ Soạn thảo câu hỏi theo Ma trận")
 
+# 2.1. Bộ lọc Chủ đề & Bài học
 col_a, col_b = st.columns(2)
 with col_a:
     all_terms = list(raw_data.keys())
     selected_term = st.selectbox("Chọn Học kỳ:", all_terms)
     lessons_in_term = raw_data[selected_term]
+    
+    # Lấy danh sách chủ đề duy nhất
     unique_topics = sorted(list(set([l['Chủ đề'] for l in lessons_in_term])))
     if not unique_topics:
         st.warning("Chưa có chủ đề cho học kỳ này.")
@@ -519,18 +483,24 @@ with col_a:
     selected_topic = st.selectbox("Chọn Chủ đề:", unique_topics)
 
 with col_b:
+    # Lọc bài học theo chủ đề (Hiển thị list bài học đầy đủ)
     filtered_lessons = [l for l in lessons_in_term if l['Chủ đề'] == selected_topic]
+    
     if not filtered_lessons:
-        st.warning("Chưa có bài học cho chủ đề này.")
-        st.stop()
+         st.warning("Chưa có bài học cho chủ đề này.")
+         st.stop()
+
     lesson_options = {f"{l['Bài học']}": l for l in filtered_lessons}
     selected_lesson_name = st.selectbox("Chọn Bài học:", list(lesson_options.keys()))
+    
+    # Kiểm tra key an toàn
+    if selected_lesson_name not in lesson_options:
+        st.stop()
+        
+    current_lesson_data = lesson_options[selected_lesson_name]
+    st.info(f"🎯 **YCCĐ (TT 32/2018):** {current_lesson_data['YCCĐ']}")
 
-if selected_lesson_name not in lesson_options:
-    st.stop()
-current_lesson_data = lesson_options[selected_lesson_name]
-st.info(f"🎯 **YCCĐ (Tham khảo):** {current_lesson_data['YCCĐ']}")
-
+# 2.2. Cấu hình câu hỏi
 col_x, col_y, col_z = st.columns(3)
 with col_x:
     q_type = st.selectbox("Dạng câu hỏi:", ["Trắc nghiệm (4 lựa chọn)", "Đúng/Sai", "Điền khuyết", "Nối đôi", "Tự luận", "Giải toán có lời văn"])
@@ -539,6 +509,7 @@ with col_y:
 with col_z:
     points = st.number_input("Điểm số:", min_value=0.25, max_value=10.0, step=0.25, value=1.0)
 
+# 2.3. Nút Tạo & Xem trước
 btn_preview = st.button("✨ Tạo thử & Xem trước nội dung", type="primary")
 
 if btn_preview:
@@ -546,10 +517,34 @@ if btn_preview:
         st.error("Vui lòng nhập API Key trước.")
     else:
         with st.spinner("AI đang viết câu hỏi..."):
-            preview_content = generate_single_question(
-                api_key_input, selected_grade, selected_subject,
-                current_lesson_data, q_type, level, points
-            )
+            
+            prompt = f"""
+            Đóng vai chuyên gia giáo dục Tiểu học (Chương trình GDPT 2018).
+            Hãy soạn **1 CÂU HỎI KIỂM TRA ĐỊNH KỲ** cho môn {selected_subject} Lớp {selected_grade}.
+            
+            THÔNG TIN CẤU TRÚC:
+            - Bài học: {current_lesson_data['Bài học']}
+            - Yêu cầu cần đạt (YCCĐ): {current_lesson_data['YCCĐ']}
+            - Dạng câu hỏi: {q_type}
+            - Mức độ: {level}
+            - Điểm số: {points} điểm.
+
+            YÊU CẦU NỘI DUNG:
+            1. Nội dung phải chính xác, phù hợp với tâm lý lứa tuổi học sinh {selected_grade}.
+            2. Bám sát tuyệt đối vào YCCĐ đã cung cấp.
+            3. Ngôn ngữ trong sáng, rõ ràng.
+            4. Nếu là câu trắc nghiệm: Phải có 4 đáp án A, B, C, D (chỉ 1 đúng).
+            5. Nếu là Tin học/Công nghệ: Câu hỏi phải thực tế, liên quan đến thao tác.
+
+            OUTPUT TRẢ VỀ (Bắt buộc theo định dạng sau):
+            **Câu hỏi:** [Nội dung câu hỏi đầy đủ]
+            **Đáp án:** [Đáp án chi tiết và hướng dẫn chấm ngắn gọn]
+            """
+            
+            # Sử dụng hàm cache
+            request_id = int(time.time()) # Tạo ID để tránh cache khi bấm nút mới
+            preview_content = query_gemini_with_cache(api_key_input, prompt, request_id)
+            
             st.session_state.current_preview = preview_content
             st.session_state.temp_question_data = {
                 "topic": selected_topic,
@@ -560,20 +555,18 @@ if btn_preview:
                 "content": preview_content
             }
 
+# 2.4. Khu vực Hiển thị Xem trước & Xác nhận
 if st.session_state.current_preview:
     st.markdown("### 👁️ Xem trước câu hỏi:")
     with st.container():
-        st.markdown(f"""
-<div style='border: 1px solid #ccc; padding: 15px; border-radius: 5px; background-color: #f9f9f9;'>
-{st.session_state.current_preview}
-</div>
-""", unsafe_allow_html=True)
-    c1, c2 = st.columns()
+        st.markdown(f"<div class='question-box'>{st.session_state.current_preview}</div>", unsafe_allow_html=True)
+    
+    c1, c2 = st.columns([1, 4])
     with c1:
         if st.button("✅ Thêm vào đề thi"):
             if st.session_state.temp_question_data:
                 st.session_state.exam_list.append(st.session_state.temp_question_data)
-                st.session_state.current_preview = ""
+                st.session_state.current_preview = "" 
                 st.session_state.temp_question_data = None
                 st.success("Đã thêm câu hỏi thành công!")
                 st.rerun()
@@ -581,13 +574,11 @@ if st.session_state.current_preview:
         st.caption("Nếu chưa ưng ý, hãy bấm nút 'Tạo thử' lại để sinh câu mới.")
 
 # BƯỚC 3: XUẤT ĐỀ VÀ MA TRẬN
-
 st.markdown("---")
 st.subheader("📋 Danh sách câu hỏi & Xuất file")
 
 if len(st.session_state.exam_list) > 0:
-
-    # 3.1. Hiển thị bảng tóm tắt (GIỮ NGUYÊN)
+    # 3.1. Hiển thị bảng tóm tắt
     df_preview = pd.DataFrame(st.session_state.exam_list)
     st.dataframe(
         df_preview[['topic', 'lesson', 'type', 'level', 'points']],
@@ -600,69 +591,63 @@ if len(st.session_state.exam_list) > 0:
         },
         use_container_width=True
     )
+
     if st.button("❌ Xóa câu hỏi gần nhất"):
         st.session_state.exam_list.pop()
         st.rerun()
 
-    # 3.2. Xuất file (ĐÃ THAY ĐỔI ĐỊNH DẠNG)
+    # 3.2. Xuất file
+    # --- PHẦN 1: TẠO BẢNG ĐẶC TẢ MA TRẬN ---
     matrix_text = f"BẢNG ĐẶC TẢ MA TRẬN ĐỀ THI {selected_subject.upper()} - {selected_grade.upper()}\n"
     matrix_text += "="*90 + "\n"
     matrix_text += f"{'STT':<4} | {'Chủ đề':<25} | {'Bài học':<30} | {'Dạng':<12} | {'Mức độ':<10} | {'Điểm':<5}\n"
     matrix_text += "-"*90 + "\n"
+    
     for idx, item in enumerate(st.session_state.exam_list):
         topic_short = (item['topic'][:23] + '..') if len(item['topic']) > 23 else item['topic']
         lesson_short = (item['lesson'][:28] + '..') if len(item['lesson']) > 28 else item['lesson']
         row_str = f"{idx+1:<4} | {topic_short:<25} | {lesson_short:<30} | {item['type']:<12} | {item['level'][:10]:<10} | {item['points']:<5}\n"
         matrix_text += row_str
+    
     matrix_text += "-"*90 + "\n"
     matrix_text += f"TỔNG SỐ CÂU: {len(st.session_state.exam_list)} câu\n"
-    matrix_text += f"TỔNG ĐIỂM: {sum(q['points'] for q in st.session_state.exam_list)} điểm\n"
+    matrix_text += f"TỔNG ĐIỂM:   {sum(q['points'] for q in st.session_state.exam_list)} điểm\n"
     matrix_text += "="*90 + "\n\n\n"
 
     # --- PHẦN 2: TẠO NỘI DUNG ĐỀ THI ---
-    # Sử dụng HTML/CSS cơ bản để giả lập định dạng Nghị định 30 (Font Times New Roman, Cỡ 14)
-    exam_content_html = f"""
-<div style='font-family: "Times New Roman", Times, serif; font-size: 14pt; line-height: 1.5;'>
-    <p style='text-align: center;'>TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
-    <h2 style='text-align: center; font-weight: bold;'>ĐỀ KIỂM TRA {selected_subject.upper()} - {selected_grade.upper()}</h2>
-    <p style='text-align: center; font-style: italic;'>Thời gian làm bài: 40 phút</p>
-    <p style='text-align: center;'>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</p>
-"""
-
+    exam_text = f"TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN\n"
+    exam_text += f"ĐỀ KIỂM TRA {selected_subject.upper()} - {selected_grade.upper()}\n"
+    exam_text += f"Thời gian làm bài: 40 phút\n"
+    exam_text += "-"*50 + "\n\n"
+    
     for idx, q in enumerate(st.session_state.exam_list):
-        exam_content_html += f"""
-        <p style='margin-top: 20px;'><b>Câu {idx+1}</b> ({q['points']} điểm): </p>
-        <p style='margin-left: 20px;'>{q['content'].replace('**Câu hỏi:**', '').replace('**Đáp án:**', '<br><b>Đáp án:</b>')}</p>
-        <p style='margin-top: 10px; margin-bottom: 10px; border-bottom: 1px dashed #ccc;'></p>
-"""
-    exam_content_html += "</div>"
+        exam_text += f"Câu {idx+1} ({q['points']} điểm): \n"
+        exam_text += f"{q['content']}\n"
+        exam_text += "\n" + "."*50 + "\n\n"
 
-    # Kết hợp Ma trận (Text) và Nội dung Đề thi (HTML)
-    final_output_file = matrix_text + exam_content_html
+    final_output_file = matrix_text + exam_text
 
-    # Thay đổi file_name và mime type để người dùng tải về dưới dạng .doc (Word)
     st.download_button(
-        label="📥 Tải xuống (Đề thi + Bảng đặc tả) - Định dạng Word",
+        label="📥 Tải xuống (Đề thi + Bảng đặc tả)",
         data=final_output_file,
-        file_name=f"De_thi_va_Ma_tran_{selected_subject}_{selected_grade}.doc",
-        mime="application/msword",
+        file_name=f"De_thi_va_Ma_tran_{selected_subject}_{selected_grade}.txt",
+        mime="text/plain",
         type="primary"
     )
 
-    st.markdown("""
-    <p style="color: red; font-weight: bold;">
-    *Lưu ý: Chức năng tải xuống xuất file với đuôi '.doc' và sử dụng định dạng HTML cơ bản (Times New Roman, cỡ 14) để giả lập chuẩn Nghị định 30. Bạn cần mở file này bằng Microsoft Word và kiểm tra, căn chỉnh lại để đảm bảo đúng định dạng theo yêu cầu chuyên môn.*
-    </p>
-    """, unsafe_allow_html=True)
-
 else:
     st.info("Chưa có câu hỏi nào. Hãy soạn và thêm câu hỏi ở trên.")
-    st.markdown("<div style='margin-bottom: 200px;'></div>", unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # --- FOOTER ---
-
 st.markdown("""
-<footer style='text-align: center; padding: 10px; border-top: 1px solid #ccc;'>
-    🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN
-</footer>
+<div class="footer">
+    <p style="margin: 0; font-weight: bold; color: #2c3e50;">
+        🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN
+    </p>
+    <p style="margin: 0; font-size: 12px; color: #666;">
+        Hệ thống hỗ trợ chuyên môn & Đổi mới kiểm tra đánh giá
+    </p>
+</div>
 """, unsafe_allow_html=True)
