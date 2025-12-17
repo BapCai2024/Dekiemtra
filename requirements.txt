@@ -1,7 +1,5 @@
 streamlit
-google-generativeai
 pandas
-python-docx
-openpyxl
-PyPDF2
 requests
+xlsxwriter
+openpyxl
