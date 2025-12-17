@@ -667,6 +667,10 @@ def main():
     if "exam_list" not in st.session_state: st.session_state.exam_list = [] 
     if "current_preview" not in st.session_state: st.session_state.current_preview = "" 
     if "temp_question_data" not in st.session_state: st.session_state.temp_question_data = None 
+    
+    # Biến để kiểm soát việc tự động lấy YCCĐ khi đổi bài học
+    if "last_lesson_selected" not in st.session_state: st.session_state.last_lesson_selected = ""
+    if "auto_yccd_content" not in st.session_state: st.session_state.auto_yccd_content = "Nắm vững kiến thức cơ bản và vận dụng giải bài tập."
 
     # --- SIDEBAR CHUNG ---
     with st.sidebar:
@@ -719,24 +723,32 @@ def main():
             school_name_t1 = st.text_input("Tên trường:", value="TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", key="t1_school")
 
         st.subheader("3. Upload Ma trận")
-        st.info("💡 File upload nên chứa bảng ma trận có các cột: Mạch kiến thức, Mức độ, Số câu, Số điểm.")
+        # [YÊU CẦU 1: Bỏ dòng hướng dẫn có bóng đèn]
         uploaded = st.file_uploader("Chọn file (.xlsx, .docx, .pdf)", type=['xlsx', 'docx', 'pdf'], key="t1_up")
 
         if uploaded and st.button("🚀 TẠO ĐỀ THI NGAY", type="primary", key="t1_btn"):
             content = read_uploaded_file(uploaded)
             if content:
-                with st.spinner("Đang phân tích ma trận và tạo đề..."):
+                with st.spinner("Đang phân tích ma trận và tạo đề từ nguồn GDPT 2018..."):
+                    # [YÊU CẦU 1: Tạo đề từ AI lấy nguồn GDPT 2018, đặc biệt môn Tin học]
                     prompt = f"""
-                    Bạn là chuyên gia giáo dục tiểu học. Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1} dựa CHÍNH XÁC vào nội dung file tải lên dưới đây.
-                    YÊU CẦU BẮT BUỘC:
-                    1. Tuân thủ tuyệt đối cấu trúc ma trận/bảng đặc tả trong văn bản cung cấp.
-                    2. Hiển thị rõ ràng theo định dạng:
+                    Bạn là chuyên gia giáo dục tiểu học Việt Nam. 
+                    Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1}.
+                    
+                    YÊU CẦU QUAN TRỌNG VỀ NGUỒN KIẾN THỨC:
+                    1. TUYỆT ĐỐI CHỈ SỬ DỤNG kiến thức chuẩn theo Chương trình Giáo dục Phổ thông 2018 (GDPT 2018).
+                    2. KHÔNG lấy kiến thức ngoài chương trình hoặc các sách giáo khoa cũ (trước 2018).
+                    3. Đối với môn Tin học: Phải bám sát chuẩn kiến thức kĩ năng mới nhất của Bộ GD&ĐT.
+                    
+                    YÊU CẦU VỀ CẤU TRÚC:
+                    1. Tham khảo cấu trúc ma trận/số lượng câu hỏi trong file tải lên (nếu có):
+                    {content}
+                    
+                    2. Hiển thị kết quả rõ ràng theo định dạng:
                        **Câu [Số thứ tự]** ([Số điểm] đ) - [Mức độ]: [Nội dung câu hỏi]
                        (Xuống dòng) Đáp án: ...
-                    3. Không được bịa ra các bài học không có trong file.
-                    4. Sắp xếp câu hỏi từ Mức 1 đến Mức 3 (hoặc theo thứ tự trong file).
-                    Dữ liệu đầu vào:
-                    {content}
+                    
+                    3. Sắp xếp câu hỏi từ Mức 1 đến Mức 3.
                     """
                     result_text, used_model = generate_content_with_rotation(api_key, prompt)
                     if used_model:
@@ -798,18 +810,18 @@ def main():
                 # Dropdown chọn bài học
                 selected_lesson_name = st.selectbox("Chọn Bài học:", all_lessons_in_topic, key="t2_lesson")
                 
-                # [YÊU CẦU 2] Nút lấy YCCĐ từ AI
-                col_ai_yccd, col_manual_yccd = st.columns([1, 3])
-                with col_ai_yccd:
-                    if st.button("🔮 Lấy YCCĐ chuẩn từ AI"):
-                         with st.spinner("Đang tra cứu chương trình GDPT 2018..."):
-                            yccd_prompt = f"Hãy đưa ra Yêu cầu cần đạt chuẩn theo chương trình GDPT 2018 cho bài học: '{selected_lesson_name}' thuộc chủ đề '{selected_topic}', môn {selected_subject}, lớp {selected_grade}. Chỉ đưa ra nội dung YCCĐ ngắn gọn."
-                            ai_yccd, _ = generate_content_with_rotation(api_key, yccd_prompt)
-                            st.session_state.temp_yccd = ai_yccd
+                # [YÊU CẦU 3 & 4: Tự động lấy YCCĐ, bỏ nút bấm]
+                # Kiểm tra xem bài học có thay đổi không, nếu có thì tự gọi API
+                if st.session_state.last_lesson_selected != selected_lesson_name:
+                    with st.spinner("AI đang tự động tra cứu YCCĐ chuẩn chương trình..."):
+                        yccd_prompt = f"Hãy đưa ra Yêu cầu cần đạt chuẩn theo chương trình GDPT 2018 cho bài học: '{selected_lesson_name}' thuộc chủ đề '{selected_topic}', môn {selected_subject}, lớp {selected_grade}. Chỉ đưa ra nội dung YCCĐ ngắn gọn."
+                        ai_yccd, _ = generate_content_with_rotation(api_key, yccd_prompt)
+                        if ai_yccd:
+                            st.session_state.auto_yccd_content = ai_yccd
+                        st.session_state.last_lesson_selected = selected_lesson_name
                 
-                # Input YCCĐ (Lấy từ session state nếu có)
-                default_yccd = st.session_state.get('temp_yccd', "Nắm vững kiến thức cơ bản và vận dụng giải bài tập.")
-                yccd_input = st.text_area("Yêu cầu cần đạt (YCCĐ):", value=default_yccd, height=68, key="t2_yccd_input")
+                # Input YCCĐ (Hiển thị giá trị từ session state)
+                yccd_input = st.text_area("Yêu cầu cần đạt (AI tự động lấy):", value=st.session_state.auto_yccd_content, height=68, key="t2_yccd_input")
                 
                 # Lưu thông tin bài học hiện tại để dùng
                 current_lesson_data = {
@@ -820,10 +832,17 @@ def main():
 
             col_x, col_y, col_z = st.columns(3)
             with col_x:
-                # [YÊU CẦU 1] DẠNG CÂU HỎI CHUẨN
-                question_types = ["Trắc nghiệm nhiều lựa chọn", "Nối cột", "Điền khuyết", "Đúng/Sai", "Tự luận"]
+                # [YÊU CẦU 2: Sửa tên dạng câu hỏi cho đúng thực tế]
+                question_types = [
+                    "Trắc nghiệm (4 lựa chọn)", 
+                    "Đúng/Sai", 
+                    "Ghép nối (Nối cột)", 
+                    "Điền khuyết (Hoàn thành câu)", 
+                    "Tự luận"
+                ]
                 if selected_subject == "Tin học":
-                    question_types.append("Thực hành")
+                    question_types.append("Thực hành trên máy tính")
+                    
                 q_type = st.selectbox("Dạng câu hỏi:", question_types, key="t2_type")
             with col_y:
                 level = st.selectbox("Mức độ:", ["Mức 1: Biết", "Mức 2: Hiểu", "Mức 3: Vận dụng"], key="t2_lv")
@@ -833,7 +852,6 @@ def main():
             # HÀM TẠO CÂU HỎI
             def generate_question():
                 with st.spinner("AI đang viết..."):
-                    # [YÊU CẦU 3] THÊM NGẪU NHIÊN ĐỂ NÚT TẠO LẠI HOẠT ĐỘNG
                     random_seed = random.randint(1, 100000)
                     prompt_q = f"""
                     Đóng vai chuyên gia giáo dục Tiểu học. Soạn **1 CÂU HỎI KIỂM TRA** môn {selected_subject} Lớp {selected_grade}.
@@ -868,7 +886,6 @@ def main():
                         st.success("Đã thêm vào danh sách!")
                         st.rerun()
                 with col_btn2:
-                    # [YÊU CẦU 3] NÚT TẠO LẠI ĐÃ ĐƯỢC FIX LOGIC BÊN TRONG HÀM GENERATE
                     if st.button("🔄 Tạo câu hỏi khác", key="t2_regen"):
                         generate_question()
                         st.rerun()
