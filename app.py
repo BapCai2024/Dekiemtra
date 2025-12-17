@@ -466,11 +466,9 @@ def create_word_from_question_list(school_name, subject, exam_list):
 
     doc.add_paragraph()
     
-    # [YÊU CẦU 5: BỎ BẢNG MA TRẬN, CHỈ ĐỂ ĐỀ]
-    # PHẦN 1: MA TRẬN ĐỀ THI - ĐÃ BỎ THEO YÊU CẦU
+    # [YÊU CẦU 5: XÓA BỎ HOÀN TOÀN BẢNG MA TRẬN Ở ĐÂY, CHỈ GIỮ LẠI CÂU HỎI]
 
     # PHẦN 2: NỘI DUNG ĐỀ THI
-    # Sửa tiêu đề cho phù hợp
     h2 = doc.add_heading('ĐỀ BÀI', level=1)
     h2.runs[0].font.name = 'Times New Roman'
     h2.runs[0].font.color.rgb = None
@@ -859,20 +857,21 @@ def main():
                     
                     YÊU CẦU ĐỊNH DẠNG NGHIÊM NGẶT (SỬA LỖI HIỂN THỊ):
                     1. KHÔNG được nhắc lại tên bài học hay ngữ cảnh mở đầu (ví dụ: "Trong bài học X..."). Vào thẳng nội dung câu hỏi.
+                    2. TUYỆT ĐỐI KHÔNG xuất hiện dòng chữ "Nội dung câu hỏi:" hay "Câu hỏi:" trong kết quả trả về.
                     
-                    2. VỚI DẠNG "Trắc nghiệm (4 lựa chọn)":
+                    3. VỚI DẠNG "Trắc nghiệm (4 lựa chọn)":
                        - Phải hiển thị 4 đáp án A. B. C. D. riêng biệt xuống dòng.
                        - Chỉ ra đáp án đúng ở cuối.
                     
-                    3. VỚI DẠNG "Ghép nối (Nối cột)":
+                    4. VỚI DẠNG "Ghép nối (Nối cột)":
                        - Phải liệt kê nội dung Cột A (1, 2,...) và Cột B (a, b,...) rõ ràng.
                        - Phần đáp án mô phỏng kết quả nối (ví dụ: 1-b, 2-a).
                     
-                    4. VỚI DẠNG "Điền khuyết" hoặc "Tự luận":
+                    5. VỚI DẠNG "Điền khuyết" hoặc "Tự luận":
                        - Câu hỏi phải chừa chỗ trống bằng dấu ".........." để học sinh điền.
                        - Hiển thị đáp án gợi ý ở cuối.
 
-                    OUTPUT CHỈ GHI NỘI DUNG, KHÔNG CẦN LỜI DẪN:
+                    OUTPUT CHỈ GHI NỘI DUNG CÂU HỎI VÀ ĐÁP ÁN:
                     [Nội dung câu hỏi và các lựa chọn]
                     
                     Đáp án: ...
