@@ -8,7 +8,7 @@ import io
 import time
 
 # --- CẤU HÌNH TRANG ---
-st.set_page_config(page_title="Hệ Thống Ra Đề Thi (Auto-Detect)", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Hệ Thống Ra Đề Thi (Anti-429)", page_icon="🛡️", layout="wide")
 
 # --- CSS ---
 st.markdown("""
@@ -33,34 +33,56 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# --- HÀM TỰ ĐỘNG TÌM MODEL (KHẮC PHỤC TRIỆT ĐỂ LỖI 404) ---
-def get_available_model(api_key):
+# --- HÀM GỌI AI THÔNG MINH (CHỐNG LỖI 429) ---
+def generate_content_with_fallback(api_key, prompt):
     genai.configure(api_key=api_key)
-    try:
-        # Lấy danh sách tất cả model mà API Key này được phép dùng
-        all_models = genai.list_models()
-        
-        # Lọc ra các model có khả năng tạo văn bản (generateContent)
-        valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
-        
-        if not valid_models:
-            return None, "Không tìm thấy model nào khả dụng cho Key này."
+    
+    # DANH SÁCH ƯU TIÊN (Priority List)
+    # 1. gemini-1.5-flash: Tốc độ nhanh, Quota miễn phí cao nhất (Khuyên dùng đầu tiên)
+    # 2. gemini-1.5-flash-8b: Bản siêu nhẹ
+    # 3. gemini-1.5-pro: Thông minh hơn nhưng Quota thấp (Dễ bị 429)
+    # 4. gemini-pro: Bản cũ ổn định
+    models_to_try = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b", 
+        "gemini-2.0-flash-exp",
+        "gemini-1.5-pro",
+        "gemini-pro"
+    ]
+    
+    last_error = None
 
-        # Ưu tiên chọn model thông minh nhất theo thứ tự
-        priority_list = ['models/gemini-1.5-pro', 'models/gemini-1.5-flash', 'models/gemini-pro']
-        
-        # Tìm model tốt nhất có trong danh sách valid_models
-        for priority in priority_list:
-            # Kiểm tra xem priority có nằm trong tên model không (vì tên thực tế có thể là models/gemini-pro-001)
-            for valid in valid_models:
-                if priority in valid or valid in priority:
-                    return valid, f"Đã tự động chọn model: {valid}"
-        
-        # Nếu không có model ưu tiên, lấy cái đầu tiên tìm thấy
-        return valid_models[0], f"Dùng model mặc định: {valid_models[0]}"
-        
-    except Exception as e:
-        return None, str(e)
+    # Vòng lặp thử từng model
+    for model_name in models_to_try:
+        try:
+            # Tạo model
+            model = genai.GenerativeModel(model_name)
+            
+            # Gọi API
+            response = model.generate_content(prompt)
+            
+            # Nếu thành công, trả về kết quả và tên model đã dùng
+            return response.text, model_name
+            
+        except Exception as e:
+            error_str = str(e)
+            last_error = error_str
+            
+            # Phân tích lỗi
+            if "429" in error_str:
+                # Nếu lỗi 429 (Hết quota), không dừng lại mà thử model tiếp theo ngay
+                print(f"Model {model_name} bị quá tải (429). Đang chuyển sang model khác...")
+                time.sleep(1) # Nghỉ 1 nhịp nhẹ
+                continue 
+            elif "404" in error_str:
+                # Nếu lỗi 404 (Không tìm thấy model), thử cái tiếp theo
+                continue
+            else:
+                # Các lỗi khác (như sai API Key) thì dừng lại thử cái khác luôn
+                continue
+
+    # Nếu thử hết danh sách mà vẫn lỗi
+    raise Exception(f"Tất cả các model đều bận hoặc hết hạn mức. Lỗi cuối cùng: {last_error}")
 
 # --- HÀM XỬ LÝ FILE ---
 def read_uploaded_file(uploaded_file):
@@ -113,7 +135,7 @@ def create_word_file(school_name, exam_name, content):
 
 # --- MAIN ---
 def main():
-    st.title("🛡️ HỆ THỐNG RA ĐỀ THI (AUTO-DETECT MODEL)")
+    st.title("🛡️ HỆ THỐNG RA ĐỀ THI (ANTI-429)")
     
     if 'exam_result' not in st.session_state: st.session_state.exam_result = ""
 
@@ -121,15 +143,6 @@ def main():
         st.header("1. Cấu hình")
         api_key = st.text_input("Nhập API Key:", type="password")
         
-        # Nút kiểm tra kết nối để debug
-        if api_key:
-            if st.button("Kiểm tra kết nối API"):
-                model_name, msg = get_available_model(api_key)
-                if model_name:
-                    st.success(f"Kết nối tốt! {msg}")
-                else:
-                    st.error(f"Lỗi kết nối: {msg}")
-
         st.divider()
         school_name = st.text_input("Tên trường:", value="TRƯỜNG TH NGUYỄN DU")
         exam_term = st.selectbox("Kỳ thi:", 
@@ -155,35 +168,26 @@ def main():
     if uploaded and st.button("🚀 TẠO ĐỀ THI", type="primary"):
         content = read_uploaded_file(uploaded)
         if content:
-            with st.spinner("Đang tự động tìm model tốt nhất và tạo đề..."):
-                # 1. Tự động lấy tên model đúng nhất
-                active_model_name, status_msg = get_available_model(api_key)
-                
-                if not active_model_name:
-                    st.error(f"Lỗi nghiêm trọng: {status_msg}")
-                    st.stop()
-                
-                st.toast(status_msg) # Thông báo nhỏ góc màn hình model đang dùng
-
-                # 2. Tạo nội dung
+            with st.spinner("Đang kết nối AI (Tự động đổi model nếu quá tải)..."):
                 try:
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel(active_model_name)
-                    
                     prompt = f"""
                     Vai trò: Giáo viên tiểu học. Soạn đề thi môn {sub_name} lớp {grade}.
                     Yêu cầu:
-                    1. Chỉ dùng dữ liệu từ văn bản dưới.
+                    1. Chỉ dùng dữ liệu từ văn bản dưới đây.
                     2. Không bịa kiến thức ngoài.
                     3. Cấu trúc: Phần I. Trắc nghiệm (nếu có), Phần II. Tự luận.
                     Dữ liệu ma trận:
                     {content}
                     """
-                    response = model.generate_content(prompt)
-                    st.session_state.exam_result = response.text
-                    st.success("✅ Đã tạo xong!")
+                    
+                    # GỌI HÀM MỚI VỚI CƠ CHẾ FALLBACK
+                    result_text, used_model = generate_content_with_fallback(api_key, prompt)
+                    
+                    st.session_state.exam_result = result_text
+                    st.success(f"✅ Đã tạo xong! (Sử dụng model: {used_model})")
+                    
                 except Exception as e:
-                    st.error(f"Lỗi khi tạo nội dung: {e}")
+                    st.error(f"Lỗi khởi tạo: {e}. Vui lòng kiểm tra lại API Key hoặc thử lại sau 1 phút.")
 
     # KHUNG SỬA VÀ TẢI
     if st.session_state.exam_result:
