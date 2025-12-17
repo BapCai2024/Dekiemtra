@@ -15,19 +15,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. CSS GIAO DIỆN (Gộp style của cả 2 file) ---
+# --- 2. CSS GIAO DIỆN ---
 st.markdown("""
 <style>
-    /* Style cho Tab 1 */
+    /* Tab 1 Style */
     .subject-card { padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; margin-bottom: 10px; }
     .stTextArea textarea { font-family: 'Times New Roman'; font-size: 16px; }
     .success-box { padding: 10px; background-color: #d4edda; color: #155724; border-radius: 5px; margin-bottom: 10px; }
     
-    /* Style cho Tab 2 */
+    /* Tab 2 Style */
     .main-title { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px;}
     .question-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #1565C0; margin-bottom: 10px; }
     
-    /* Footer chung */
+    /* Footer */
     .footer {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: #f1f1f1; color: #333;
@@ -44,7 +44,7 @@ try:
 except ImportError:
     st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt: pip install pypdf")
 
-# --- 4. DỮ LIỆU (Giữ nguyên database khổng lồ từ file 1) ---
+# --- 4. DỮ LIỆU CSDL (GIỮ NGUYÊN) ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
@@ -354,56 +354,48 @@ CURRICULUM_DB = {
     }
 }
 
-# --- 5. HỆ THỐNG API (UNIVERSAL FIX) ---
-def get_best_available_model(api_key):
-    """Tìm model tốt nhất của Google để tránh lỗi 404/429"""
+# --- 5. HỆ THỐNG API (UNIVERSAL FIX + ANTI-429) ---
+def generate_content_with_rotation(api_key, prompt):
+    """
+    Cơ chế Fallback thông minh:
+    1. Ưu tiên Flash (Rẻ, nhanh)
+    2. Nếu lỗi, thử Flash bản khác
+    3. Nếu lỗi, thử Pro
+    """
     genai.configure(api_key=api_key)
-    try:
-        all_models = genai.list_models()
-        valid_models = []
-        for m in all_models:
-            if 'generateContent' in m.supported_generation_methods:
-                valid_models.append(m.name)
-        
-        if not valid_models:
-            return None, "API Key đúng nhưng không tìm thấy model."
+    
+    # DANH SÁCH MẠNH MẼ: Flash -> Pro -> Experimental
+    # Đưa gemini-1.5-flash lên đầu vì quota cao nhất
+    model_priority = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro",
+        "gemini-pro"
+    ]
+    
+    last_error = ""
 
-        priorities = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']
-        selected_model = None
-        for p in priorities:
-            for v in valid_models:
-                if p in v:
-                    selected_model = v
-                    break
-            if selected_model: break
-        
-        if not selected_model: selected_model = valid_models[0]
-        return selected_model, None
-    except Exception as e:
-        return None, f"Lỗi kết nối API: {str(e)}"
+    for model_name in model_priority:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text, model_name
+        except Exception as e:
+            error_msg = str(e)
+            last_error = error_msg
+            
+            # Nếu lỗi 429 (Quá tải) -> In ra và thử model tiếp theo ngay lập tức
+            if "429" in error_msg:
+                # Không sleep lâu, chuyển ngay sang model khác
+                continue 
+            elif "404" in error_msg:
+                continue
+            else:
+                continue
 
-def generate_content_safe(api_key, prompt):
-    """Hàm gọi AI an toàn, tự động retry"""
-    model_name, error = get_best_available_model(api_key)
-    if error: return f"Lỗi: {error}", None
-    if not model_name: return "Không tìm thấy model.", None
+    return f"Lỗi: Tất cả model đều bận. {last_error}", None
 
-    try:
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text, model_name
-    except Exception as e:
-        # Retry nếu lỗi 429
-        if "429" in str(e):
-            time.sleep(2)
-            try:
-                response = model.generate_content(prompt)
-                return response.text, model_name
-            except Exception as e2:
-                return f"Lỗi quá tải (429): {e2}", None
-        return f"Lỗi: {e}", None
-
-# --- 6. HÀM HỖ TRỢ TAB 1 (TẠO TỪ FILE) ---
+# --- 6. HÀM HỖ TRỢ FILE ---
 def read_uploaded_file(uploaded_file):
     try:
         if uploaded_file.name.endswith('.xlsx'):
@@ -461,14 +453,6 @@ def main():
         st.header("🔑 CẤU HÌNH HỆ THỐNG")
         api_key = st.text_input("Nhập API Key Google:", type="password")
         
-        if api_key:
-            if st.button("Kiểm tra kết nối"):
-                m_name, err = get_best_available_model(api_key)
-                if m_name:
-                    st.success(f"Kết nối tốt! Model: {m_name}")
-                else:
-                    st.error(f"Lỗi: {err}")
-        
         st.divider()
         st.markdown("**TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN**")
         st.caption("Hệ thống hỗ trợ chuyên môn")
@@ -517,7 +501,7 @@ def main():
                     Dữ liệu ma trận:
                     {content}
                     """
-                    result_text, used_model = generate_content_safe(api_key, prompt)
+                    result_text, used_model = generate_content_with_rotation(api_key, prompt)
                     if used_model:
                         st.session_state.exam_result = result_text
                         st.success(f"Đã tạo xong bằng model: {used_model}")
@@ -588,7 +572,7 @@ def main():
                     **Câu hỏi:** ...
                     **Đáp án:** ...
                     """
-                    preview_content, _ = generate_content_safe(api_key, prompt_q)
+                    preview_content, _ = generate_content_with_rotation(api_key, prompt_q)
                     st.session_state.current_preview = preview_content
                     st.session_state.temp_question_data = {
                         "topic": selected_topic, "lesson": selected_lesson_name,
