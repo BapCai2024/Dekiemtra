@@ -5,35 +5,27 @@ from docx import Document
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
-import pypdf # Đã thêm vào requirements.txt
+import time
+
+# --- XỬ LÝ LỖI THIẾU THƯ VIỆN ---
+try:
+    import pypdf
+except ImportError:
+    st.error("⚠️ Thiếu thư viện 'pypdf'. Nếu chạy Local hãy gõ: pip install pypdf. Nếu chạy Cloud hãy thêm pypdf vào requirements.txt")
+    st.stop()
 
 # --- CẤU HÌNH TRANG ---
-st.set_page_config(
-    page_title="Hỗ Trợ Ra Đề Thi Tiểu Học (TT27)",
-    page_icon="✍️",
-    layout="wide"
-)
+st.set_page_config(page_title="Hệ Thống Ra Đề Thi (TT27) - Auto Fix", page_icon="🏫", layout="wide")
 
-# --- CSS TÙY CHỈNH ---
+# --- CSS ---
 st.markdown("""
 <style>
-    .subject-card {
-        padding: 15px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        background-color: #ffffff;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .main-header { font-size: 24px; font-weight: bold; color: #2c3e50; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 50px; background-color: #007bff; color: white;}
+    .subject-card { padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; text-align: center; margin-bottom: 10px; }
+    .stTextArea textarea { font-family: 'Times New Roman'; font-size: 16px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- DỮ LIỆU MÔN HỌC THEO THÔNG TƯ 27 (CHỈ CÁC MÔN CÓ ĐIỂM SỐ) ---
-# Loại bỏ Tiếng Anh theo yêu cầu.
-# Lớp 1, 2, 3: Chỉ Toán, Tiếng Việt (Tin học & Công nghệ bắt đầu từ lớp 3)
-# Lớp 4, 5: Thêm Khoa học, Lịch sử & Địa lí.
+# --- DỮ LIỆU MÔN HỌC (TT27 - KHÔNG TIẾNG ANH) ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
@@ -42,7 +34,30 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# --- HÀM XỬ LÝ FILE ---
+# --- HÀM THỬ MODEL (AUTO FIX LỖI 404) ---
+def generate_content_safe(api_key, prompt):
+    genai.configure(api_key=api_key)
+    
+    # Danh sách model sẽ thử lần lượt. Nếu cái đầu lỗi sẽ thử cái sau.
+    # gemini-1.5-flash: Nhanh, mới.
+    # gemini-pro: Cũ hơn nhưng cực kỳ ổn định, ít lỗi vặt.
+    models_to_try = ["gemini-1.5-flash", "gemini-pro", "gemini-1.5-pro"]
+    
+    last_error = None
+    
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text, model_name # Trả về nội dung và tên model đã dùng thành công
+        except Exception as e:
+            last_error = e
+            continue # Thử model tiếp theo
+            
+    # Nếu thử hết mà vẫn lỗi
+    raise last_error
+
+# --- HÀM XỬ LÝ FILE ĐẦU VÀO ---
 def read_uploaded_file(uploaded_file):
     try:
         if uploaded_file.name.endswith('.xlsx'):
@@ -57,178 +72,133 @@ def read_uploaded_file(uploaded_file):
             for page in reader.pages:
                 text += page.extract_text()
             return text
-        else:
-            return None
-    except Exception as e:
-        st.error(f"Lỗi đọc file: {e}")
+        return None
+    except Exception:
         return None
 
-# --- HÀM TẠO FILE WORD (CHUẨN HÓA THEO YÊU CẦU MỚI) ---
+# --- HÀM TẠO FILE WORD ---
 def create_word_file(school_name, exam_name, content):
     doc = Document()
     
-    # Cấu hình font chữ chung Times New Roman
+    # Font Times New Roman
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
     font.size = Pt(13)
 
-    # Căn lề chuẩn NĐ 30 (Trên 2, Dưới 2, Trái 3, Phải 2 cm)
-    sections = doc.sections
-    for section in sections:
-        section.top_margin = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin = Cm(3)
-        section.right_margin = Cm(2)
+    # Margin chuẩn NĐ 30
+    for section in doc.sections:
+        section.top_margin = Cm(2); section.bottom_margin = Cm(2)
+        section.left_margin = Cm(3); section.right_margin = Cm(2)
 
-    # --- HEADER (Bảng 2 cột ẩn viền) ---
+    # Header 2 cột
     table = doc.add_table(rows=1, cols=2)
     table.autofit = False
-    table.columns[0].width = Cm(7) 
-    table.columns[1].width = Cm(9)
+    table.columns[0].width = Cm(7); table.columns[1].width = Cm(9)
 
-    # Ô 1: Chỉ tên trường (Theo yêu cầu: Bỏ Phòng GD)
+    # Cột 1: Tên Trường (Bỏ PGD)
     cell_1 = table.cell(0, 0)
     p1 = cell_1.paragraphs[0]
-    run_school = p1.add_run(f"{school_name.upper()}")
-    run_school.bold = True
-    run_school.font.size = Pt(12)
+    run_s = p1.add_run(f"{school_name.upper()}")
+    run_s.bold = True
+    run_s.font.size = Pt(12)
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # Ô 2: Tên kỳ thi + Năm học để trống
+    # Cột 2: Tên Kỳ Thi + Năm học trống
     cell_2 = table.cell(0, 1)
     p2 = cell_2.paragraphs[0]
-    run_exam = p2.add_run(f"{exam_name.upper()}\n")
-    run_exam.bold = True
-    run_exam.font.size = Pt(12)
-    
-    # Năm học để trống
-    run_year = p2.add_run("Năm học: ..........") 
-    run_year.font.size = Pt(13)
+    run_e = p2.add_run(f"{exam_name.upper()}\n")
+    run_e.bold = True
+    run_e.font.size = Pt(12)
+    run_y = p2.add_run("Năm học: ..........")
+    run_y.font.size = Pt(13)
     p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph() # Dòng trống ngăn cách
+    doc.add_paragraph() # Dòng trống
 
-    # --- TIÊU ĐỀ NỘI DUNG ---
-    title = doc.add_paragraph("ĐỀ BÀI")
-    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title.runs[0].bold = True
-
-    # --- NỘI DUNG TỪ AI ---
-    # Xử lý xuống dòng chuẩn
+    # Nội dung
     for line in content.split('\n'):
-        p = doc.add_paragraph(line)
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        if line.strip():
+            p = doc.add_paragraph(line)
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-    # Lưu vào buffer
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
 
-# --- MAIN APP ---
+# --- MAIN ---
 def main():
-    st.title("HỆ THỐNG RA ĐỀ THI TIỂU HỌC (TT27)")
+    st.title("🛠️ HỆ THỐNG RA ĐỀ THI (AUTO-FIX)")
     
+    if 'exam_result' not in st.session_state:
+        st.session_state.exam_result = ""
+
     with st.sidebar:
-        st.header("Cấu hình hệ thống")
-        api_key = st.text_input("Nhập Google Gemini API Key:", type="password")
-        
+        st.header("1. Cấu hình")
+        api_key = st.text_input("Nhập API Key:", type="password")
         st.divider()
-        st.header("Thông tin đầu trang")
         school_name = st.text_input("Tên trường:", value="TRƯỜNG TH NGUYỄN DU")
         exam_term = st.selectbox("Kỳ thi:", 
-                               ["ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ I", 
-                                "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ I", 
-                                "ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ II", 
-                                "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ II"])
+             ["ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ I", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ I",
+              "ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ II", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ II"])
 
     if not api_key:
-        st.warning("⚠️ Vui lòng nhập API Key để sử dụng.")
-        return
+        st.warning("Vui lòng nhập API Key."); return
 
-    genai.configure(api_key=api_key)
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.subheader("2. Chọn Lớp")
+        grade = st.radio("Khối:", list(SUBJECTS_DB.keys()))
+    with col2:
+        st.subheader("3. Chọn Môn")
+        subjects = SUBJECTS_DB[grade]
+        sub_name = st.selectbox("Môn học:", [s[0] for s in subjects])
+        icon = next(i for n, i in subjects if n == sub_name)
+        st.markdown(f"<div class='subject-card'><h3>{icon} {sub_name}</h3></div>", unsafe_allow_html=True)
 
-    # 1. Chọn Lớp
-    st.subheader("1. Chọn Khối Lớp")
-    selected_grade_key = st.radio("Chọn khối lớp:", list(SUBJECTS_DB.keys()), horizontal=True)
+    st.subheader("4. Upload Ma trận (Bắt buộc)")
+    uploaded = st.file_uploader("Chọn file (.xlsx, .docx, .pdf)", type=['xlsx', 'docx', 'pdf'])
 
-    # 2. Chọn Môn (Dynamic theo lớp)
-    st.subheader("2. Chọn Môn Học")
-    
-    # Lấy danh sách môn của lớp đã chọn
-    available_subjects = SUBJECTS_DB[selected_grade_key]
-    
-    # Tạo danh sách tên môn để hiển thị trong selectbox
-    subject_names = [sub[0] for sub in available_subjects]
-    selected_subject_name = st.selectbox("Môn học:", subject_names)
-    
-    # Tìm icon tương ứng
-    selected_icon = next(icon for name, icon in available_subjects if name == selected_subject_name)
-
-    # Hiển thị Card môn học
-    st.markdown(f"""
-        <div class="subject-card">
-            <h1 style='margin:0'>{selected_icon}</h1>
-            <h3 style='margin:0'>{selected_subject_name} - {selected_grade_key}</h3>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # 3. Upload Ma trận
-    st.subheader("3. Dữ liệu đầu vào (Ma trận & Đặc tả)")
-    st.info("Chỉ chấp nhận file ma trận. Hệ thống sẽ tạo đề bám sát file này.")
-    uploaded_file = st.file_uploader("Tải lên file Ma trận/Đặc tả (.xlsx, .docx, .pdf)", type=['xlsx', 'docx', 'pdf'])
-
-    if uploaded_file:
-        file_content = read_uploaded_file(uploaded_file)
-        if file_content:
-            st.success("Đã đọc dữ liệu thành công!")
-            
-            if st.button("BẮT ĐẦU TẠO ĐỀ THI"):
-                with st.spinner("Đang phân tích chương trình GDPT 2018 và tạo đề..."):
+    if uploaded:
+        if st.button("🚀 TẠO ĐỀ THI (AUTO FIX)", type="primary"):
+            content = read_uploaded_file(uploaded)
+            if content:
+                with st.spinner("Đang kết nối AI và tự động xử lý lỗi nếu có..."):
                     try:
-                        # Cấu hình Model
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        
-                        # Prompt tối ưu hóa
                         prompt = f"""
-                        Bạn là chuyên gia giáo dục tiểu học, am hiểu Thông tư 27/2020/TT-BGDĐT.
-                        
-                        NHIỆM VỤ: Soạn đề kiểm tra định kì môn {selected_subject_name} lớp {selected_grade_key}.
-                        
-                        YÊU CẦU BẮT BUỘC:
-                        1. NGUỒN DỮ LIỆU: Chỉ sử dụng nội dung kiến thức trong văn bản người dùng cung cấp dưới đây. Tuyệt đối không lấy kiến thức bên ngoài.
-                        2. CẤU TRÚC: Tuân thủ đúng cấu trúc ma trận/bảng đặc tả đã cung cấp.
-                        3. HÌNH THỨC: Trình bày rõ ràng, ngôn ngữ phù hợp học sinh tiểu học.
-                        
-                        DỮ LIỆU MA TRẬN/ĐẶC TẢ ĐẦU VÀO:
-                        ---
-                        {file_content}
-                        ---
-                        
-                        Hãy viết nội dung đề thi (không cần đáp án chi tiết, chỉ cần đề bài):
+                        Vai trò: Giáo viên tiểu học Việt Nam.
+                        Nhiệm vụ: Soạn đề thi môn {sub_name} lớp {grade}.
+                        Yêu cầu:
+                        1. Chỉ dùng dữ liệu từ văn bản cung cấp dưới đây.
+                        2. Không bịa đặt kiến thức ngoài.
+                        3. Cấu trúc: Phần I. Trắc nghiệm (nếu ma trận có), Phần II. Tự luận.
+                        Dữ liệu:
+                        {content}
                         """
-                        
-                        response = model.generate_content(prompt)
-                        exam_text = response.text
-                        
-                        st.markdown("---")
-                        st.subheader("Kết quả từ AI:")
-                        st.write(exam_text)
-                        
-                        # Tạo file Word để tải về
-                        docx_buffer = create_word_file(school_name, exam_term, exam_text)
-                        
-                        st.download_button(
-                            label="📥 TẢI VỀ FILE WORD (.DOCX)",
-                            data=docx_buffer,
-                            file_name=f"De_Kiem_Tra_{selected_subject_name}_{selected_grade_key}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            type="primary"
-                        )
+                        # GỌI HÀM AN TOÀN
+                        result_text, used_model = generate_content_safe(api_key, prompt)
+                        st.session_state.exam_result = result_text
+                        st.success(f"✅ Đã tạo xong! (Sử dụng model: {used_model})")
                         
                     except Exception as e:
-                        st.error(f"Lỗi xử lý: {e}")
+                        st.error(f"Vẫn gặp lỗi nghiêm trọng: {e}. Vui lòng kiểm tra lại API Key.")
+
+    # KHUNG SỬA VÀ TẢI
+    if st.session_state.exam_result:
+        st.markdown("---")
+        st.subheader("📝 Xem và Sửa nội dung")
+        edited_text = st.text_area("Sửa trực tiếp tại đây:", value=st.session_state.exam_result, height=500)
+        st.session_state.exam_result = edited_text # Cập nhật
+
+        docx = create_word_file(school_name, exam_term, edited_text)
+        st.download_button(
+            "📥 TẢI VỀ FILE WORD (.DOCX)", 
+            docx, 
+            file_name=f"De_{sub_name}_{grade}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            type="primary"
+        )
 
 if __name__ == "__main__":
     main()
