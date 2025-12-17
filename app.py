@@ -7,15 +7,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
 import time
 
-# --- XỬ LÝ LỖI THIẾU THƯ VIỆN ---
-try:
-    import pypdf
-except ImportError:
-    st.error("⚠️ Thiếu thư viện 'pypdf'. Nếu chạy Local hãy gõ: pip install pypdf. Nếu chạy Cloud hãy thêm pypdf vào requirements.txt")
-    st.stop()
-
 # --- CẤU HÌNH TRANG ---
-st.set_page_config(page_title="Hệ Thống Ra Đề Thi (TT27) - Auto Fix", page_icon="🏫", layout="wide")
+st.set_page_config(page_title="Hệ Thống Ra Đề Thi (Auto-Detect)", page_icon="🛡️", layout="wide")
 
 # --- CSS ---
 st.markdown("""
@@ -25,7 +18,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- DỮ LIỆU MÔN HỌC (TT27 - KHÔNG TIẾNG ANH) ---
+# --- IMPORT AN TOÀN ---
+try:
+    import pypdf
+except ImportError:
+    st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt để đọc file PDF.")
+
+# --- DỮ LIỆU MÔN HỌC ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
@@ -34,30 +33,36 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# --- HÀM THỬ MODEL (AUTO FIX LỖI 404) ---
-def generate_content_safe(api_key, prompt):
+# --- HÀM TỰ ĐỘNG TÌM MODEL (KHẮC PHỤC TRIỆT ĐỂ LỖI 404) ---
+def get_available_model(api_key):
     genai.configure(api_key=api_key)
-    
-    # Danh sách model sẽ thử lần lượt. Nếu cái đầu lỗi sẽ thử cái sau.
-    # gemini-1.5-flash: Nhanh, mới.
-    # gemini-pro: Cũ hơn nhưng cực kỳ ổn định, ít lỗi vặt.
-    models_to_try = ["gemini-1.5-flash", "gemini-pro", "gemini-1.5-pro"]
-    
-    last_error = None
-    
-    for model_name in models_to_try:
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text, model_name # Trả về nội dung và tên model đã dùng thành công
-        except Exception as e:
-            last_error = e
-            continue # Thử model tiếp theo
-            
-    # Nếu thử hết mà vẫn lỗi
-    raise last_error
+    try:
+        # Lấy danh sách tất cả model mà API Key này được phép dùng
+        all_models = genai.list_models()
+        
+        # Lọc ra các model có khả năng tạo văn bản (generateContent)
+        valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
+        
+        if not valid_models:
+            return None, "Không tìm thấy model nào khả dụng cho Key này."
 
-# --- HÀM XỬ LÝ FILE ĐẦU VÀO ---
+        # Ưu tiên chọn model thông minh nhất theo thứ tự
+        priority_list = ['models/gemini-1.5-pro', 'models/gemini-1.5-flash', 'models/gemini-pro']
+        
+        # Tìm model tốt nhất có trong danh sách valid_models
+        for priority in priority_list:
+            # Kiểm tra xem priority có nằm trong tên model không (vì tên thực tế có thể là models/gemini-pro-001)
+            for valid in valid_models:
+                if priority in valid or valid in priority:
+                    return valid, f"Đã tự động chọn model: {valid}"
+        
+        # Nếu không có model ưu tiên, lấy cái đầu tiên tìm thấy
+        return valid_models[0], f"Dùng model mặc định: {valid_models[0]}"
+        
+    except Exception as e:
+        return None, str(e)
+
+# --- HÀM XỬ LÝ FILE ---
 def read_uploaded_file(uploaded_file):
     try:
         if uploaded_file.name.endswith('.xlsx'):
@@ -67,11 +72,13 @@ def read_uploaded_file(uploaded_file):
             doc = Document(uploaded_file)
             return "\n".join([para.text for para in doc.paragraphs])
         elif uploaded_file.name.endswith('.pdf'):
-            reader = pypdf.PdfReader(uploaded_file)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text()
-            return text
+            if 'pypdf' in globals():
+                reader = pypdf.PdfReader(uploaded_file)
+                text = ""
+                for page in reader.pages: text += page.extract_text()
+                return text
+            else:
+                return "Lỗi: Chưa cài đặt thư viện pypdf."
         return None
     except Exception:
         return None
@@ -79,72 +86,57 @@ def read_uploaded_file(uploaded_file):
 # --- HÀM TẠO FILE WORD ---
 def create_word_file(school_name, exam_name, content):
     doc = Document()
-    
-    # Font Times New Roman
-    style = doc.styles['Normal']
-    font = style.font
-    font.name = 'Times New Roman'
-    font.size = Pt(13)
-
-    # Margin chuẩn NĐ 30
+    style = doc.styles['Normal']; font = style.font; font.name = 'Times New Roman'; font.size = Pt(13)
     for section in doc.sections:
         section.top_margin = Cm(2); section.bottom_margin = Cm(2)
         section.left_margin = Cm(3); section.right_margin = Cm(2)
 
-    # Header 2 cột
-    table = doc.add_table(rows=1, cols=2)
-    table.autofit = False
+    table = doc.add_table(rows=1, cols=2); table.autofit = False
     table.columns[0].width = Cm(7); table.columns[1].width = Cm(9)
 
-    # Cột 1: Tên Trường (Bỏ PGD)
-    cell_1 = table.cell(0, 0)
-    p1 = cell_1.paragraphs[0]
-    run_s = p1.add_run(f"{school_name.upper()}")
-    run_s.bold = True
-    run_s.font.size = Pt(12)
+    cell_1 = table.cell(0, 0); p1 = cell_1.paragraphs[0]
+    run_s = p1.add_run(f"{school_name.upper()}"); run_s.bold = True; run_s.font.size = Pt(12)
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    # Cột 2: Tên Kỳ Thi + Năm học trống
-    cell_2 = table.cell(0, 1)
-    p2 = cell_2.paragraphs[0]
-    run_e = p2.add_run(f"{exam_name.upper()}\n")
-    run_e.bold = True
-    run_e.font.size = Pt(12)
-    run_y = p2.add_run("Năm học: ..........")
-    run_y.font.size = Pt(13)
+    cell_2 = table.cell(0, 1); p2 = cell_2.paragraphs[0]
+    run_e = p2.add_run(f"{exam_name.upper()}\n"); run_e.bold = True; run_e.font.size = Pt(12)
+    run_y = p2.add_run("Năm học: .........."); run_y.font.size = Pt(13)
     p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph() # Dòng trống
-
-    # Nội dung
+    doc.add_paragraph()
     for line in content.split('\n'):
         if line.strip():
-            p = doc.add_paragraph(line)
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p = doc.add_paragraph(line); p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
+    buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
     return buffer
 
 # --- MAIN ---
 def main():
-    st.title("🛠️ HỆ THỐNG RA ĐỀ THI (AUTO-FIX)")
+    st.title("🛡️ HỆ THỐNG RA ĐỀ THI (AUTO-DETECT MODEL)")
     
-    if 'exam_result' not in st.session_state:
-        st.session_state.exam_result = ""
+    if 'exam_result' not in st.session_state: st.session_state.exam_result = ""
 
     with st.sidebar:
         st.header("1. Cấu hình")
         api_key = st.text_input("Nhập API Key:", type="password")
+        
+        # Nút kiểm tra kết nối để debug
+        if api_key:
+            if st.button("Kiểm tra kết nối API"):
+                model_name, msg = get_available_model(api_key)
+                if model_name:
+                    st.success(f"Kết nối tốt! {msg}")
+                else:
+                    st.error(f"Lỗi kết nối: {msg}")
+
         st.divider()
         school_name = st.text_input("Tên trường:", value="TRƯỜNG TH NGUYỄN DU")
         exam_term = st.selectbox("Kỳ thi:", 
              ["ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ I", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ I",
               "ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ II", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ II"])
 
-    if not api_key:
-        st.warning("Vui lòng nhập API Key."); return
+    if not api_key: st.warning("Vui lòng nhập API Key."); return
 
     col1, col2 = st.columns([1, 2])
     with col1:
@@ -160,45 +152,48 @@ def main():
     st.subheader("4. Upload Ma trận (Bắt buộc)")
     uploaded = st.file_uploader("Chọn file (.xlsx, .docx, .pdf)", type=['xlsx', 'docx', 'pdf'])
 
-    if uploaded:
-        if st.button("🚀 TẠO ĐỀ THI (AUTO FIX)", type="primary"):
-            content = read_uploaded_file(uploaded)
-            if content:
-                with st.spinner("Đang kết nối AI và tự động xử lý lỗi nếu có..."):
-                    try:
-                        prompt = f"""
-                        Vai trò: Giáo viên tiểu học Việt Nam.
-                        Nhiệm vụ: Soạn đề thi môn {sub_name} lớp {grade}.
-                        Yêu cầu:
-                        1. Chỉ dùng dữ liệu từ văn bản cung cấp dưới đây.
-                        2. Không bịa đặt kiến thức ngoài.
-                        3. Cấu trúc: Phần I. Trắc nghiệm (nếu ma trận có), Phần II. Tự luận.
-                        Dữ liệu:
-                        {content}
-                        """
-                        # GỌI HÀM AN TOÀN
-                        result_text, used_model = generate_content_safe(api_key, prompt)
-                        st.session_state.exam_result = result_text
-                        st.success(f"✅ Đã tạo xong! (Sử dụng model: {used_model})")
-                        
-                    except Exception as e:
-                        st.error(f"Vẫn gặp lỗi nghiêm trọng: {e}. Vui lòng kiểm tra lại API Key.")
+    if uploaded and st.button("🚀 TẠO ĐỀ THI", type="primary"):
+        content = read_uploaded_file(uploaded)
+        if content:
+            with st.spinner("Đang tự động tìm model tốt nhất và tạo đề..."):
+                # 1. Tự động lấy tên model đúng nhất
+                active_model_name, status_msg = get_available_model(api_key)
+                
+                if not active_model_name:
+                    st.error(f"Lỗi nghiêm trọng: {status_msg}")
+                    st.stop()
+                
+                st.toast(status_msg) # Thông báo nhỏ góc màn hình model đang dùng
+
+                # 2. Tạo nội dung
+                try:
+                    genai.configure(api_key=api_key)
+                    model = genai.GenerativeModel(active_model_name)
+                    
+                    prompt = f"""
+                    Vai trò: Giáo viên tiểu học. Soạn đề thi môn {sub_name} lớp {grade}.
+                    Yêu cầu:
+                    1. Chỉ dùng dữ liệu từ văn bản dưới.
+                    2. Không bịa kiến thức ngoài.
+                    3. Cấu trúc: Phần I. Trắc nghiệm (nếu có), Phần II. Tự luận.
+                    Dữ liệu ma trận:
+                    {content}
+                    """
+                    response = model.generate_content(prompt)
+                    st.session_state.exam_result = response.text
+                    st.success("✅ Đã tạo xong!")
+                except Exception as e:
+                    st.error(f"Lỗi khi tạo nội dung: {e}")
 
     # KHUNG SỬA VÀ TẢI
     if st.session_state.exam_result:
         st.markdown("---")
         st.subheader("📝 Xem và Sửa nội dung")
         edited_text = st.text_area("Sửa trực tiếp tại đây:", value=st.session_state.exam_result, height=500)
-        st.session_state.exam_result = edited_text # Cập nhật
+        st.session_state.exam_result = edited_text 
 
         docx = create_word_file(school_name, exam_term, edited_text)
-        st.download_button(
-            "📥 TẢI VỀ FILE WORD (.DOCX)", 
-            docx, 
-            file_name=f"De_{sub_name}_{grade}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            type="primary"
-        )
+        st.download_button("📥 TẢI VỀ FILE WORD (.DOCX)", docx, file_name=f"De_{sub_name}_{grade}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
 
 if __name__ == "__main__":
     main()
