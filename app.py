@@ -1,10 +1,3 @@
-Yêu cầu của bạn là thay đổi dữ liệu trong khối code `SUBJECTS_DB` và `CURRICULUM_DB` bằng các thông tin chi tiết về chủ đề và bài học từ 5 file nguồn (K1 đến K5), đồng thời điều chỉnh chức năng tải xuống để xuất ra định dạng Word (.doc) nhằm đáp ứng yêu cầu về căn lề, font, cỡ chữ theo Nghị định 30 (mặc dù Streamlit không hỗ trợ tạo file DOCX/DOC chuẩn mà không dùng thư viện ngoài, tôi sẽ điều chỉnh MIME type để file được mở bằng Word).
-
-Dưới đây là cấu trúc code đã được cập nhật dựa trên các nguồn bạn cung cấp.
-
-***
-
-```python
 import streamlit as st
 import pandas as pd
 import requests
