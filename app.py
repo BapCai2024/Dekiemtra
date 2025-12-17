@@ -8,7 +8,7 @@ import io
 import time
 
 # --- CẤU HÌNH TRANG ---
-st.set_page_config(page_title="Hệ Thống Ra Đề Thi (Universal Fix)", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Hệ Thống Ra Đề Thi (Anti-429)", page_icon="🛡️", layout="wide")
 
 # --- CSS ---
 st.markdown("""
@@ -23,7 +23,7 @@ st.markdown("""
 try:
     import pypdf
 except ImportError:
-    st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng thêm pypdf vào requirements.txt")
+    st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt để đọc file PDF.")
 
 # --- DỮ LIỆU MÔN HỌC ---
 SUBJECTS_DB = {
@@ -34,72 +34,56 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# --- HÀM TÌM MODEL THỰC TẾ (CHỮA LỖI 404 TRIỆT ĐỂ) ---
-def get_best_available_model(api_key):
-    """
-    Hàm này hỏi Google xem Key này dùng được những model nào,
-    sau đó chọn model tốt nhất (ưu tiên Flash để nhanh và rẻ).
-    """
+# --- HÀM GỌI AI THÔNG MINH (CHỐNG LỖI 429) ---
+def generate_content_with_fallback(api_key, prompt):
     genai.configure(api_key=api_key)
-    try:
-        # Lấy danh sách model thực tế từ Google
-        all_models = genai.list_models()
-        
-        # Lọc ra model có thể tạo văn bản (generateContent)
-        valid_models = []
-        for m in all_models:
-            if 'generateContent' in m.supported_generation_methods:
-                valid_models.append(m.name)
-        
-        if not valid_models:
-            return None, "API Key đúng, nhưng không tìm thấy model nào hỗ trợ tạo văn bản."
+    
+    # DANH SÁCH ƯU TIÊN (Priority List)
+    # 1. gemini-1.5-flash: Tốc độ nhanh, Quota miễn phí cao nhất (Khuyên dùng đầu tiên)
+    # 2. gemini-1.5-flash-8b: Bản siêu nhẹ
+    # 3. gemini-1.5-pro: Thông minh hơn nhưng Quota thấp (Dễ bị 429)
+    # 4. gemini-pro: Bản cũ ổn định
+    models_to_try = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-8b", 
+        "gemini-2.0-flash-exp",
+        "gemini-1.5-pro",
+        "gemini-pro"
+    ]
+    
+    last_error = None
 
-        # Ưu tiên chọn model theo thứ tự này
-        priorities = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']
-        
-        selected_model = None
-        
-        # Tìm trong danh sách ưu tiên
-        for p in priorities:
-            for v in valid_models:
-                if p in v: # Nếu tìm thấy tên model ưu tiên
-                    selected_model = v
-                    break
-            if selected_model: break
-        
-        # Nếu không có model ưu tiên, lấy cái đầu tiên tìm được
-        if not selected_model:
-            selected_model = valid_models[0]
+    # Vòng lặp thử từng model
+    for model_name in models_to_try:
+        try:
+            # Tạo model
+            model = genai.GenerativeModel(model_name)
             
-        return selected_model, None
-
-    except Exception as e:
-        return None, f"Lỗi kết nối API: {str(e)}"
-
-# --- HÀM GỌI AI ---
-def generate_content_safe(api_key, prompt):
-    # Bước 1: Tìm model sống
-    model_name, error = get_best_available_model(api_key)
-    
-    if error:
-        raise Exception(error)
-    
-    if not model_name:
-        raise Exception("Không tìm thấy model nào khả dụng.")
-
-    # Bước 2: Gọi model đó
-    try:
-        model = genai.GenerativeModel(model_name)
-        response = model.generate_content(prompt)
-        return response.text, model_name
-    except Exception as e:
-        # Nếu lỗi 429 (Quá tải), chờ 2s rồi thử lại 1 lần nữa
-        if "429" in str(e):
-            time.sleep(2)
+            # Gọi API
             response = model.generate_content(prompt)
+            
+            # Nếu thành công, trả về kết quả và tên model đã dùng
             return response.text, model_name
-        else:
-            raise e
+            
+        except Exception as e:
+            error_str = str(e)
+            last_error = error_str
+            
+            # Phân tích lỗi
+            if "429" in error_str:
+                # Nếu lỗi 429 (Hết quota), không dừng lại mà thử model tiếp theo ngay
+                print(f"Model {model_name} bị quá tải (429). Đang chuyển sang model khác...")
+                time.sleep(1) # Nghỉ 1 nhịp nhẹ
+                continue 
+            elif "404" in error_str:
+                # Nếu lỗi 404 (Không tìm thấy model), thử cái tiếp theo
+                continue
+            else:
+                # Các lỗi khác (như sai API Key) thì dừng lại thử cái khác luôn
+                continue
+
+    # Nếu thử hết danh sách mà vẫn lỗi
+    raise Exception(f"Tất cả các model đều bận hoặc hết hạn mức. Lỗi cuối cùng: {last_error}")
 
 # --- HÀM XỬ LÝ FILE ---
 def read_uploaded_file(uploaded_file):
@@ -116,6 +100,8 @@ def read_uploaded_file(uploaded_file):
                 text = ""
                 for page in reader.pages: text += page.extract_text()
                 return text
+            else:
+                return "Lỗi: Chưa cài đặt thư viện pypdf."
         return None
     except Exception:
         return None
@@ -150,7 +136,7 @@ def create_word_file(school_name, exam_name, content):
 
 # --- MAIN ---
 def main():
-    st.title("🛡️ HỆ THỐNG RA ĐỀ THI (UNIVERSAL FIX)")
+    st.title("🛡️ HỆ THỐNG RA ĐỀ THI (ANTI-429)")
     
     if 'exam_result' not in st.session_state: st.session_state.exam_result = ""
 
@@ -158,15 +144,6 @@ def main():
         st.header("1. Cấu hình")
         api_key = st.text_input("Nhập API Key:", type="password")
         
-        # Nút kiểm tra API để người dùng yên tâm
-        if api_key:
-            if st.button("Kiểm tra kết nối"):
-                m_name, err = get_best_available_model(api_key)
-                if m_name:
-                    st.success(f"✅ Kết nối tốt! Sẽ dùng model: {m_name}")
-                else:
-                    st.error(f"❌ Lỗi: {err}")
-
         st.divider()
         school_name = st.text_input("Tên trường:", value="TRƯỜNG TH NGUYỄN DU")
         exam_term = st.selectbox("Kỳ thi:", 
@@ -192,7 +169,7 @@ def main():
     if uploaded and st.button("🚀 TẠO ĐỀ THI", type="primary"):
         content = read_uploaded_file(uploaded)
         if content:
-            with st.spinner("Đang tìm model phù hợp và tạo đề..."):
+            with st.spinner("Đang kết nối AI (Tự động đổi model nếu quá tải)..."):
                 try:
                     prompt = f"""
                     Vai trò: Giáo viên tiểu học. Soạn đề thi môn {sub_name} lớp {grade}.
@@ -204,14 +181,14 @@ def main():
                     {content}
                     """
                     
-                    # Gọi hàm tạo đề
-                    result_text, used_model = generate_content_safe(api_key, prompt)
+                    # GỌI HÀM MỚI VỚI CƠ CHẾ FALLBACK
+                    result_text, used_model = generate_content_with_fallback(api_key, prompt)
                     
                     st.session_state.exam_result = result_text
                     st.markdown(f"<div class='success-box'>✅ Đã tạo xong bằng model: <b>{used_model}</b></div>", unsafe_allow_html=True)
                     
                 except Exception as e:
-                    st.error(f"Lỗi: {e}")
+                    st.error(f"Lỗi khởi tạo: {e}. Vui lòng kiểm tra lại API Key hoặc thử lại sau 1 phút.")
 
     # KHUNG SỬA VÀ TẢI
     if st.session_state.exam_result:
