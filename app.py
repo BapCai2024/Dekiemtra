@@ -54,7 +54,7 @@ try:
 except ImportError:
     st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt: pip install pypdf")
 
-# --- 4. DỮ LIỆU CSDL (GIỮ NGUYÊN MÔN HỌC, CẬP NHẬT NỘI DUNG TỪ FILE CHUẨN) ---
+# --- 4. DỮ LIỆU CSDL (GIỮ NGUYÊN MÔN HỌC) ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
@@ -63,8 +63,31 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# DỮ LIỆU TỪ FILE CHUẨN.TXT
-CURRICULUM_DB = {
+# --- HÀM XỬ LÝ TÁCH BÀI HỌC TỰ ĐỘNG ---
+# Hàm này sẽ chạy khi khởi động để tách chuỗi bài học thành list
+def process_curriculum_data(raw_db):
+    processed_db = {}
+    for grade, subjects in raw_db.items():
+        processed_db[grade] = {}
+        for subject, content in subjects.items():
+            processed_db[grade][subject] = []
+            # Content là một list các dict
+            for item in content:
+                topic = item["Chủ đề"]
+                raw_lessons = item["Bài học"]
+                # Tách chuỗi bài học dựa trên dấu chấm phẩy
+                lesson_list = [l.strip() for l in raw_lessons.split(';') if l.strip()]
+                
+                # Tạo ra các mục riêng cho từng bài học nhỏ
+                for lesson in lesson_list:
+                    processed_db[grade][subject].append({
+                        "Chủ đề": topic,
+                        "Bài học": lesson
+                    })
+    return processed_db
+
+# DỮ LIỆU GỐC (Dạng chuỗi dài)
+RAW_CURRICULUM_DB = {
     "Lớp 1": {
         "Tiếng Việt": [
             {"Chủ đề": "Làm quen với tiếng việt", "Bài học": "Bài 1A: a, b; Bài 1B: c, o; Bài 1C: ô, ơ; Bài 1D: d, đ; Bài 1E: Ôn tập; Bài 2A: e, ê; Bài 2B: h, i; Bài 2C: g, gh; Bài 2D: k, kh; Bài 2E: Ôn tập; Bài 3A: l, m; Bài 3B: n, nh; Bài 3C: ng, ngh; Bài 3D: u, ư; Bài 3E: Ôn tập; Bài 4A: q - qu, gi; Bài 4B: p - ph; Bài 4C: r , s; Bài 4D: t , th; Bài 4E: Ôn tập"},
@@ -215,6 +238,29 @@ CURRICULUM_DB = {
         ]
     }
 }
+
+# --- CẤU TRÚC DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA LẠI ĐỂ TẠO LIST BÀI HỌC ---
+CURRICULUM_DB_PROCESSED = {}
+
+# Xử lý dữ liệu thô để tách chuỗi bài học thành list
+for grade, subjects in CURRICULUM_DB.items():
+    CURRICULUM_DB_PROCESSED[grade] = {}
+    for subject, topics in subjects.items():
+        # Dữ liệu hiện tại là một list các dict, mỗi dict có 'Chủ đề' và 'Bài học' (chuỗi dài)
+        processed_topics = []
+        for item in topics:
+            topic_name = item['Chủ đề']
+            raw_lessons_str = item['Bài học']
+            # Tách chuỗi dựa trên dấu chấm phẩy
+            lessons_list = [l.strip() for l in raw_lessons_str.split(';') if l.strip()]
+            
+            # Tạo structure mới: mỗi chủ đề chứa một list các bài học con
+            processed_topics.append({
+                'Chủ đề': topic_name,
+                'Bài học': lessons_list # Đây giờ là một list các string
+            })
+        CURRICULUM_DB_PROCESSED[grade][subject] = processed_topics
+
 
 # --- 5. HỆ THỐNG API MỚI (CHỐNG LỖI 404 VÀ 429) ---
 def generate_content_with_rotation(api_key, prompt):
@@ -503,7 +549,8 @@ def main():
             selected_subject_full = st.selectbox("Chọn Môn Học:", subjects_list, key="t2_sub")
             selected_subject = selected_subject_full.split(" ", 1)[1]
 
-        raw_data = CURRICULUM_DB.get(selected_grade, {}).get(selected_subject, {})
+        # Lấy dữ liệu đã được xử lý từ CURRICULUM_DB_PROCESSED
+        raw_data = CURRICULUM_DB_PROCESSED.get(selected_grade, {}).get(selected_subject, {})
 
         if not raw_data:
             st.warning("⚠️ Dữ liệu môn này đang cập nhật.")
@@ -513,26 +560,37 @@ def main():
             
             col_a, col_b = st.columns(2)
             with col_a:
-                # XỬ LÝ SỰ KHÁC BIỆT CẤU TRÚC DỮ LIỆU MỚI (LIST VS DICT)
-                if isinstance(raw_data, list):
-                    selected_term = "Cả năm"
-                    lessons_in_term = raw_data
-                    st.info(f"Đang hiển thị danh sách bài học {selected_term}")
-                else:
-                    all_terms = list(raw_data.keys())
-                    selected_term = st.selectbox("Chọn Học kỳ:", all_terms, key="t2_term")
-                    lessons_in_term = raw_data[selected_term]
-
+                # Xử lý Dropdown Học kỳ -> Chủ đề -> Bài học
+                # Vì raw_data giờ là một List (sau khi xử lý ở trên, dù code cũ để Dict/List thì giờ nó đã đồng nhất thành List ở biến CURRICULUM_DB_PROCESSED)
+                # Tuy nhiên, để an toàn, kiểm tra lại type
+                lessons_in_term = raw_data
+                selected_term = "Cả năm" # Mặc định nếu không chia học kỳ trong cấu trúc list
+                
+                # Gom danh sách chủ đề duy nhất
                 unique_topics = sorted(list(set([l['Chủ đề'] for l in lessons_in_term])))
                 selected_topic = st.selectbox("Chọn Chủ đề:", unique_topics, key="t2_topic")
 
             with col_b:
+                # Lọc bài học THEO CHỦ ĐỀ ĐÃ CHỌN
                 filtered_lessons = [l for l in lessons_in_term if l['Chủ đề'] == selected_topic]
-                lesson_options = {f"{l['Bài học']}": l for l in filtered_lessons}
-                selected_lesson_name = st.selectbox("Chọn Bài học:", list(lesson_options.keys()), key="t2_lesson")
-                current_lesson_data = lesson_options[selected_lesson_name]
-                # Xử lý trường hợp thiếu key YCCĐ trong dữ liệu mới
-                st.info(f"🎯 **YCCĐ:** {current_lesson_data.get('YCCĐ', 'Nội dung bài học')}")
+                
+                # Tạo list tất cả bài học nhỏ
+                all_lessons_in_topic = []
+                for item in filtered_lessons:
+                    # item['Bài học'] bây giờ là một LIST các chuỗi bài học nhỏ
+                    all_lessons_in_topic.extend(item['Bài học'])
+                
+                # Dropdown chọn bài học (Giờ sẽ là từng bài nhỏ, không phải cả cục dài)
+                selected_lesson_name = st.selectbox("Chọn Bài học:", all_lessons_in_topic, key="t2_lesson")
+                
+                # Lưu thông tin bài học hiện tại để dùng
+                current_lesson_data = {
+                    "Chủ đề": selected_topic,
+                    "Bài học": selected_lesson_name,
+                    "YCCĐ": "Theo chuẩn kiến thức kĩ năng" # Mặc định vì data gốc không có trường này cho từng bài nhỏ
+                }
+                
+                st.info(f"🎯 **YCCĐ:** {current_lesson_data['YCCĐ']}")
 
             col_x, col_y, col_z = st.columns(3)
             with col_x:
@@ -547,8 +605,9 @@ def main():
                 with st.spinner("AI đang viết..."):
                     prompt_q = f"""
                     Đóng vai chuyên gia giáo dục Tiểu học. Soạn **1 CÂU HỎI KIỂM TRA** môn {selected_subject} Lớp {selected_grade}.
-                    - Bài học: {current_lesson_data['Bài học']}
-                    - YCCĐ: {current_lesson_data.get('YCCĐ', 'Theo chuẩn kiến thức kĩ năng')}
+                    - Chủ đề: {current_lesson_data['Chủ đề']}
+                    - Bài học cụ thể: {current_lesson_data['Bài học']}
+                    - YCCĐ: {current_lesson_data['YCCĐ']}
                     - Dạng: {q_type} - Mức độ: {level} - Điểm: {points}
                     OUTPUT CHỈ GHI NỘI DUNG, KHÔNG CẦN LỜI DẪN:
                     Nội dung câu hỏi...
