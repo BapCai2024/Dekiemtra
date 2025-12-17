@@ -354,28 +354,48 @@ CURRICULUM_DB = {
     }
 }
 
-# --- 5. HỆ THỐNG API (UNIVERSAL FIX + ANTI-429) ---
+# --- 5. HỆ THỐNG API MỚI (CHỐNG LỖI 404 VÀ 429) ---
 def generate_content_with_rotation(api_key, prompt):
-    """
-    Cơ chế Fallback thông minh:
-    1. Ưu tiên Flash (Rẻ, nhanh)
-    2. Nếu lỗi, thử Flash bản khác
-    3. Nếu lỗi, thử Pro
-    """
     genai.configure(api_key=api_key)
     
-    # DANH SÁCH MẠNH MẼ: Flash -> Pro -> Experimental
-    # Đưa gemini-1.5-flash lên đầu vì quota cao nhất
-    model_priority = [
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-pro",
-        "gemini-pro"
+    # 1. LẤY DANH SÁCH MODEL THỰC TẾ TỪ GOOGLE (Tránh lỗi 404 do sai tên)
+    try:
+        all_models = list(genai.list_models())
+    except Exception as e:
+        return f"Lỗi kết nối lấy danh sách model: {e}", None
+
+    # Lọc ra các model có thể tạo văn bản
+    valid_models = [
+        m.name for m in all_models 
+        if 'generateContent' in m.supported_generation_methods
     ]
     
-    last_error = ""
+    if not valid_models:
+        return "Lỗi: API Key đúng nhưng không tìm thấy model nào hỗ trợ tạo văn bản (generateContent).", None
 
-    for model_name in model_priority:
+    # 2. SẮP XẾP ƯU TIÊN (Flash > Pro)
+    # Chúng ta sẽ tạo một danh sách ưu tiên dựa trên những gì thực tế ĐANG CÓ
+    priority_order = []
+    
+    # Tìm các bản Flash trước
+    for m in valid_models:
+        if 'flash' in m.lower() and '1.5' in m:
+            priority_order.append(m)
+            
+    # Tìm các bản Pro
+    for m in valid_models:
+        if 'pro' in m.lower() and '1.5' in m and m not in priority_order:
+            priority_order.append(m)
+            
+    # Các model còn lại (như gemini-pro cũ, gemini-1.0...)
+    for m in valid_models:
+        if m not in priority_order:
+            priority_order.append(m)
+
+    # 3. THỬ LẦN LƯỢT (Cơ chế chống lỗi 429)
+    last_error = ""
+    
+    for model_name in priority_order:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
@@ -383,17 +403,11 @@ def generate_content_with_rotation(api_key, prompt):
         except Exception as e:
             error_msg = str(e)
             last_error = error_msg
-            
-            # Nếu lỗi 429 (Quá tải) -> In ra và thử model tiếp theo ngay lập tức
-            if "429" in error_msg:
-                # Không sleep lâu, chuyển ngay sang model khác
-                continue 
-            elif "404" in error_msg:
-                continue
-            else:
-                continue
+            # Gặp lỗi (429, 500, v.v.) thì thử model tiếp theo ngay
+            time.sleep(1) 
+            continue
 
-    return f"Lỗi: Tất cả model đều bận. {last_error}", None
+    return f"Hết model khả dụng. Lỗi cuối cùng: {last_error}", None
 
 # --- 6. HÀM HỖ TRỢ FILE ---
 def read_uploaded_file(uploaded_file):
