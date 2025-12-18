@@ -2,8 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 import pandas as pd
 from docx import Document
-from docx.shared import Pt, Cm, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
+from docx.shared import Pt, Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
 import time
 import re
@@ -43,7 +43,7 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-CURRICULUM_DB_PROCESSED = {} # (Giữ nguyên logic xử lý dữ liệu của bạn nếu có)
+CURRICULUM_DB_PROCESSED = {} # (Giữ nguyên logic xử lý dữ liệu của bạn)
 
 # --- 5. HỆ THỐNG API ---
 def generate_content_with_rotation(api_key, prompt):
@@ -56,7 +56,6 @@ def generate_content_with_rotation(api_key, prompt):
     valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
     if not valid_models: return "Lỗi: Không tìm thấy model.", None
     
-    # Ưu tiên Flash > Pro để tốc độ nhanh và ít lỗi
     priority_order = []
     for m in valid_models:
         if 'flash' in m.lower() and '1.5' in m: priority_order.append(m)
@@ -127,7 +126,7 @@ def create_word_file_simple(school_name, exam_name, content):
     return buffer
 
 def create_word_from_question_list(school_name, subject, exam_list):
-    # Hàm này dùng cho Tab 2 (Chỉ xuất đề, không xuất ma trận theo yêu cầu cũ)
+    # Hàm này dùng cho Tab 2 (Chỉ xuất đề)
     doc = Document(); set_font_style(doc)
     
     table = doc.add_table(rows=1, cols=2); table.autofit = False
@@ -220,31 +219,31 @@ def main():
             content = read_uploaded_file(uploaded)
             if content:
                 with st.spinner("Đang phân tích ma trận và tạo đề từ nguồn GDPT 2018..."):
-                    # [YÊU CẦU 1 SỬA LẠI: PHÂN TÍCH FILE ĐỂ TÌM BỘ SÁCH VÀ TẠO ĐỀ CHÍNH XÁC]
+                    # [YÊU CẦU 1 SỬA LẠI: PHÂN TÍCH FILE ĐỂ TÌM BỘ SÁCH VÀ TÍNH ĐIỂM CHÍNH XÁC]
                     prompt = f"""
                     Bạn là chuyên gia giáo dục tiểu học Việt Nam.
-                    Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1}.
+                    Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1} dựa CHÍNH XÁC vào file ma trận tải lên.
 
-                    QUY TRÌNH XỬ LÝ (BẮT BUỘC):
-                    1. ĐỌC KỸ dữ liệu file bên dưới để xác định bộ sách giáo khoa được sử dụng (ví dụ: Chân trời sáng tạo, Kết nối tri thức, Cùng khám phá, Cánh diều...). Nếu file có ghi tên bộ sách, phải dùng đúng bộ đó.
-                    2. Phân tích bảng ma trận/đặc tả trong file để lấy danh sách bài học, chủ đề, mạch kiến thức.
-                    3. Tạo câu hỏi CHÍNH XÁC theo từng dòng của ma trận trong file (Đúng số lượng, đúng mức độ, đúng dạng bài).
+                    PHÂN TÍCH DỮ LIỆU ĐẦU VÀO (QUAN TRỌNG):
+                    1. Xác định bộ sách giáo khoa: Đọc file để tìm từ khóa (Chân trời sáng tạo, Kết nối tri thức, Cánh diều, Cùng khám phá...). Nếu không thấy, hãy dùng bộ sách phổ biến nhất cho {sub_name_t1} lớp {grade_t1}.
+                    2. Phân tích điểm số logic:
+                       - Nếu ma trận ghi "Tổng điểm" cho một hàng có nhiều câu hỏi (ví dụ: Số câu: 2, Tổng điểm: 1.0), thì điểm mỗi câu = Tổng điểm / Số câu = 0.5 điểm. 
+                       - TUYỆT ĐỐI KHÔNG GÁN tổng điểm (ví dụ 25 điểm) cho 1 câu hỏi trắc nghiệm đơn lẻ. Điểm mỗi câu trắc nghiệm thường là 0.5 hoặc 1.0.
+                    
+                    QUY TRÌNH TẠO ĐỀ:
+                    1. Tạo đúng số lượng câu hỏi theo ma trận.
+                    2. Nội dung câu hỏi phải cụ thể, rõ ràng, có dữ kiện đầy đủ (Không được viết chung chung kiểu "Hãy làm bài tập này").
+                    3. Đối với môn Tin học/Công nghệ: Câu hỏi phải bám sát phần mềm/công cụ dạy trong chương trình 2018.
 
-                    YÊU CẦU VỀ NỘI DUNG:
-                    - TUYỆT ĐỐI CHỈ SỬ DỤNG kiến thức chuẩn theo Chương trình GDPT 2018.
-                    - Nội dung câu hỏi phải khớp với các bài học trong file đã phân tích.
+                    ĐỊNH DẠNG ĐẦU RA (BẮT BUỘC):
+                    **Câu [Số thứ tự]** ([Điểm đã chia nhỏ] đ) - [Mức độ]: [Nội dung câu hỏi đầy đủ]
+                    A. [Lựa chọn A]
+                    B. [Lựa chọn B]
+                    C. [Lựa chọn C]
+                    D. [Lựa chọn D]
+                    (Xuống dòng) Đáp án: [Đáp án đúng]
 
-                    YÊU CẦU ĐẦU RA (TẠO ĐỀ NGAY):
-                    - Không cần chào hỏi, vào thẳng đề thi.
-                    - Định dạng hiển thị:
-                    **Câu [Số thứ tự]** ([Số điểm] đ) - [Mức độ]: [Nội dung câu hỏi]
-                    A. ...
-                    B. ...
-                    C. ...
-                    D. ...
-                    (Xuống dòng) Đáp án: ...
-
-                    DỮ LIỆU TỪ FILE UPLOAD:
+                    DỮ LIỆU TỪ FILE MA TRẬN:
                     {content}
                     """
                     result_text, used_model = generate_content_with_rotation(api_key, prompt)
