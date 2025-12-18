@@ -1122,7 +1122,8 @@ YÊU CẦU:
             )
 
     # --- FOOTER ---
-st.markdown("""
+
+footer_html = r"""
 <style>
 .footer-box {
     width: 100%;
@@ -1146,7 +1147,12 @@ st.markdown("""
 <div class="footer-box">
     <p class="footer-text">&#127979; TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
 </div>
-""", unsafe_allow_html=True)
+"""
+
+st.markdown(footer_html, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
