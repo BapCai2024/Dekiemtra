@@ -6,35 +6,33 @@ import re
 import os
 from io import BytesIO
 from docx import Document
-
-# PDF
 import pypdf
 
 # ======================= CẤU HÌNH =======================
 st.set_page_config(
-    page_title="Hệ thống sinh đề TT27",
+    page_title="Hệ thống sinh đề đánh giá định kì TT27",
     layout="wide"
 )
 
 DATA_DIR = "data_pdf"
 IMAGE_DIR = "images"
 
-SUBJECTS = [
-    "Toán",
-    "Tiếng Việt",
-    "Tin học",
-    "Công nghệ",
-    "Khoa học",
-    "Lịch sử - Địa lí"
-]
+# ======================= MÔN THEO TT27 =======================
+SUBJECTS_BY_GRADE = {
+    1: ["Toán", "Tiếng Việt"],
+    2: ["Toán", "Tiếng Việt"],
+    3: ["Toán", "Tiếng Việt", "Tin học", "Công nghệ"],
+    4: ["Toán", "Tiếng Việt", "Tin học", "Công nghệ", "Khoa học", "Lịch sử - Địa lí"],
+    5: ["Toán", "Tiếng Việt", "Tin học", "Công nghệ", "Khoa học", "Lịch sử - Địa lí"],
+}
 
-# Nguồn đọc hiểu ngoài SGK – Tiếng Việt
+# ======================= NGUỒN NGOÀI TV =======================
 TV_EXTERNAL_TEXTS = {
-    1: ["Bé Na dậy sớm. Bé chào bố mẹ rồi đi học cùng các bạn."],
-    2: ["Buổi sáng, sân trường đông vui. Các bạn cùng nhau quét lớp."],
-    3: ["Quê hương em có cánh đồng lúa xanh mát trải dài."],
-    4: ["Dòng sông quê hương gắn liền với tuổi thơ của em."],
-    5: ["Tinh thần vượt khó giúp con người thành công trong cuộc sống."]
+    1: ["Bé Na dậy sớm, tự giác đánh răng rửa mặt rồi chào bố mẹ để đến trường."],
+    2: ["Buổi sáng ở trường rất vui. Các bạn nhỏ cùng nhau học tập và vui chơi."],
+    3: ["Quê hương em có cánh đồng lúa chín vàng mỗi khi mùa gặt đến."],
+    4: ["Dòng sông quê hương gắn liền với tuổi thơ của nhiều thế hệ."],
+    5: ["Tinh thần vượt khó giúp con người vươn lên trong học tập và cuộc sống."]
 }
 
 # ======================= HÀM AN TOÀN =======================
@@ -49,11 +47,12 @@ def safe_int(value):
     except:
         return 0
 
-# ======================= ĐỌC FILE =======================
+# ======================= ĐỌC MA TRẬN =======================
 def read_matrix(uploaded_file):
     df = pd.read_excel(uploaded_file, header=None)
     return df.dropna(how="all")
 
+# ======================= ĐỌC PDF =======================
 def read_pdf_folder(folder):
     texts = []
     if not os.path.exists(folder):
@@ -67,20 +66,38 @@ def read_pdf_folder(folder):
                     texts.append(txt)
     return "\n".join(texts)
 
-# ======================= SINH CÂU HỎI =======================
+# ======================= SINH CÂU HỎI CHUẨN =======================
 def gen_question(bank, level, qtype, idx):
-    base = random.choice(bank) if bank else "Nội dung kiến thức phù hợp"
-    if qtype == "TN":
-        return f"Câu {idx}. ({level}) {base}\nA. ...\nB. ...\nC. ...\nD. ..."
-    if qtype == "DK":
-        return f"Câu {idx}. ({level}) {base}: ________"
-    return f"Câu {idx}. ({level}) {base}."
+    content = random.choice(bank) if bank else "Nội dung kiến thức phù hợp chương trình"
+    content = content.strip()
+    if len(content) > 120:
+        content = content[:120] + "..."
 
+    if qtype == "TN":
+        return (
+            f"Câu {idx}. ({level}) Nội dung nào sau đây đúng?\n"
+            f"A. {content}\n"
+            f"B. {content[::-1][:50]}\n"
+            f"C. {content.lower()}\n"
+            f"D. {content.upper()[:50]}"
+        )
+
+    if qtype == "DK":
+        return (
+            f"Câu {idx}. ({level}) Hoàn thành câu sau:\n"
+            f"{content} ……………………………"
+        )
+
+    return (
+        f"Câu {idx}. ({level}) Em hãy trình bày ngắn gọn:\n"
+        f"{content}"
+    )
+
+# ======================= SINH ĐỀ TỪ MA TRẬN =======================
 def generate_exam(df, grade, subject, shuffle=True):
     questions, answers = [], []
     idx = 1
 
-    # Nguồn nội dung
     if subject == "Tiếng Việt":
         bank = TV_EXTERNAL_TEXTS.get(grade, [])
     else:
@@ -113,7 +130,7 @@ def generate_exam(df, grade, subject, shuffle=True):
 # ======================= XUẤT WORD =======================
 def export_word(qs, ans, grade, subject, code):
     doc = Document()
-    doc.add_heading(f"ĐỀ KIỂM TRA – MÃ {code}", level=1)
+    doc.add_heading(f"ĐỀ KIỂM TRA ĐỊNH KÌ – MÃ {code}", level=1)
     doc.add_paragraph(f"Môn: {subject} – Khối {grade}")
     doc.add_paragraph("Theo Thông tư 27/2020/TT-BGDĐT")
 
@@ -126,7 +143,7 @@ def export_word(qs, ans, grade, subject, code):
         doc.add_paragraph(q)
 
     doc.add_page_break()
-    doc.add_heading("ĐÁP ÁN", level=1)
+    doc.add_heading("GỢI Ý ĐÁP ÁN", level=1)
     for a in ans:
         doc.add_paragraph(a)
 
@@ -136,11 +153,11 @@ def export_word(qs, ans, grade, subject, code):
     return buffer
 
 # ======================= GIAO DIỆN =======================
-st.title("🏫 HỆ THỐNG SINH ĐỀ ĐÁNH GIÁ ĐỊNH KÌ (TT27)")
+st.title("🏫 HỆ THỐNG SINH ĐỀ ĐÁNH GIÁ ĐỊNH KÌ THEO TT27")
 
 tab1, tab2, tab3 = st.tabs([
     "📘 Tab 1 – Sinh đề",
-    "🤖 Tab 2 – Chức năng mở rộng",
+    "🤖 Tab 2 – Mở rộng",
     "⚙️ Tab 3 – Quản trị"
 ])
 
@@ -148,20 +165,20 @@ tab1, tab2, tab3 = st.tabs([
 with tab1:
     st.subheader("Sinh đề từ ma trận Excel")
 
-    matrix_file = st.file_uploader(
-        "Upload file ma trận (.xlsx)",
-        type=["xlsx"]
-    )
+    matrix_file = st.file_uploader("Upload file ma trận (.xlsx)", type=["xlsx"])
 
     if matrix_file:
         df = read_matrix(matrix_file)
-        st.success("Đọc ma trận thành công")
+        st.success("Đã đọc ma trận thành công")
 
         col1, col2, col3 = st.columns(3)
         with col1:
             grade = st.selectbox("Khối lớp", [1, 2, 3, 4, 5])
         with col2:
-            subject = st.selectbox("Môn học", SUBJECTS)
+            subject = st.selectbox(
+                "Môn học",
+                SUBJECTS_BY_GRADE.get(grade, [])
+            )
         with col3:
             num_codes = st.selectbox("Số mã đề", [1, 2, 3])
 
@@ -182,17 +199,8 @@ with tab1:
 
 # ======================= TAB 2 =======================
 with tab2:
-    st.subheader("Tab 2 – Chức năng mở rộng")
-    st.info(
-        "Tab này giữ chỗ để ghép nguyên logic cũ của bạn "
-        "(AI, Gemini, xử lý nâng cao…). "
-        "KHÔNG ảnh hưởng Tab 1."
-    )
+    st.info("Tab 2: sẵn sàng ghép AI / Gemini / phân tích nâng cao.")
 
 # ======================= TAB 3 =======================
 with tab3:
-    st.subheader("Tab 3 – Quản trị / Cấu hình")
-    st.info(
-        "Tab quản trị hệ thống. "
-        "Bạn có thể dán nguyên code Tab 3 cũ vào đây."
-    )
+    st.info("Tab 3: quản trị, cấu hình hệ thống.")
