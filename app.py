@@ -418,23 +418,69 @@ def generate_content_with_rotation(api_key, prompt):
 # --- HÀM TẠO YCCĐ TỰ ĐỘNG ---
 def generate_yccd_from_lesson(api_key, grade, subject, topic, lesson_name):
     """
-    Sinh Yêu cầu cần đạt cho 1 bài học bằng AI.
+    Sinh Yêu cầu cần đạt (YCCĐ) ngắn gọn, cốt lõi cho 1 bài học cụ thể.
+    Đầu ra: dạng gạch đầu dòng, không lời dẫn, không giải thích lan man.
     """
+    mon_lower = subject.lower()
+
+    if "toán" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Kiến thức số học/hình học/đo lường; (2) Kĩ năng thực hiện phép tính, giải toán; (3) Vận dụng vào tình huống thực tế đơn giản.
+"""
+    elif "tiếng việt" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Đọc đúng, hiểu nội dung chính; (2) Viết đúng chính tả, câu, đoạn; (3) Nói và nghe phù hợp ngữ cảnh; (4) Mở rộng vốn từ, ngữ pháp cơ bản.
+"""
+    elif "khoa học" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Hiểu hiện tượng tự nhiên, cơ thể người, sức khỏe; (2) Biết quan sát, thí nghiệm, rút ra nhận xét; (3) Hình thành thái độ bảo vệ môi trường, sức khoẻ.
+"""
+    elif "lịch sử" in mon_lower or "địa lí" in mon_lower or "địa lý" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Nhận biết sự kiện, nhân vật lịch sử, đặc điểm tự nhiên – kinh tế – xã hội; (2) Đọc hiểu bản đồ, lược đồ; (3) Bồi dưỡng tình yêu quê hương, đất nước.
+"""
+    elif "tin học" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Hiểu khái niệm cơ bản về máy tính, Internet; (2) Thực hiện được thao tác trên phần mềm/hệ điều hành; (3) Ý thức an toàn, văn hoá trong môi trường số.
+"""
+    elif "công nghệ" in mon_lower:
+        mon_hint = """
+- Tập trung vào: (1) Hiểu vai trò công nghệ trong đời sống; (2) Thực hiện được thao tác, quy trình đơn giản; (3) Tuân thủ an toàn khi sử dụng dụng cụ, thiết bị.
+"""
+    else:
+        mon_hint = """
+- Tập trung vào kiến thức, kĩ năng, thái độ cốt lõi theo chương trình GDPT 2018 của môn học này.
+"""
+
     prompt = f"""
-    AI đang chạy
-    Nhiệm vụ: Trích xuất chính xác Yêu cầu cần đạt (YCCĐ) cho bài học sau:
-    - Bài học: '{lesson_name}'
-    - Chủ đề: '{topic}'
-    - Môn: {subject}
-    - Lớp: {grade}
-    
-    Yêu cầu:
-    1. Chỉ đưa ra nội dung cốt lõi, ngắn gọn, súc tích.
-    2. Phải chính xác với văn bản quy định của Bộ GD&ĐT (CT GDPT 2018).
-    3. Không thêm lời dẫn.
-    """
+Bạn là chuyên gia xây dựng chương trình GDPT 2018 bậc Tiểu học.
+
+Nhiệm vụ:
+- Soạn **Yêu cầu cần đạt (YCCĐ)** cho bài học sau, bám sát tinh thần CTGDPT 2018, nhưng diễn đạt lại bằng lời rõ ràng, dễ hiểu.
+
+Thông tin:
+- Lớp: {grade}
+- Môn: {subject}
+- Chủ đề: {topic}
+- Bài học: {lesson_name}
+
+Định hướng theo môn:
+{mon_hint}
+
+YÊU CẦU ĐẦU RA:
+1. Chỉ liệt kê YCCĐ, **không viết lời dẫn, không giải thích thêm**.
+2. Mỗi dòng là **một gạch đầu dòng**, bắt đầu bằng dấu gạch ngang `-`.
+3. Mỗi gạch đầu dòng nêu **1 năng lực/kiến thức/kĩ năng cụ thể** mà HS cần đạt sau bài học.
+4. Không trích dẫn nguyên văn sách giáo khoa, mà diễn đạt lại cho phù hợp CT 2018.
+
+Ví dụ hình thức (chỉ là ví dụ, không cần giống nội dung):
+- Nhận biết được ...
+- Thực hiện được ...
+- Vận dụng được ...
+"""
+
     text, _ = generate_content_with_rotation(api_key, prompt)
-    return text.strip() if text else ""
+    return text.strip()
 
 # --- 6. HÀM HỖ TRỢ FILE ---
 def read_uploaded_file(uploaded_file):
@@ -669,7 +715,7 @@ def main():
         
         st.divider()
         st.markdown("**TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN**")
-        st.caption("Hệ thống hỗ trợ chuyên môn")
+        st.caption("Hệ thống hỗ trợ ra đề")
 
     if not api_key:
         st.warning("Vui lòng nhập API Key để bắt đầu.")
@@ -707,6 +753,84 @@ def main():
             if content:
                 with st.spinner("Đang phân tích ma trận và tạo đề từ nguồn GDPT 2018..."):
                     prompt = f"""
+Bạn là chuyên gia giáo dục Tiểu học Việt Nam, am hiểu chương trình GDPT 2018 và kĩ thuật ra đề theo **MA TRẬN ĐỀ**.
+
+Môn: {sub_name_t1}
+Lớp: {grade_t1}
+Kỳ thi: {exam_term_t1}
+
+DỮ LIỆU MA TRẬN (được trích từ file người dùng tải lên):
+--------------------
+{content}
+--------------------
+
+NHIỆM VỤ CHÍNH:
+1. Đọc kĩ bảng ma trận. Với mỗi dòng, xác định:
+   - Chương/Chủ đề/Nội dung kiến thức
+   - Số câu, dạng câu (TN, Đ/S, Nối, Điền, Tự luận...), mức độ (Biết/Hiểu/Vận dụng)
+   - Số điểm hoặc tỉ lệ điểm.
+
+2. Nếu ma trận ghi:
+   - Số câu và **Tổng điểm** cho một dòng:
+     → Điểm mỗi câu = Tổng điểm / số câu của dòng đó.
+   - Tuyệt đối KHÔNG gán cả 5, 10, 25 điểm cho 1 câu trắc nghiệm.
+
+3. Với mỗi ô ma trận có SỐ CÂU > 0, phải tạo đúng:
+   - Số câu hỏi tương ứng.
+   - Dạng câu hỏi đúng (Trắc nghiệm 4 lựa chọn, Đúng/Sai, Nối, Điền, Tự luận...).
+   - Mức độ nhận thức đúng (Biết/Hiểu/Vận dụng).
+   - Nội dung bám sát “Nội dung kiến thức/Chủ đề” của dòng đó.
+   - Điểm mỗi câu đúng theo quy tắc.
+
+GỢI Ý THEO MÔN:
+- Toán: có số liệu rõ ràng, yêu cầu tính toán, so sánh, giải toán có lời văn, đo lường, hình học...
+- Tiếng Việt: đọc hiểu, từ – câu, chính tả, luyện từ và câu, Tập làm văn.
+- Khoa học: hiện tượng tự nhiên, cơ thể người, sức khỏe, môi trường.
+- Lịch sử & Địa lí: sự kiện, nhân vật lịch sử, địa lí tự nhiên, dân cư, kinh tế.
+- Tin học/Công nghệ: thao tác phần mềm, thiết bị, an toàn thông tin, quy trình đơn giản.
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+
+Mỗi câu ghi theo cấu trúc:
+
+Câu [số] – [Dạng câu hỏi] – [Mức độ: Biết/Hiểu/Vận dụng] – [Số điểm]:
+[Nội dung câu hỏi đầy đủ, rõ ràng, có dữ kiện cụ thể]
+
+Nếu là **Trắc nghiệm (4 lựa chọn)**:
+A. ...
+B. ...
+C. ...
+D. ...
+Đáp án: ...
+
+Nếu là **Đúng/Sai**:
+[Mệnh đề 1...]
+[Mệnh đề 2...]
+Yêu cầu: Khoanh Đ (Đúng) hoặc S (Sai).
+Đáp án: 1-Đ, 2-S,...
+
+Nếu là **Ghép nối (Nối cột)**:
+Cột A:
+1. ...
+2. ...
+Cột B:
+a. ...
+b. ...
+Đáp án: 1-b, 2-a,...
+
+Nếu là **Điền khuyết**:
+Câu hỏi phải có chỗ trống "........".
+Đáp án: ...
+
+Nếu là **Tự luận**:
+Nêu yêu cầu rõ ràng, chi tiết.
+Gợi ý chấm: ...
+
+YÊU CẦU:
+- Chỉ xuất ra **NỘI DUNG ĐỀ THI**, không giải thích thuật toán, không mô tả ma trận lại.
+- Tổng số câu và tổng điểm **phải khớp** với ma trận.
+- Ngôn ngữ: tiếng Việt, phù hợp học sinh tiểu học.
+"""
                     Bạn là chuyên gia giáo dục tiểu học Việt Nam. 
                     Nhiệm vụ: Soạn đề thi môn {sub_name_t1} lớp {grade_t1}.
                     
