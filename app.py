@@ -1,8 +1,150 @@
 import streamlit as st
 import google.generativeai as genai
-from CURRICULUM_DB import CURRICULUM_DB
+
 import io
 from docx import Document
+# =========================================================
+# CURRICULUM_DB – CTGDPT 2018 – TT27
+# Toán, Tiếng Việt: Kết nối tri thức
+# Tin học (3–5): Cùng khám phá
+# =========================================================
+
+CURRICULUM_DB = {
+    # === LỚP 1 ===
+    "Lớp 1": {
+        "Toán": {
+            "bo_sach": "Kết nối tri thức",
+            "Học kỳ I": {
+                "Làm quen với Toán học": {
+                    "Toán học quanh ta": {
+                        "yccd": [
+                            "Nhận biết được toán học có trong các tình huống thực tiễn quen thuộc.",
+                            "Bước đầu hình thành hứng thú học tập môn Toán."
+                        ]
+                    }
+                },
+                "Các số đến 10": {
+                    "Các số 1, 2, 3": {
+                        "yccd": [
+                            "Nhận biết, đọc, viết được các số 1, 2, 3.",
+                            "So sánh được các số trong phạm vi 3."
+                        ]
+                    },
+                    "Các số 4, 5": {
+                        "yccd": [
+                            "Nhận biết, đọc, viết được các số 4, 5.",
+                            "So sánh được các số trong phạm vi 5."
+                        ]
+                    },
+                    "Các số 6 đến 10": {
+                        "yccd": [
+                            "Nhận biết, đọc, viết được các số từ 6 đến 10.",
+                            "So sánh và sắp xếp được các số trong phạm vi 10."
+                        ]
+                    }
+                }
+            },
+            "Học kỳ II": {
+                "Phép cộng, phép trừ trong phạm vi 10": {
+                    "Phép cộng": {
+                        "yccd": [
+                            "Thực hiện được phép cộng trong phạm vi 10.",
+                            "Vận dụng phép cộng để giải quyết tình huống đơn giản."
+                        ]
+                    },
+                    "Phép trừ": {
+                        "yccd": [
+                            "Thực hiện được phép trừ trong phạm vi 10.",
+                            "Vận dụng phép trừ để giải quyết tình huống đơn giản."
+                        ]
+                    }
+                }
+            }
+        },
+        "Tiếng Việt": {
+            "bo_sach": "Kết nối tri thức",
+            "Học kỳ I": {
+                "Học vần": {
+                    "Âm và chữ a, ă, â": {
+                        "yccd": [
+                            "Nhận biết được âm và chữ a, ă, â.",
+                            "Đọc, viết được các tiếng, từ có chứa a, ă, â."
+                        ]
+                    }
+                }
+            },
+            "Học kỳ II": {
+                "Tập đọc": {
+                    "Đọc đoạn, bài ngắn": {
+                        "yccd": [
+                            "Đọc trôi chảy đoạn, bài ngắn phù hợp trình độ.",
+                            "Hiểu nội dung chính của đoạn, bài đã đọc."
+                        ]
+                    }
+                }
+            }
+        }
+    },
+
+    # === LỚP 2 ===
+    "Lớp 2": {
+        "Toán": {
+            "bo_sach": "Kết nối tri thức",
+            "Học kỳ I": {
+                "Các số đến 100": {
+                    "Các số trong phạm vi 100": {
+                        "yccd": [
+                            "Đọc, viết, so sánh được các số trong phạm vi 100.",
+                            "Sắp xếp được các số theo thứ tự."
+                        ]
+                    }
+                }
+            },
+            "Học kỳ II": {
+                "Phép nhân, phép chia": {
+                    "Phép nhân": {
+                        "yccd": [
+                            "Nhận biết phép nhân là phép cộng các số hạng bằng nhau.",
+                            "Thực hiện được phép nhân đơn giản."
+                        ]
+                    },
+                    "Phép chia": {
+                        "yccd": [
+                            "Nhận biết phép chia là phép tách thành các phần bằng nhau.",
+                            "Thực hiện được phép chia đơn giản."
+                        ]
+                    }
+                }
+            }
+        },
+        "Tiếng Việt": {
+            "bo_sach": "Kết nối tri thức",
+            "Học kỳ I": {
+                "Đọc": {
+                    "Đọc hiểu": {
+                        "yccd": [
+                            "Hiểu được nội dung chính của văn bản ngắn.",
+                            "Trả lời được câu hỏi đơn giản về nội dung."
+                        ]
+                    }
+                }
+            },
+            "Học kỳ II": {
+                "Tập làm văn": {
+                    "Viết đoạn văn ngắn": {
+                        "yccd": [
+                            "Viết được đoạn văn ngắn theo chủ đề quen thuộc.",
+                            "Diễn đạt rõ ràng, mạch lạc."
+                        ]
+                    }
+                }
+            }
+        }
+    },
+
+    # === LỚP 3–4–5 ===
+    # (GIỮ NGUYÊN PHẦN LỚP 3–4–5 BẠN ĐÃ COPY Ở PART A, DÁN TIẾP XUỐNG ĐÂY)
+}
 
 # =====================================================
 # CẤU HÌNH – GIỮ NGUYÊN MOTIF + API NHƯ FILE GỐC
