@@ -58,8 +58,55 @@ try:
 except ImportError:
     st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt: pip install pypdf")
 
-# --- 4. KHỞI TẠO DỮ LIỆU (QUAN TRỌNG: PHẢI ĐẶT TRƯỚC HÀM MAIN) ---
+# --- 4. HÀM HỖ TRỢ CHUNG (ĐẶT Ở ĐẦU ĐỂ TRÁNH LỖI NAME ERROR) ---
 
+def set_font_style(doc):
+    """Thiết lập font chữ mặc định cho file Word"""
+    style = doc.styles['Normal']
+    font = style.font
+    font.name = 'Times New Roman'
+    font.size = Pt(13)
+
+def safe_int(v):
+    """Chuyển đổi an toàn giá trị sang số nguyên"""
+    if pd.isna(v): return 0
+    try:
+        nums = re.findall(r"\d+", str(v))
+        return int(nums[0]) if nums else 0
+    except: return 0
+
+def read_matrix(file):
+    """Đọc file Excel ma trận"""
+    df = pd.read_excel(file, header=None)
+    return df.dropna(how="all")
+
+def extract_periods(lesson_name):
+    """Lấy số tiết từ tên bài học"""
+    match = re.search(r'\((\d+)\s*tiết\)', lesson_name, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return "-"
+
+def read_uploaded_file(uploaded_file):
+    """Đọc nội dung file upload (dành cho các file text/docx cũ)"""
+    try:
+        if uploaded_file.name.endswith('.xlsx'):
+            df = pd.read_excel(uploaded_file)
+            return df.to_string()
+        elif uploaded_file.name.endswith('.docx'):
+            doc = Document(uploaded_file)
+            return "\n".join([para.text for para in doc.paragraphs])
+        elif uploaded_file.name.endswith('.pdf'):
+            if 'pypdf' in globals():
+                reader = pypdf.PdfReader(uploaded_file)
+                text = ""
+                for page in reader.pages: text += page.extract_text()
+                return text
+        return None
+    except Exception:
+        return None
+
+# --- 5. DỮ LIỆU CSDL ---
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Công nghệ", "🔧")],
@@ -68,7 +115,7 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# DỮ LIỆU GỐC ĐẦY ĐỦ (Không được cắt bớt)
+# DỮ LIỆU GỐC ĐẦY ĐỦ
 CURRICULUM_DB = {
     "Lớp 1": {
         "Tiếng Việt": {
@@ -182,7 +229,7 @@ CURRICULUM_DB = {
                 {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1: Tự nhiên và công nghệ (HĐ1, HĐ2, HĐ3); Bài 2: Sử dụng đèn học (HĐ 1, HĐ 2, HĐ 3); Bài 3: Sử dụng quạt điện (HĐ1, HĐ2, HĐ3); Bài 4: Sử dụng máy thu thanh (HĐ1, HĐ2, HĐ3, HĐ4); Bài 5: Sử dụng máy thu hình (HĐ1, HĐ2, HĐ3, HĐ4); Bài 6: An toàn với môi trường công nghệ trong gia đình (HĐ1, HĐ2, HĐ3)"}
             ],
             "Học kỳ II": [
-                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Dụng cụ và vật liệu làm thủ công; Bài 8: Làm đồ dùng học tập; Bài 9: Làm biển báo giao thông; Bài 10: Làm đồ chơi; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
+                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7: Giới thiệu bộ lắp ghép mô hình kĩ thuật; Bài 8: Lắp ghép mô hình bập bênh; Bài 9: Lắp ghép mô hình robot; Bài 10: Đồ chơi dân gian; Bài 11: Làm đèn lồng; Bài 12: Làm chuồn chuồn thăng bằng"}
             ]
         }
     },
@@ -225,6 +272,81 @@ CURRICULUM_DB = {
                 {"Chủ đề": "DUYÊN HẢI MIỀN TRUNG", "Bài học": "Bài 15: Thiên nhiên vùng duyên hải miền Trung; Bài 16: Dân cư, hoạt động sản xuất ở vùng duyên hải miền Trung; Bài 17: Một số nét văn hóa ở vùng duyên hải miền Trung; Bài 18: Cố đô Huế; Bài 19: Phố cổ Hội An"},
                 {"Chủ đề": "TÂY NGUYÊN", "Bài học": "Bài 20: Thiên nhiên vùng Tây Nguyên; Bài 21: Dân cư, hoạt động sản xuất ở vùng Tây Nguyên; Bài 22: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Tây Nguyên; Bài 23: Lễ hội cồng chiêng Tây Nguyên"},
                 {"Chủ đề": "NAM BỘ", "Bài học": "Bài 24: Thiên nhiên vùng Nam Bộ; Bài 25: Dân cư, hoạt động sản xuất vùng Nam Bộ; Bài 26: Một số nét văn hóa và truyền thống yêu nước, cách mạng của đồng bào Nam Bộ; Bài 27: Thành phố Hồ Chí Minh; Bài 28: Địa đạo củ chi"}
+            ]
+        },
+        "Khoa học": {
+            "Học kỳ I": [
+                {"Chủ đề": "CHẤT", "Bài học": "Bài 1: Thành phần và vai trò của đất đối với cây trồng; Bài 2: Ô nhiễm, xói mòn đất và bảo vệ môi trường đất; Bài 3: Hỗn hợp và dung dịch; Bài 4: Đặc điểm của chất ở trạng thái rắn, lỏng, khí. Sự biến đổi trạng thái của chất; Bài 5: Sự biến đổi hóa học của chất; Bài 6: Ôn tập chủ đề chất"},
+                {"Chủ đề": "NĂNG LƯỢNG", "Bài học": "Bài 7: Vai trò của năng lượng; Bài 8: Sử dụng năng lượng điện; Bài 9: Mạch điện đơn giản, vật dẫn điện và vật cách điện; Bài 10: Năng lượng chất đốt; Bài 11: Sử dụng năng lượng mặt trời, năng lượng gió, năng lượng nước chảy; Bài 12: Ôn tập chủ đề năng lượng"},
+                {"Chủ đề": "THỰC VẬT VÀ ĐỘNG VẬT", "Bài học": "Bài 13: Sinh sản của thực vật có hoa; Bài 14: Sự phát triển của cây con; Bài 15: Sinh sản của thực vật có hoa; Bài 16: Vòng đời và sự phát triển của động vật; Bài 17: ôn tập chủ đề thực vật và động vật"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "VI KHUẨN", "Bài học": "Bài 18: Vi khuẩn xung quanh chúng ta; Bài 19: Vi khuẩn có ích trong chế biến thực phẩm; Bài 20: Vi khuẩn gây bệnh ở người và cách phòng tránh; Bài 21: Ôn tập chủ đề vi khuẩn"},
+                {"Chủ đề": "CON NGƯỜI VÀ SỨC KHỎE", "Bài học": "Bài 22: Sự hình thành cơ thể người; Bài 23: Các giai đoạn phát triển chính của con người; Bài 24: Nam và nữ; Bài 25: Chăm sóc sức khoẻ tuổi dậy thì; Bài 26: Phòng tránh bị xâm hại; Bài 27: Ôn tập chủ đề con người và sức khoẻ"},
+                {"Chủ đề": "SINH VẬT VÀ MÔI TRƯỜNG", "Bài học": "Bài 28: Chức năng của môi trường đối với sinh vật; Bài 29: Tác động của con người và một số biện pháp bảo vệ môi trường; Bài 30: ôn tập chủ đề sinh vật và môi trường"}
+            ]
+        },
+        "Tin học": {
+            "Học kỳ I": [
+                {"Chủ đề": "MÁY TÍNH VÀ EM", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
+                {"Chủ đề": "MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
+                {"Chủ đề": "TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
+                {"Chủ đề": "ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
+                {"Chủ đề": "ỨNG DỤNG TIN HỌC", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
+            ]
+        },
+        "Công nghệ": {
+            "Học kỳ I": [
+                {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
+            ]
+        }
+    },
+    "Lớp 5": {
+        "Tiếng Việt": {
+            "Học kỳ I": [
+                {"Chủ đề": "Thế giới tuổi thơ", "Bài học": "Bài 1: Thanh âm của gió; Bài 2: Cánh đồng hoa; Bài 3: Tuổi Ngựa; Bài 4: Bến sông tuổi thơ; Bài 5: Tiếng hạt nảy mầm; Bài 6: Ngôi sao sân cỏ; Bài 7: Bộ sưu tập độc đáo; Bài 8: Hành tinh kì lạ"},
+                {"Chủ đề": "THIÊN NHIÊN KÌ THÚ", "Bài học": "Bài 9: Trước cổng trời; Bài 10: Kì diệu rừng xanh; Bài 11: Hang Sơn Đoòng - Những điều kì thú; Bài 12: Những hòn đảo trên vịnh Hạ Long; Bài 13: Mầm non; Bài 14: Những ngọn núi nóng rẫy; Bài 15: Bài ca về mặt trời; Bài 16: Xin chào, Xa-ha-ra"},
+                {"Chủ đề": "Trên con đường học tập", "Bài học": "Bài 17: Thư gửi các học sinh; Bài 18: Tấm gương tự học; Bài 19: Trải nghiệm để sáng tạo; Bài 20: Khổ luyện thành tài; Bài 21: Thế giới trong trang sách; Bài 22: Từ những câu chuyện ấu thơ; Bài 23: Giới thiệu sách Dế Mèn phiêu lưu kí; Bài 24: Tinh thần học tập của nhà Phi-lít"},
+                {"Chủ đề": "Nghệ thuật muôn màu", "Bài học": "Bài 25: Tiếng đàn ba-la-lai-ca trên sông Đà; Bài 26: Trí tưởng tượng phong phú; Bài 27: Tranh làng Hồ; Bài 28: Tập hát quan họ; Bài 29: Phim hoạt hình Chú ốc sên bay; Bài 30: Nghệ thuật múa ba lê; Bài 31: Một ngôi chùa độc đáo; Bài 32: Sự tích chú Tễu"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "Vẻ đẹp cuộc sống", "Bài học": "Bài 1: Tiếng hát của người đã; Bài 2: Khúc hát ru những em bé lớn trên lưng mẹ; Bài 3: Hạt gạo làng ta; Bài 4: Hộp quà màu thiên thanh; Bài 5: Giỏ hoa tháng Năm; Bài 6: Thư của bố; Bài 7: Đoàn thuyền đánh cá; Bài 8: Khu rừng của Mát"},
+                {"Chủ đề": "Hương sắc trăm miền", "Bài học": "Bài 9: Hội thổi cơm thi ở Đồng Văn; Bài 10: Những búp chè trên cây cổ thụ; Bài 11: Hương cốm mùa thu; Bài 12: Vũ điệu trên tiền thổ cẩm; Bài 13: Đàn t'rưng – tiếng ca đại ngàn; Bài 14: Đường quê Đồng Tháp Mười; Bài 15: Xuồng ba lá quê tôi; Bài 16: Về thăm Đất Mũi"},
+                {"Chủ đề": "Tiếp bước cha ông", "Bài học": "Bài 17: Nghìn năm văn hiến; Bài 18: Người thầy của muôn đời; Bài 19: Danh y Tuệ Tĩnh; Bài 20: Cụ Đồ Chiểu; Bài 21: Anh hùng Lao động Trần Đại Nghĩa; Bài 22: Bộ đội về làng; Bài 23: Về ngôi nhà đang xây; Bài 24: Việt Nam quê hương ta"},
+                {"Chủ đề": "Thế giới của chúng ta", "Bài học": "Bài 25: Bài ca trái đất; Bài 26: Những con hạc giấy; Bài 27: Một người hùng thầm lặng; Bài 28: Giờ Trái Đất; Bài 29: Điện thoại di động; Bài 30: Thành phố thông minh Mát-xđa"}
+            ]
+        },
+        "Toán": {
+            "Học kỳ I": [
+                {"Chủ đề": "Ôn tập và bổ sung", "Bài học": "Bài 1. Ôn tập số tự nhiên; Bài 2. Ôn tập các phép tính với số tự nhiên; Bài 3. Ôn tập phân số; Bài 4. Phân số thập phân; Bài 5. Ôn tập các phép tính với phân số; Bài 6. Cộng, trừ hai phân số khác mẫu số; Bài 7. Hỗn số; Bài 8. Ôn tập hình học và đo lường; Bài 9. Luyện tập chung"},
+                {"Chủ đề": "Số thập phân", "Bài học": "Bài 10. Khái niệm số thập phân; Bài 11. So sánh các số thập phân; Bài 12. Viết số đo đại lượng dưới dạng số thập phân; Bài 13. Làm tròn số thập phân; Bài 14. Luyện tập chung"},
+                {"Chủ đề": "MỘT SỐ ĐƠN VỊ ĐO DIỆN TÍCH", "Bài học": "Bài 15. Ki-lô-mét vuông. Héc-ta; Bài 16. Các đơn vị đo diện tích; Bài 17. Thực hành và trải nghiệm; Bài 18 Luyện tập chung"},
+                {"Chủ đề": "CÁC PHÉP TÍNH VỚI SỐ THẬP PHÂN", "Bài học": "Bài 19: Phép cộng số thập phân; Bài 20. Phép trừ số thập phân; Bài 21: Phép nhân số thập phân; Bài 22: Phép chia số thập phân; Bài 23. Nhân, chia số thập phân với 10, 100, 1000...; Bài 24. Luyện tập chung"},
+                {"Chủ đề": "MỘT SỐ HÌNH PHẲNG. CHU VI VÀ DIỆN TÍCH", "Bài học": "Bài 25. Hình tam giác. Diện tích hình tam giác; Bài 26. Hình thang. Diện tích hình thang; Bài 27. Đường tròn. Chu vi và diện tích hình tròn; Bài 28. Thực hành và trải nghiệm đo, vẽ, lắp ghép, tạo hình; Bài 29. Luyện tập chung"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "TỈ SỐ VÀ CÁC BÀI TOÁN LIÊN QUAN", "Bài học": "Bài 36. Tỉ số/Tỉ số phần trăm; Bài 37. Tỉ lệ bản đồ và ứng dụng; Bài 38. Tìm hai số khi biết tổng và tỉ số; Bài 39. Tìm hai số khi biết hiệu và tỉ số; Bài 40. Tìm tỉ số phần trăm của hai số; Bài 41. Tìm giá trị phần trăm của một số; Bài 42. Máy tính cầm tay; Bài 43. Thực hành và trải nghiệm; Bài 44. Luyện tập chung"},
+                {"Chủ đề": "DIỆN TÍCH VÀ THỂ TÍCH CỦA MỘT SỐ HÌNH KHỐI", "Bài học": "Bài 49. Hình khai triển; Bài 50. Diện tích xung quanh và DT toàn phần của hình hộp chữ nhật; Bài 51. DT xung quanh và DT toàn phần của hình lập phương; Bài 52. Thể tích của hình hộp chữ nhật; Bài 53. Thể tích của hình lập phương; Bài 54. Thực hành tính toán và ước lượng thể tích; Bài 55. Luyện tập chung"},
+                {"Chủ đề": "SỐ ĐO THỜI GIAN. VẬN TỐC. CÁC BÀI TOÁN LIÊN QUAN ĐẾN CHUYỂN ĐỘNG ĐỀU", "Bài học": "Bài 56. Các đơn vị đo thời gian; Bài 57. Cộng, trừ số đo thời gian; Bài 58. Nhân, chia số đo thời gian với một số; Bài 59. Vận tốc của một chuyển động đều; Bài 60. Quãng đường, thời gian của một chuyển động đều; Bài 61. Thực hành tính toán và ước lượng; Bài 62. Luyện tập chung"},
+                {"Chủ đề": "MỘT SỐ YẾU TỐ THỐNG KÊ VÀ XÁC SUẤT", "Bài học": "Bài 63. Thu thập, phân loại, sắp xếp các số liệu; Bài 64. Biểu đồ hình quạt tròn; Bài 65. Tỉ số của số lần lặp lại một sự kiện; Bài 66. Thực hành và trải nghiệm thu thập, phân tích, biểu diễn các số liệu thống kê; Bài 67. Luyện tập chung"}
+            ]
+        },
+        "Lịch sử và Địa lí": {
+            "Học kỳ I": [
+                {"Chủ đề": "ĐẤT NƯỚC VÀ CON NGƯỜI VIỆT NAM", "Bài học": "Bài 1: Vị trí địa lí, lãnh thổ, đơn vị hành chính, Quốc kì, Quốc huy, Quốc ca; Bài 2: Thiên nhiên Việt Nam; Bài 3: Biển, đảo Việt Nam; Bài 4: Dân cư và dân tộc ở Việt Nam"},
+                {"Chủ đề": "NHỮNG QUỐC GIA ĐẦU TIÊN TRÊN LÃNH THỔ VIỆT NAM", "Bài học": "Bài 5: Nhà nước Văn Lang, Nhà nước Âu Lạc; Bài 6: Vương quốc Phù Nam; Bài 7: Vương quốc Chăm-pa"},
+                {"Chủ đề": "XÂY DỰNG VÀ BẢO VỆ ĐẤT NƯỚC VIỆT NAM", "Bài học": "Bài 8: Đấu tranh giành độc lập thời kì Bắc thuộc; Bài 9: Triều Lý và việc định đô ở Thăng Long; Bài 10: Triều Trần xây dựng đất nước và kháng chiến chống quân Mông – Nguyên xâm lược; Bài 12: Khởi nghĩa Lam Sơn và Triều Hậu Lê; Bài 13: Triều Nguyễn; Bài 14: Cách mạng tháng Tám năm 1945; Bài 15: Chiến dịch Điện Biên Phủ năm 1954; Bài 16: Chiến dịch Hồ Chí Minh năm 1975; Bài 17: Đất nước đổi mới"}
+            ],
+            "Học kỳ II": [
+                {"Chủ đề": "CÁC NƯỚC LÁNG GIỀNG", "Bài học": "Bài 18: Nước Cộng hoà Nhân dân Trung Hoa; Bài 19: Cộng hoà Dân chủ Nhân dân Lào; Bài 20: Vương quốc Cam-pu-chia; Bài 21: Hiệp hội các quốc gia Đông Nam Á"},
+                {"Chủ đề": "TÌM HIỂU THẾ GIỚI", "Bài học": "Bài 22: Các châu lục và đại dương trên thế giới; Bài 23: Dân số và các chủng tộc trên thế giới; Bài 24: Văn minh Ai Cập; Bài 25: Văn minh Hy Lạp"},
+                {"Chủ đề": "CHUNG TAY XÂY DỰNG THẾ GIỚI", "Bài học": "Bài 26: Xây dựng thế giới xanh – sạch – đẹp; Bài 27: Xây dựng thế giới hoà bình"}
             ]
         },
         "Khoa học": {
@@ -339,20 +461,7 @@ def generate_yccd_from_lesson(api_key, grade, subject, topic, lesson_name):
     text, _ = generate_content_with_rotation(api_key, prompt)
     return text.strip() if text else ""
 
-# --- 6. CÁC HÀM HỖ TRỢ XỬ LÝ MA TRẬN & FILE ---
-def safe_int(v):
-    # Hàm an toàn để chuyển đổi giá trị sang số nguyên
-    if pd.isna(v): return 0
-    try:
-        nums = re.findall(r"\d+", str(v))
-        return int(nums[0]) if nums else 0
-    except: return 0
-
-def read_matrix(file):
-    # Đọc file Excel không header để xử lý linh hoạt
-    df = pd.read_excel(file, header=None)
-    return df.dropna(how="all")
-
+# --- 6. CÁC HÀM HỖ TRỢ TAB 1 MỚI (TỪ APP TAB 1) ---
 def build_prompt_from_matrix(df, grade, subject):
     # Logic phân tích ma trận từ file Excel (lấy từ app tab(1).py)
     matrix_text = ""
@@ -503,15 +612,6 @@ def create_matrix_document(exam_list, subject_name, grade_name):
         
     buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
     return buffer
-
-def read_uploaded_file(uploaded_file): # Hàm đọc file cũ để tương thích
-    # Hàm này dùng cho trường hợp file docx/pdf nếu có
-    # Nhưng Tab 1 mới dùng logic read_matrix cho excel
-    return "" 
-
-def extract_periods(lesson_name):
-    match = re.search(r'\((\d+)\s*tiết\)', lesson_name, re.IGNORECASE)
-    return match.group(1) if match else "-"
 
 # --- 7. MAIN APP ---
 def main():
@@ -691,11 +791,30 @@ def main():
         st.download_button("📥 TẢI BẢN ĐẶC TẢ", mx_doc, f"Dac_ta_{selected_subject}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
 
     # --- FOOTER ---
-    st.markdown("""
-    <div class="footer">
-        <p style="margin: 0; font-weight: bold; color: #2c3e50;">🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
-    </div>
-    """, unsafe_allow_html=True)
+    footer_html = r"""
+<style>
+.footer-box {
+    width: 100%;
+    padding: 12px 0;
+    margin-top: 40px;
+    text-align: center;
+    background: linear-gradient(90deg, #e8f0fe, #ffffff);
+    border-top: 2px solid #d0d7e2;
+    font-family: 'Segoe UI', sans-serif;
+}
+.footer-text {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #2c3e50;
+    letter-spacing: 0.3px;
+}
+</style>
+<div class="footer-box">
+    <p class="footer-text">&#127979; TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+</div>
+"""
+    st.markdown(footer_html, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
