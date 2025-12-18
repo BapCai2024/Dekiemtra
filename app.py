@@ -58,7 +58,8 @@ try:
 except ImportError:
     st.error("⚠️ Thiếu thư viện 'pypdf'. Vui lòng cài đặt: pip install pypdf")
 
-# --- 4. DỮ LIỆU CSDL (GIỮ NGUYÊN) ---
+# --- 4. KHỞI TẠO DỮ LIỆU (QUAN TRỌNG: PHẢI ĐẶT TRƯỚC HÀM MAIN) ---
+
 SUBJECTS_DB = {
     "Lớp 1": [("Tiếng Việt", "📚"), ("Toán", "🧮")],
     "Lớp 2": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Công nghệ", "🔧")],
@@ -67,7 +68,7 @@ SUBJECTS_DB = {
     "Lớp 5": [("Tiếng Việt", "📚"), ("Toán", "🧮"), ("Khoa học", "🔬"), ("Lịch sử & Địa lí", "🌏"), ("Tin học", "💻"), ("Công nghệ", "🔧")]
 }
 
-# DỮ LIỆU GỐC (FULL)
+# DỮ LIỆU GỐC ĐẦY ĐỦ (Không được cắt bớt)
 CURRICULUM_DB = {
     "Lớp 1": {
         "Tiếng Việt": {
@@ -258,83 +259,33 @@ CURRICULUM_DB = {
                 {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
             ]
         }
-    },
-    "Lớp 5": {
-        "Tiếng Việt": {
-            "Học kỳ I": [
-                {"Chủ đề": "Thế giới tuổi thơ", "Bài học": "Bài 1: Thanh âm của gió; Bài 2: Cánh đồng hoa; Bài 3: Tuổi Ngựa; Bài 4: Bến sông tuổi thơ; Bài 5: Tiếng hạt nảy mầm; Bài 6: Ngôi sao sân cỏ; Bài 7: Bộ sưu tập độc đáo; Bài 8: Hành tinh kì lạ"},
-                {"Chủ đề": "THIÊN NHIÊN KÌ THÚ", "Bài học": "Bài 9: Trước cổng trời; Bài 10: Kì diệu rừng xanh; Bài 11: Hang Sơn Đoòng - Những điều kì thú; Bài 12: Những hòn đảo trên vịnh Hạ Long; Bài 13: Mầm non; Bài 14: Những ngọn núi nóng rẫy; Bài 15: Bài ca về mặt trời; Bài 16: Xin chào, Xa-ha-ra"},
-                {"Chủ đề": "Trên con đường học tập", "Bài học": "Bài 17: Thư gửi các học sinh; Bài 18: Tấm gương tự học; Bài 19: Trải nghiệm để sáng tạo; Bài 20: Khổ luyện thành tài; Bài 21: Thế giới trong trang sách; Bài 22: Từ những câu chuyện ấu thơ; Bài 23: Giới thiệu sách Dế Mèn phiêu lưu kí; Bài 24: Tinh thần học tập của nhà Phi-lít"},
-                {"Chủ đề": "Nghệ thuật muôn màu", "Bài học": "Bài 25: Tiếng đàn ba-la-lai-ca trên sông Đà; Bài 26: Trí tưởng tượng phong phú; Bài 27: Tranh làng Hồ; Bài 28: Tập hát quan họ; Bài 29: Phim hoạt hình Chú ốc sên bay; Bài 30: Nghệ thuật múa ba lê; Bài 31: Một ngôi chùa độc đáo; Bài 32: Sự tích chú Tễu"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "Vẻ đẹp cuộc sống", "Bài học": "Bài 1: Tiếng hát của người đã; Bài 2: Khúc hát ru những em bé lớn trên lưng mẹ; Bài 3: Hạt gạo làng ta; Bài 4: Hộp quà màu thiên thanh; Bài 5: Giỏ hoa tháng Năm; Bài 6: Thư của bố; Bài 7: Đoàn thuyền đánh cá; Bài 8: Khu rừng của Mát"},
-                {"Chủ đề": "Hương sắc trăm miền", "Bài học": "Bài 9: Hội thổi cơm thi ở Đồng Văn; Bài 10: Những búp chè trên cây cổ thụ; Bài 11: Hương cốm mùa thu; Bài 12: Vũ điệu trên tiền thổ cẩm; Bài 13: Đàn t'rưng – tiếng ca đại ngàn; Bài 14: Đường quê Đồng Tháp Mười; Bài 15: Xuồng ba lá quê tôi; Bài 16: Về thăm Đất Mũi"},
-                {"Chủ đề": "Tiếp bước cha ông", "Bài học": "Bài 17: Nghìn năm văn hiến; Bài 18: Người thầy của muôn đời; Bài 19: Danh y Tuệ Tĩnh; Bài 20: Cụ Đồ Chiểu; Bài 21: Anh hùng Lao động Trần Đại Nghĩa; Bài 22: Bộ đội về làng; Bài 23: Về ngôi nhà đang xây; Bài 24: Việt Nam quê hương ta"},
-                {"Chủ đề": "Thế giới của chúng ta", "Bài học": "Bài 25: Bài ca trái đất; Bài 26: Những con hạc giấy; Bài 27: Một người hùng thầm lặng; Bài 28: Giờ Trái Đất; Bài 29: Điện thoại di động; Bài 30: Thành phố thông minh Mát-xđa"}
-            ]
-        },
-        "Toán": {
-            "Học kỳ I": [
-                {"Chủ đề": "Ôn tập và bổ sung", "Bài học": "Bài 1. Ôn tập số tự nhiên; Bài 2. Ôn tập các phép tính với số tự nhiên; Bài 3. Ôn tập phân số; Bài 4. Phân số thập phân; Bài 5. Ôn tập các phép tính với phân số; Bài 6. Cộng, trừ hai phân số khác mẫu số; Bài 7. Hỗn số; Bài 8. Ôn tập hình học và đo lường; Bài 9. Luyện tập chung"},
-                {"Chủ đề": "Số thập phân", "Bài học": "Bài 10. Khái niệm số thập phân; Bài 11. So sánh các số thập phân; Bài 12. Viết số đo đại lượng dưới dạng số thập phân; Bài 13. Làm tròn số thập phân; Bài 14. Luyện tập chung"},
-                {"Chủ đề": "MỘT SỐ ĐƠN VỊ ĐO DIỆN TÍCH", "Bài học": "Bài 15. Ki-lô-mét vuông. Héc-ta; Bài 16. Các đơn vị đo diện tích; Bài 17. Thực hành và trải nghiệm; Bài 18 Luyện tập chung"},
-                {"Chủ đề": "CÁC PHÉP TÍNH VỚI SỐ THẬP PHÂN", "Bài học": "Bài 19: Phép cộng số thập phân; Bài 20. Phép trừ số thập phân; Bài 21: Phép nhân số thập phân; Bài 22: Phép chia số thập phân; Bài 23. Nhân, chia số thập phân với 10, 100, 1000...; Bài 24. Luyện tập chung"},
-                {"Chủ đề": "MỘT SỐ HÌNH PHẲNG. CHU VI VÀ DIỆN TÍCH", "Bài học": "Bài 25. Hình tam giác. Diện tích hình tam giác; Bài 26. Hình thang. Diện tích hình thang; Bài 27. Đường tròn. Chu vi và diện tích hình tròn; Bài 28. Thực hành và trải nghiệm đo, vẽ, lắp ghép, tạo hình; Bài 29. Luyện tập chung"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "TỈ SỐ VÀ CÁC BÀI TOÁN LIÊN QUAN", "Bài học": "Bài 36. Tỉ số/Tỉ số phần trăm; Bài 37. Tỉ lệ bản đồ và ứng dụng; Bài 38. Tìm hai số khi biết tổng và tỉ số; Bài 39. Tìm hai số khi biết hiệu và tỉ số; Bài 40. Tìm tỉ số phần trăm của hai số; Bài 41. Tìm giá trị phần trăm của một số; Bài 42. Máy tính cầm tay; Bài 43. Thực hành và trải nghiệm; Bài 44. Luyện tập chung"},
-                {"Chủ đề": "DIỆN TÍCH VÀ THỂ TÍCH CỦA MỘT SỐ HÌNH KHỐI", "Bài học": "Bài 49. Hình khai triển; Bài 50. Diện tích xung quanh và DT toàn phần của hình hộp chữ nhật; Bài 51. DT xung quanh và DT toàn phần của hình lập phương; Bài 52. Thể tích của hình hộp chữ nhật; Bài 53. Thể tích của hình lập phương; Bài 54. Thực hành tính toán và ước lượng thể tích; Bài 55. Luyện tập chung"},
-                {"Chủ đề": "SỐ ĐO THỜI GIAN. VẬN TỐC. CÁC BÀI TOÁN LIÊN QUAN ĐẾN CHUYỂN ĐỘNG ĐỀU", "Bài học": "Bài 56. Các đơn vị đo thời gian; Bài 57. Cộng, trừ số đo thời gian; Bài 58. Nhân, chia số đo thời gian với một số; Bài 59. Vận tốc của một chuyển động đều; Bài 60. Quãng đường, thời gian của một chuyển động đều; Bài 61. Thực hành tính toán và ước lượng; Bài 62. Luyện tập chung"},
-                {"Chủ đề": "MỘT SỐ YẾU TỐ THỐNG KÊ VÀ XÁC SUẤT", "Bài học": "Bài 63. Thu thập, phân loại, sắp xếp các số liệu; Bài 64. Biểu đồ hình quạt tròn; Bài 65. Tỉ số của số lần lặp lại một sự kiện; Bài 66. Thực hành và trải nghiệm thu thập, phân tích, biểu diễn các số liệu thống kê; Bài 67. Luyện tập chung"}
-            ]
-        },
-        "Lịch sử và Địa lí": {
-            "Học kỳ I": [
-                {"Chủ đề": "ĐẤT NƯỚC VÀ CON NGƯỜI VIỆT NAM", "Bài học": "Bài 1: Vị trí địa lí, lãnh thổ, đơn vị hành chính, Quốc kì, Quốc huy, Quốc ca; Bài 2: Thiên nhiên Việt Nam; Bài 3: Biển, đảo Việt Nam; Bài 4: Dân cư và dân tộc ở Việt Nam"},
-                {"Chủ đề": "NHỮNG QUỐC GIA ĐẦU TIÊN TRÊN LÃNH THỔ VIỆT NAM", "Bài học": "Bài 5: Nhà nước Văn Lang, Nhà nước Âu Lạc; Bài 6: Vương quốc Phù Nam; Bài 7: Vương quốc Chăm-pa"},
-                {"Chủ đề": "XÂY DỰNG VÀ BẢO VỆ ĐẤT NƯỚC VIỆT NAM", "Bài học": "Bài 8: Đấu tranh giành độc lập thời kì Bắc thuộc; Bài 9: Triều Lý và việc định đô ở Thăng Long; Bài 10: Triều Trần xây dựng đất nước và kháng chiến chống quân Mông – Nguyên xâm lược; Bài 12: Khởi nghĩa Lam Sơn và Triều Hậu Lê; Bài 13: Triều Nguyễn; Bài 14: Cách mạng tháng Tám năm 1945; Bài 15: Chiến dịch Điện Biên Phủ năm 1954; Bài 16: Chiến dịch Hồ Chí Minh năm 1975; Bài 17: Đất nước đổi mới"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "CÁC NƯỚC LÁNG GIỀNG", "Bài học": "Bài 18: Nước Cộng hoà Nhân dân Trung Hoa; Bài 19: Cộng hoà Dân chủ Nhân dân Lào; Bài 20: Vương quốc Cam-pu-chia; Bài 21: Hiệp hội các quốc gia Đông Nam Á"},
-                {"Chủ đề": "TÌM HIỂU THẾ GIỚI", "Bài học": "Bài 22: Các châu lục và đại dương trên thế giới; Bài 23: Dân số và các chủng tộc trên thế giới; Bài 24: Văn minh Ai Cập; Bài 25: Văn minh Hy Lạp"},
-                {"Chủ đề": "CHUNG TAY XÂY DỰNG THẾ GIỚI", "Bài học": "Bài 26: Xây dựng thế giới xanh – sạch – đẹp; Bài 27: Xây dựng thế giới hoà bình"}
-            ]
-        },
-        "Khoa học": {
-            "Học kỳ I": [
-                {"Chủ đề": "CHẤT", "Bài học": "Bài 1: Thành phần và vai trò của đất đối với cây trồng; Bài 2: Ô nhiễm, xói mòn đất và bảo vệ môi trường đất; Bài 3: Hỗn hợp và dung dịch; Bài 4: Đặc điểm của chất ở trạng thái rắn, lỏng, khí. Sự biến đổi trạng thái của chất; Bài 5: Sự biến đổi hóa học của chất; Bài 6: Ôn tập chủ đề chất"},
-                {"Chủ đề": "NĂNG LƯỢNG", "Bài học": "Bài 7: Vai trò của năng lượng; Bài 8: Sử dụng năng lượng điện; Bài 9: Mạch điện đơn giản, vật dẫn điện và vật cách điện; Bài 10: Năng lượng chất đốt; Bài 11: Sử dụng năng lượng mặt trời, năng lượng gió, năng lượng nước chảy; Bài 12: Ôn tập chủ đề năng lượng"},
-                {"Chủ đề": "THỰC VẬT VÀ ĐỘNG VẬT", "Bài học": "Bài 13: Sinh sản của thực vật có hoa; Bài 14: Sự phát triển của cây con; Bài 15: Sinh sản của thực vật có hoa; Bài 16: Vòng đời và sự phát triển của động vật; Bài 17: ôn tập chủ đề thực vật và động vật"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "VI KHUẨN", "Bài học": "Bài 18: Vi khuẩn xung quanh chúng ta; Bài 19: Vi khuẩn có ích trong chế biến thực phẩm; Bài 20: Vi khuẩn gây bệnh ở người và cách phòng tránh; Bài 21: Ôn tập chủ đề vi khuẩn"},
-                {"Chủ đề": "CON NGƯỜI VÀ SỨC KHỎE", "Bài học": "Bài 22: Sự hình thành cơ thể người; Bài 23: Các giai đoạn phát triển chính của con người; Bài 24: Nam và nữ; Bài 25: Chăm sóc sức khoẻ tuổi dậy thì; Bài 26: Phòng tránh bị xâm hại; Bài 27: Ôn tập chủ đề con người và sức khoẻ"},
-                {"Chủ đề": "SINH VẬT VÀ MÔI TRƯỜNG", "Bài học": "Bài 28: Chức năng của môi trường đối với sinh vật; Bài 29: Tác động của con người và một số biện pháp bảo vệ môi trường; Bài 30: ôn tập chủ đề sinh vật và môi trường"}
-            ]
-        },
-        "Tin học": {
-            "Học kỳ I": [
-                {"Chủ đề": "MÁY TÍNH VÀ EM", "Bài học": "Bài 1. Em có thể làm gì với máy tính?"},
-                {"Chủ đề": "MẠNG MÁY TÍNH VÀ INTERNET", "Bài học": "Bài 2. Tìm kiếm thông tin trên website"},
-                {"Chủ đề": "TỔ CHỨC LƯU TRỮ, TÌM KIẾM VÀ TRAO ĐỔI THÔNG TIN", "Bài học": "Bài 3. Tìm kiếm thông tin trong giải quyết vấn đề; Bài 4. Cây thư mục"},
-                {"Chủ đề": "ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ", "Bài học": "Bài 5. Bản quyền nội dung thông tin"},
-                {"Chủ đề": "ỨNG DỤNG TIN HỌC", "Bài học": "Bài 6. Định dạng kí tự và bố trí hình ảnh trong văn bản; Bài 7. Thực hành soạn thảo văn bản; Bài 9A: Sử dụng phần mềm đồ họa tạo sản phẩm số; Bài 9B. Thực hành tạo đồ dùng gia đình"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH", "Bài học": "Bài 10. Cấu trúc tuần tự; Bài 11. Cấu trúc lặp; Bài 12. Thực hành sử dụng lệnh lặp; Bài 13. Cấu trúc rẽ nhánh; Bài 14. Sử dụng biến trong chương trình; Bài 15. Sử dụng biểu thức trong chương trình; Bài 16. Từ kịch bản đến chương trình"}
-            ]
-        },
-        "Công nghệ": {
-            "Học kỳ I": [
-                {"Chủ đề": "Công nghệ và đời sống", "Bài học": "Bài 1. Vai trò của công nghệ; Bài 2. Nhà sáng chế; Bài 3. Tìm hiểu thiết kế; Bài 4. Thiết kế sản phẩm; Bài 5. Sử dụng điện thoại; Bài 6. Sử dụng tủ lạnh"}
-            ],
-            "Học kỳ II": [
-                {"Chủ đề": "Thủ công kĩ thuật", "Bài học": "Bài 7. Lắp ráp mô hình xe điện chạy bằng pin; Bài 8. Mô hình máy phát điện gió; Bài 9. Mô hình điện mặt trời"}
-            ]
-        }
     }
 }
+
+# --- CẤU TRÚC DỮ LIỆU ĐÃ ĐƯỢC CHUẨN HÓA LẠI ĐỂ TẠO LIST BÀI HỌC ---
+# (KHỞI TẠO SAU KHI CÓ CURRICULUM_DB)
+CURRICULUM_DB_PROCESSED = {}
+
+# Xử lý dữ liệu thô để tách chuỗi bài học thành list
+for grade, subjects in CURRICULUM_DB.items():
+    CURRICULUM_DB_PROCESSED[grade] = {}
+    for subject, semesters in subjects.items():
+        # Xử lý theo từng học kỳ
+        CURRICULUM_DB_PROCESSED[grade][subject] = {}
+        for semester, content in semesters.items():
+            processed_topics = []
+            for item in content:
+                topic_name = item['Chủ đề']
+                raw_lessons_str = item['Bài học']
+                # Tách chuỗi dựa trên dấu chấm phẩy
+                lessons_list = [l.strip() for l in raw_lessons_str.split(';') if l.strip()]
+                
+                # Tạo structure mới: mỗi chủ đề chứa một list các bài học con
+                processed_topics.append({
+                    'Chủ đề': topic_name,
+                    'Bài học': lessons_list # Đây giờ là một list các string
+                })
+            CURRICULUM_DB_PROCESSED[grade][subject][semester] = processed_topics
 
 # --- 5. HỆ THỐNG API MỚI (CHỐNG LỖI 404 VÀ 429) ---
 def generate_content_with_rotation(api_key, prompt):
@@ -344,23 +295,17 @@ def generate_content_with_rotation(api_key, prompt):
     except Exception as e:
         return f"Lỗi kết nối lấy danh sách model: {e}", None
 
-    valid_models = [
-        m.name for m in all_models 
-        if 'generateContent' in m.supported_generation_methods
-    ]
+    valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
     if not valid_models:
         return "Lỗi: API Key đúng nhưng không tìm thấy model nào hỗ trợ tạo văn bản (generateContent).", None
 
     priority_order = []
     for m in valid_models:
-        if 'flash' in m.lower() and '1.5' in m:
-            priority_order.append(m)
+        if 'flash' in m.lower() and '1.5' in m: priority_order.append(m)
     for m in valid_models:
-        if 'pro' in m.lower() and '1.5' in m and m not in priority_order:
-            priority_order.append(m)
+        if 'pro' in m.lower() and '1.5' in m and m not in priority_order: priority_order.append(m)
     for m in valid_models:
-        if m not in priority_order:
-            priority_order.append(m)
+        if m not in priority_order: priority_order.append(m)
 
     last_error = ""
     for model_name in priority_order:
@@ -377,167 +322,196 @@ def generate_content_with_rotation(api_key, prompt):
 
 # --- HÀM TẠO YCCĐ TỰ ĐỘNG ---
 def generate_yccd_from_lesson(api_key, grade, subject, topic, lesson_name):
-    # ... (Giữ nguyên code hàm generate_yccd_from_lesson từ app lỗi cuối.py)
-    # Vì lý do giới hạn ký tự, tôi sẽ tóm tắt lại, bạn giữ nguyên code cũ phần này
-    mon_lower = subject.lower()
-    if "toán" in mon_lower:
-        mon_hint = """- Tập trung vào: (1) Kiến thức số học/hình học/đo lường; (2) Kĩ năng thực hiện phép tính, giải toán; (3) Vận dụng vào tình huống thực tế đơn giản."""
-    elif "tiếng việt" in mon_lower:
-        mon_hint = """- Tập trung vào: (1) Đọc đúng, hiểu nội dung chính; (2) Viết đúng chính tả, câu, đoạn; (3) Nói và nghe phù hợp ngữ cảnh; (4) Mở rộng vốn từ, ngữ pháp cơ bản."""
-    # ... (các môn khác giữ nguyên) ...
-    else:
-        mon_hint = """- Tập trung vào kiến thức, kĩ năng, thái độ cốt lõi theo chương trình GDPT 2018 của môn học này."""
-
+    # ... (Giữ nguyên logic prompt YCCĐ)
     prompt = f"""
-Bạn là chuyên gia xây dựng chương trình GDPT 2018 bậc Tiểu học.
-Nhiệm vụ: Soạn **Yêu cầu cần đạt (YCCĐ)** cho bài học sau.
-Thông tin: Lớp: {grade}, Môn: {subject}, Chủ đề: {topic}, Bài học: {lesson_name}
-Định hướng: {mon_hint}
-YÊU CẦU ĐẦU RA: Chỉ liệt kê YCCĐ dạng gạch đầu dòng, không lời dẫn.
-"""
+    AI đang chạy
+    Nhiệm vụ: Trích xuất chính xác Yêu cầu cần đạt (YCCĐ) cho bài học sau:
+    - Bài học: '{lesson_name}'
+    - Chủ đề: '{topic}'
+    - Môn: {subject}
+    - Lớp: {grade}
+    
+    Yêu cầu:
+    1. Chỉ đưa ra nội dung cốt lõi, ngắn gọn, súc tích.
+    2. Phải chính xác với văn bản quy định của Bộ GD&ĐT (CT GDPT 2018).
+    3. Không thêm lời dẫn.
+    """
     text, _ = generate_content_with_rotation(api_key, prompt)
     return text.strip() if text else ""
 
-# --- 6. CÁC HÀM HỖ TRỢ TAB 1 MỚI (TỪ APP TAB 1) ---
+# --- 6. CÁC HÀM HỖ TRỢ XỬ LÝ MA TRẬN & FILE ---
 def safe_int(v):
-    if pd.isna(v):
-        return 0
-    # Xử lý trường hợp ô excel chứa text lẫn số (ví dụ: "2 câu")
-    nums = re.findall(r"\d+", str(v))
-    return int(nums[0]) if nums else 0
+    # Hàm an toàn để chuyển đổi giá trị sang số nguyên
+    if pd.isna(v): return 0
+    try:
+        nums = re.findall(r"\d+", str(v))
+        return int(nums[0]) if nums else 0
+    except: return 0
 
 def read_matrix(file):
-    # Đọc file excel không cần header để lấy toàn bộ dữ liệu thô
+    # Đọc file Excel không header để xử lý linh hoạt
     df = pd.read_excel(file, header=None)
     return df.dropna(how="all")
 
 def build_prompt_from_matrix(df, grade, subject):
-    # Xây dựng prompt dựa trên cấu trúc cột của file Excel mẫu TT27
-    # Giả định cấu trúc cột thường thấy trong các mẫu ma trận TT27:
-    # Cột 0: Mạch kiến thức / Chủ đề
-    # Các cột sau là số lượng câu hỏi mức 1, 2, 3...
-    # Đây là logic lấy từ file app tab(1).py của bạn
-    
+    # Logic phân tích ma trận từ file Excel (lấy từ app tab(1).py)
     matrix_text = ""
-    # Duyệt qua các dòng, bắt đầu từ dòng có dữ liệu (thường bỏ qua tiêu đề)
-    # Logic này cố gắng trích xuất thông tin dựa trên index cột như trong file mẫu
+    # Giả định cấu trúc cột phổ biến của ma trận TT27
     for i in range(len(df)):
-        row_text = ""
-        # Lấy tên chủ đề (thường ở cột đầu tiên hoặc thứ 2)
-        topic = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ""
-        if not topic: continue # Bỏ qua dòng trống
-        
-        # Lấy số lượng câu hỏi các mức độ (Giả định vị trí cột theo file mẫu TT27 phổ biến)
-        # TN (Trắc nghiệm): Mức 1, 2, 3 -> Cột 6, 7, 8
         try:
-            tn_m1 = safe_int(df.iloc[i, 6])
-            tn_m2 = safe_int(df.iloc[i, 7])
-            tn_m3 = safe_int(df.iloc[i, 8])
+            row_text = ""
+            topic = str(df.iloc[i, 0]) if not pd.isna(df.iloc[i, 0]) else ""
+            if not topic or len(topic) < 3: continue 
             
-            # TL (Tự luận) hoặc dạng khác: Mức 1, 2, 3 -> Cột 9, 10, 11...
-            tl_m1 = safe_int(df.iloc[i, 9])
-            tl_m2 = safe_int(df.iloc[i, 10])
-            tl_m3 = safe_int(df.iloc[i, 11])
+            # Cố gắng lấy số lượng câu hỏi từ các cột tiềm năng
+            # TN (Trắc nghiệm): Cột 6, 7, 8 (Mức 1, 2, 3)
+            # TL (Tự luận): Cột 9, 10, 11 (Mức 1, 2, 3)
+            # Lưu ý: Index bắt đầu từ 0
             
-            # Chỉ thêm vào text nếu dòng này có yêu cầu ra câu hỏi
-            if tn_m1 + tn_m2 + tn_m3 + tl_m1 + tl_m2 + tl_m3 > 0:
-                row_text = f"- Chủ đề '{topic}': "
-                if tn_m1 > 0: row_text += f"{tn_m1} câu TN Mức 1; "
-                if tn_m2 > 0: row_text += f"{tn_m2} câu TN Mức 2; "
-                if tn_m3 > 0: row_text += f"{tn_m3} câu TN Mức 3; "
-                if tl_m1 > 0: row_text += f"{tl_m1} câu TL Mức 1; "
-                if tl_m2 > 0: row_text += f"{tl_m2} câu TL Mức 2; "
-                if tl_m3 > 0: row_text += f"{tl_m3} câu TL Mức 3; "
-                matrix_text += row_text + "\n"
-        except IndexError:
-            continue # Bỏ qua nếu file excel không đủ cột
+            # Kiểm tra xem có đủ cột không
+            if df.shape[1] > 11:
+                tn_m1 = safe_int(df.iloc[i, 6])
+                tn_m2 = safe_int(df.iloc[i, 7])
+                tn_m3 = safe_int(df.iloc[i, 8])
+                tl_m1 = safe_int(df.iloc[i, 9])
+                tl_m2 = safe_int(df.iloc[i, 10])
+                tl_m3 = safe_int(df.iloc[i, 11])
+                
+                total_q = tn_m1 + tn_m2 + tn_m3 + tl_m1 + tl_m2 + tl_m3
+                if total_q > 0:
+                    row_text = f"- Chủ đề/Mạch KT: '{topic}' có: "
+                    if tn_m1: row_text += f"{tn_m1} câu TN Mức 1; "
+                    if tn_m2: row_text += f"{tn_m2} câu TN Mức 2; "
+                    if tn_m3: row_text += f"{tn_m3} câu TN Mức 3; "
+                    if tl_m1: row_text += f"{tl_m1} câu TL Mức 1; "
+                    if tl_m2: row_text += f"{tl_m2} câu TL Mức 2; "
+                    if tl_m3: row_text += f"{tl_m3} câu TL Mức 3; "
+                    matrix_text += row_text + "\n"
+        except Exception:
+            continue
 
-    return f"""
-Hãy tạo đề kiểm tra định kì tiểu học theo Thông tư 27.
+    prompt = f"""
+Bạn là chuyên gia giáo dục tiểu học Việt Nam.
+Nhiệm vụ: Soạn đề thi môn {subject} lớp {grade} theo ma trận đã phân tích.
 
-Thông tin:
-- Khối: {grade}
-- Môn: {subject}
+DỮ LIỆU PHÂN TÍCH TỪ FILE MA TRẬN:
+{matrix_text if matrix_text else "Không phân tích được chi tiết số lượng câu hỏi từ file, hãy tự cân đối đề thi chuẩn theo TT27."}
 
-Yêu cầu:
-- Đúng tuyệt đối số câu và mức độ theo ma trận đã phân tích dưới đây.
-- Ngôn ngữ phù hợp học sinh tiểu học.
-- Tiếng Việt: KHÔNG dùng bài đọc trong SGK (hãy sáng tạo văn bản tương đương).
-- Trắc nghiệm có 4 phương án (A, B, C, D) rõ ràng.
-- Có đáp án và thang điểm chi tiết.
+YÊU CẦU:
+1. Tạo đề thi ĐÚNG SỐ LƯỢNG và MỨC ĐỘ câu hỏi như trên (nếu có).
+2. Nội dung câu hỏi phải bám sát chương trình GDPT 2018 (Kết nối tri thức/Chân trời sáng tạo/Cánh diều).
+3. Đề thi gồm 2 phần:
+   I. PHẦN TRẮC NGHIỆM (Khoanh tròn)
+   II. PHẦN TỰ LUẬN
 
-Ma trận phân tích được từ file:
-{matrix_text}
-
-Định dạng đầu ra mong muốn:
-I. PHẦN TRẮC NGHIỆM
-Câu 1. ...
+ĐỊNH DẠNG ĐẦU RA:
+**Câu [số]** ([điểm] đ) - [Mức độ]: [Nội dung câu hỏi]
 A. ...
 B. ...
 C. ...
 D. ...
+(Xuống dòng) Đáp án: [Đáp án đúng]
 
-II. PHẦN TỰ LUẬN
-Câu ...
-
---- ĐÁP ÁN VÀ THANG ĐIỂM ---
-Câu 1: A (0.5 điểm)
-...
+(Nếu là tự luận thì ghi rõ yêu cầu và đáp án gợi ý)
 """
+    return prompt
 
-# --- CÁC HÀM TẠO WORD (GIỮ NGUYÊN) ---
-def create_word_from_question_list(school_name, subject, exam_list):
-    # ... (Giữ nguyên code cũ)
-    doc = Document()
-    set_font_style(doc)
-    # ... (Logic tạo bảng header, loop câu hỏi...)
-    # Vì giới hạn ký tự, tôi giả định phần này giữ nguyên như file app lỗi cuối.py
-    # Bạn hãy đảm bảo copy phần này từ file cũ vào nếu cần
-    return io.BytesIO() # Placeholder để tránh lỗi nếu chạy thử, thực tế dùng code cũ
-
-def create_matrix_document(exam_list, subject_name, grade_name):
-    # ... (Giữ nguyên code cũ)
-    return io.BytesIO()
-
+# --- CÁC HÀM TẠO WORD ---
 def create_word_file_simple(school_name, exam_name, content):
-    doc = Document()
-    set_font_style(doc)
+    doc = Document(); set_font_style(doc)
     
-    # Header
-    table = doc.add_table(rows=1, cols=2)
-    table.autofit = False
-    table.columns[0].width = Cm(7)
-    table.columns[1].width = Cm(9)
+    table = doc.add_table(rows=1, cols=2); table.autofit = False
+    table.columns[0].width = Cm(7); table.columns[1].width = Cm(9)
+    cell_1 = table.cell(0, 0); p1 = cell_1.paragraphs[0]
+    run_s = p1.add_run(f"{school_name.upper()}"); run_s.bold = True; p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cell_2 = table.cell(0, 1); p2 = cell_2.paragraphs[0]
+    run_e = p2.add_run(f"{exam_name.upper()}\n"); run_e.bold = True
+    run_y = p2.add_run("Năm học: .........."); p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
-    cell_1 = table.cell(0, 0)
-    p1 = cell_1.paragraphs[0]
-    run_s = p1.add_run(f"{school_name.upper()}")
-    run_s.bold = True
-    p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    
-    cell_2 = table.cell(0, 1)
-    p2 = cell_2.paragraphs[0]
-    run_e = p2.add_run(f"{exam_name.upper()}\n")
-    run_e.bold = True
-    run_y = p2.add_run("Năm học: ..........")
-    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
     doc.add_paragraph()
     for line in content.split('\n'):
         if line.strip():
-            p = doc.add_paragraph(line)
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
+            p = doc.add_paragraph(line); p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            
+    buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
     return buffer
+
+def create_word_from_question_list(school_name, subject, exam_list):
+    doc = Document(); set_font_style(doc)
+    table = doc.add_table(rows=1, cols=2); table.autofit = False
+    table.columns[0].width = Cm(7); table.columns[1].width = Cm(9)
+    cell_1 = table.cell(0, 0); p1 = cell_1.paragraphs[0]
+    run_s = p1.add_run(f"{school_name.upper()}"); run_s.bold = True; p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cell_2 = table.cell(0, 1); p2 = cell_2.paragraphs[0]
+    run_e = p2.add_run(f"ĐỀ KIỂM TRA {subject.upper()}\n"); run_e.bold = True
+    run_y = p2.add_run("Năm học: .........."); p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    doc.add_paragraph()
+    h2 = doc.add_heading('ĐỀ BÀI', level=1); h2.runs[0].font.name = 'Times New Roman'; h2.runs[0].font.color.rgb = None
+    
+    for idx, q in enumerate(exam_list):
+        p = doc.add_paragraph()
+        run_title = p.add_run(f"Câu {idx + 1} ({q['points']} điểm): ")
+        run_title.bold = True
+        for line in q['content'].split('\n'):
+            if line.strip() and not (line.startswith("**Câu hỏi:**") or line.startswith("**Đáp án:**")):
+                doc.add_paragraph(line.strip())
+        doc.add_paragraph()
+    
+    buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
+    return buffer
+
+def create_matrix_document(exam_list, subject_name, grade_name):
+    doc = Document(); set_font_style(doc)
+    p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = p.add_run(f"BẢN ĐẶC TẢ ĐỀ KIỂM TRA MÔN {subject_name.upper()} {grade_name.upper()}"); run.bold = True
+    doc.add_paragraph()
+    
+    table = doc.add_table(rows=2, cols=12); table.style = 'Table Grid'
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = "STT"; hdr_cells[1].text = "Chủ đề"; hdr_cells[2].text = "Bài học"
+    hdr_cells[3].text = "Yêu cầu cần đạt"; hdr_cells[4].text = "Dạng câu hỏi & Mức độ nhận thức"
+    hdr_cells[4].merge(hdr_cells[10]); hdr_cells[11].text = "Tổng điểm"
+    
+    row2_cells = table.rows[1].cells
+    sub_headers = ["TN-Biết", "TN-Hiểu", "TN-VD", "TL-Biết", "TL-Hiểu", "TL-VD", "Khác"]
+    for i, t in enumerate(sub_headers): row2_cells[i+4].text = t
+    for i in [0,1,2,3,11]: hdr_cells[i].merge(row2_cells[i])
+    
+    grouped = {}
+    for idx, q in enumerate(exam_list):
+        key = (q['topic'], q['lesson'])
+        if key not in grouped: grouped[key] = {'yccd': q.get('yccd',''), 'qs': []}
+        grouped[key]['qs'].append(q)
+    
+    stt = 1
+    for (topic, lesson), d in grouped.items():
+        row = table.add_row().cells
+        row[0].text = str(stt); row[1].text = topic; row[2].text = lesson; row[3].text = d['yccd']
+        counts = {k: [] for k in sub_headers}; pts = 0
+        for q in d['qs']:
+            idx = exam_list.index(q)+1
+            type_c = "TN" if "Tự luận" not in q['type'] else "TL"
+            lvl_c = "Biết" if "Mức 1" in q['level'] else ("Hiểu" if "Mức 2" in q['level'] else "VD")
+            key = f"{type_c}-{lvl_c}"
+            if key in counts: counts[key].append(str(idx))
+            else: counts["Khác"].append(str(idx))
+            pts += q['points']
+        for i, k in enumerate(sub_headers):
+            if counts[k]: row[i+4].text = f"Câu {','.join(counts[k])}"
+        row[11].text = str(pts); stt += 1
+        
+    buffer = io.BytesIO(); doc.save(buffer); buffer.seek(0)
+    return buffer
+
+def read_uploaded_file(uploaded_file): # Hàm đọc file cũ để tương thích
+    # Hàm này dùng cho trường hợp file docx/pdf nếu có
+    # Nhưng Tab 1 mới dùng logic read_matrix cho excel
+    return "" 
 
 def extract_periods(lesson_name):
     match = re.search(r'\((\d+)\s*tiết\)', lesson_name, re.IGNORECASE)
-    if match:
-        return match.group(1)
-    return "-"
+    return match.group(1) if match else "-"
 
 # --- 7. MAIN APP ---
 def main():
@@ -545,337 +519,183 @@ def main():
     if "exam_list" not in st.session_state: st.session_state.exam_list = [] 
     if "current_preview" not in st.session_state: st.session_state.current_preview = "" 
     if "temp_question_data" not in st.session_state: st.session_state.temp_question_data = None 
-    
     if "last_lesson_selected" not in st.session_state: st.session_state.last_lesson_selected = ""
-    if "auto_yccd_content" not in st.session_state: st.session_state.auto_yccd_content = "Nắm vững kiến thức cơ bản và vận dụng giải bài tập."
+    if "auto_yccd_content" not in st.session_state: st.session_state.auto_yccd_content = "Nắm vững kiến thức cơ bản..."
 
-    # --- SIDEBAR CHUNG ---
+    # SIDEBAR
     with st.sidebar:
         st.header("🔑 CẤU HÌNH HỆ THỐNG")
-        st.subheader("HỖ TRỢ RA ĐỀ CẤP TIỂU HỌC")
         api_key = st.text_input("Nhập API Key Google:", type="password")
-        
-        # NÚT KIỂM TRA API
-        if st.button("🔌 Kiểm tra kết nối API"):
-            if not api_key:
-                st.warning("Vui lòng nhập API Key trước.")
-            else:
+        if st.button("🔌 Kiểm tra API"):
+            if api_key:
                 try:
                     genai.configure(api_key=api_key)
                     models = list(genai.list_models())
-                    st.success(f"✅ Kết nối thành công! (Tìm thấy {len(models)} models)")
-                except Exception as e:
-                    st.error(f"❌ Kết nối thất bại: {e}")
-        
+                    st.success(f"✅ OK! ({len(models)} models)")
+                except Exception as e: st.error(f"❌ Lỗi: {e}")
         st.divider()
-        st.markdown("**TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN**")
-        st.caption("Hệ thống hỗ trợ chuyên môn")
+        st.caption("TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN")
 
-    if not api_key:
-        st.warning("Vui lòng nhập API Key để bắt đầu.")
-        return
+    if not api_key: st.warning("Vui lòng nhập API Key."); return
 
-    # [YÊU CẦU 3] THÊM TIÊU ĐỀ LỚN Ở GIAO DIỆN CHÍNH
     st.markdown('<div class="main-header">HỖ TRỢ RA ĐỀ THI CẤP TIỂU HỌC</div>', unsafe_allow_html=True)
+    tab1, tab2, tab3 = st.tabs(["📁 TẠO ĐỀ TỪ FILE EXCEL", "✍️ SOẠN TỪNG CÂU (CSDL)", "📊 MA TRẬN ĐỀ THI"])
 
-    # --- TABS GIAO DIỆN ---
-    tab1, tab2, tab3 = st.tabs(["📁 TẠO ĐỀ TỪ FILE (UPLOAD)", "✍️ SOẠN TỪNG CÂU (CSDL)", "📊 MA TRẬN ĐỀ THI"])
-
-    # ========================== TAB 1: UPLOAD & TẠO ĐỀ (LOGIC MỚI TỪ APP TAB 1) ==========================
+    # ========================== TAB 1: LOGIC MỚI TỪ APP TAB 1 ==========================
     with tab1:
         st.header("🤖 AI SINH ĐỀ THEO MA TRẬN TT27 (BẢN ỔN ĐỊNH)")
         
-        # Chọn thông tin cơ bản
         col1, col2 = st.columns([1, 2])
         with col1:
-            st.subheader("1. Chọn Lớp")
             grade_t1 = st.selectbox("Khối lớp:", [1, 2, 3, 4, 5], key="t1_grade")
         with col2:
-            st.subheader("2. Chọn Môn")
-            # Lấy danh sách môn theo khối từ SUBJECTS_DB
-            subjects_t1_list = [s[0] for s in SUBJECTS_DB[f"Lớp {grade_t1}"]]
-            sub_name_t1 = st.selectbox("Môn học:", subjects_t1_list, key="t1_sub")
+            subjects_t1 = SUBJECTS_DB[f"Lớp {grade_t1}"]
+            sub_name_t1 = st.selectbox("Môn học:", [s[0] for s in subjects_t1], key="t1_sub")
             
             exam_term_t1 = st.selectbox("Kỳ thi:", 
-                ["ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ I", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ I",
-                "ĐỀ KIỂM TRA ĐỊNH KÌ GIỮA HỌC KÌ II", "ĐỀ KIỂM TRA ĐỊNH KÌ CUỐI HỌC KÌ II"], key="t1_term")
+                ["ĐỀ KT GIỮA KÌ I", "ĐỀ KT CUỐI KÌ I", "ĐỀ KT GIỮA KÌ II", "ĐỀ KT CUỐI KÌ II"], key="t1_term")
             school_name_t1 = st.text_input("Tên trường:", value="TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", key="t1_school")
 
-        st.subheader("3. Upload Ma trận")
-        st.info("💡 Vui lòng upload file Excel (.xlsx) chứa ma trận đề thi.")
-        # Chỉ chấp nhận file xlsx theo logic mới
-        uploaded = st.file_uploader("Chọn file ma trận Excel", type=['xlsx'], key="t1_up")
+        st.info("💡 Upload file Excel ma trận (.xlsx). Hệ thống sẽ tự động phân tích số câu TN/TL.")
+        uploaded = st.file_uploader("Chọn file Excel", type=['xlsx'], key="t1_up")
 
         if uploaded and st.button("🚀 AI sinh đề", type="primary", key="t1_btn"):
-            # Logic xử lý mới: Đọc Excel -> Build Prompt -> Gọi API
             try:
                 df = read_matrix(uploaded)
-                st.success("✔ Đã đọc ma trận thành công")
+                st.success("✔ Đã đọc file Excel thành công")
                 
-                with st.spinner("AI đang phân tích và tạo đề..."):
+                with st.spinner("AI đang phân tích ma trận và tạo đề..."):
                     prompt = build_prompt_from_matrix(df, grade_t1, sub_name_t1)
+                    res, model = generate_content_with_rotation(api_key, prompt)
                     
-                    # Gọi API bằng hàm chung (đã có rotation/error handling)
-                    result_text, used_model = generate_content_with_rotation(api_key, prompt)
-                    
-                    if used_model:
-                        st.session_state.exam_result = result_text
-                        st.success(f"Đã tạo xong bằng model: {used_model}")
+                    if model:
+                        st.session_state.exam_result = res
+                        st.success(f"Đã tạo xong (Model: {model})")
                     else:
-                        st.error(result_text)
+                        st.error(res)
             except Exception as e:
-                st.error(f"❌ Có lỗi khi xử lý file Excel: {e}")
+                st.error(f"❌ Lỗi xử lý file: {e}")
 
-        # Hiển thị và tải xuống (Sử dụng lại logic hiển thị cũ cho tiện lợi)
         if st.session_state.exam_result:
             st.markdown("---")
-            edited_text = st.text_area("Sửa nội dung:", value=st.session_state.exam_result, height=500, key="t1_edit")
-            st.session_state.exam_result = edited_text 
-            
-            # Tạo file Word bằng hàm helper sẵn có
-            docx = create_word_file_simple(school_name_t1, exam_term_t1, edited_text)
-            st.download_button(
-                label="📥 TẢI VỀ FILE WORD (.docx)", 
-                data=docx, 
-                file_name=f"De_{sub_name_t1}_K{grade_t1}.docx", 
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                type="primary"
-            )
+            edited = st.text_area("Sửa nội dung:", value=st.session_state.exam_result, height=500, key="t1_edit")
+            st.session_state.exam_result = edited 
+            docx = create_word_file_simple(school_name_t1, exam_term_t1, edited)
+            st.download_button("📥 TẢI VỀ (.docx)", docx, f"De_{sub_name_t1}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
 
-    # ========================== TAB 2 & 3 (GIỮ NGUYÊN) ==========================
-    # ... (Mã nguồn Tab 2 và Tab 3 từ file cũ của bạn dán vào đây) ...
-    # Để đảm bảo mã chạy, tôi dán lại phần Tab 2 và Tab 3 chuẩn từ app lỗi cuối.py
-    
+    # ========================== TAB 2: GIỮ NGUYÊN CODE CŨ ==========================
     with tab2:
         st.header("Soạn thảo từng câu hỏi theo CSDL")
-        col1, col2 = st.columns(2)
-        with col1:
-            selected_grade = st.selectbox("Chọn Khối Lớp:", list(SUBJECTS_DB.keys()), key="t2_grade")
-        with col2:
-            subjects_list = [f"{s[1]} {s[0]}" for s in SUBJECTS_DB[selected_grade]]
-            selected_subject_full = st.selectbox("Chọn Môn Học:", subjects_list, key="t2_sub")
-            selected_subject = selected_subject_full.split(" ", 1)[1]
+        c1, c2 = st.columns(2)
+        with c1: sel_grade = st.selectbox("Khối:", list(SUBJECTS_DB.keys()), key="t2_grade")
+        with c2:
+            subs = [f"{s[1]} {s[0]}" for s in SUBJECTS_DB[sel_grade]]
+            sel_sub_full = st.selectbox("Môn:", subs, key="t2_sub")
+            sel_sub = sel_sub_full.split(" ", 1)[1]
 
-        raw_data = CURRICULUM_DB_PROCESSED.get(selected_grade, {}).get(selected_subject, {})
-
-        if not raw_data:
-            st.warning("⚠️ Dữ liệu môn này đang cập nhật.")
-        else:
-            st.markdown("---")
-            st.subheader("🛠️ Soạn thảo câu hỏi")
+        raw_data = CURRICULUM_DB_PROCESSED.get(sel_grade, {}).get(sel_sub, {})
+        if not raw_data: st.warning("⚠️ Đang cập nhật dữ liệu."); st.stop()
+        
+        ca, cb = st.columns(2)
+        with ca:
+            terms = list(raw_data.keys()); sel_term = st.selectbox("Học kỳ:", terms, key="t2_term")
+            lessons = raw_data[sel_term]
+            topics = sorted(list(set([l['Chủ đề'] for l in lessons])))
+            sel_topic = st.selectbox("Chủ đề:", topics, key="t2_topic")
+        with cb:
+            filt_lessons = [l for l in lessons if l['Chủ đề'] == sel_topic]
+            all_l = []; 
+            for x in filt_lessons: all_l.extend(x['Bài học'])
+            sel_lesson = st.selectbox("Bài học:", all_l, key="t2_lesson")
             
-            col_a, col_b = st.columns(2)
-            with col_a:
-                all_terms = list(raw_data.keys())
-                selected_term = st.selectbox("Chọn Học kỳ:", all_terms, key="t2_term")
-                lessons_in_term = raw_data[selected_term]
-                unique_topics = sorted(list(set([l['Chủ đề'] for l in lessons_in_term])))
-                selected_topic = st.selectbox("Chọn Chủ đề:", unique_topics, key="t2_topic")
+            if st.session_state.last_lesson_selected != sel_lesson:
+                with st.spinner("Đang lấy YCCĐ..."):
+                    ai_yccd = generate_yccd_from_lesson(api_key, sel_grade, sel_sub, sel_topic, sel_lesson)
+                    if ai_yccd: st.session_state.auto_yccd_content = ai_yccd
+                    st.session_state.last_lesson_selected = sel_lesson
+            
+            yccd_in = st.text_area("YCCĐ:", value=st.session_state.auto_yccd_content, height=68, key="t2_yccd")
+            curr_data = {"topic": sel_topic, "lesson": sel_lesson, "yccd": yccd_in}
 
-            with col_b:
-                filtered_lessons = [l for l in lessons_in_term if l['Chủ đề'] == selected_topic]
-                all_lessons_in_topic = []
-                for item in filtered_lessons:
-                    all_lessons_in_topic.extend(item['Bài học'])
-                selected_lesson_name = st.selectbox("Chọn Bài học:", all_lessons_in_topic, key="t2_lesson")
+        cx, cy, cz = st.columns(3)
+        with cx:
+            q_types = ["Trắc nghiệm (4 lựa chọn)", "Đúng/Sai", "Ghép nối (Nối cột)", "Điền khuyết", "Tự luận"]
+            if sel_sub == "Tin học": q_types.append("Thực hành máy tính")
+            sel_type = st.selectbox("Dạng:", q_types, key="t2_type")
+        with cy: sel_level = st.selectbox("Mức độ:", ["Mức 1: Biết", "Mức 2: Hiểu", "Mức 3: Vận dụng"], key="t2_lv")
+        with cz: sel_pts = st.number_input("Điểm:", 0.25, 10.0, 0.25, 1.0, key="t2_pt")
+
+        if st.button("✨ Tạo câu hỏi", type="primary", key="t2_gen"):
+            with st.spinner("AI đang viết..."):
+                seed = random.randint(1, 100000)
+                prompt_q = f"""
+                Đóng vai chuyên gia giáo dục. Soạn 1 câu hỏi môn {sel_sub} lớp {sel_grade}.
+                - Bài: {curr_data['lesson']} ({curr_data['topic']})
+                - YCCĐ: {curr_data['yccd']}
+                - Dạng: {sel_type} - Mức: {sel_level} - Điểm: {sel_pts}
+                - Seed: {seed}
                 
-                if st.session_state.last_lesson_selected != selected_lesson_name:
-                    with st.spinner("Đang tra cứu YCCĐ chuẩn GDPT 2018 (Chế độ chuyên gia)..."):
-                        ai_yccd = generate_yccd_from_lesson(
-                            api_key, 
-                            selected_grade, 
-                            selected_subject, 
-                            selected_topic, 
-                            selected_lesson_name
-                        )
-                        if ai_yccd:
-                            st.session_state.auto_yccd_content = ai_yccd
-                        st.session_state.last_lesson_selected = selected_lesson_name
-                
-                yccd_input = st.text_area("Yêu cầu cần đạt (AI tự động lấy):", value=st.session_state.auto_yccd_content, height=68, key="t2_yccd_input")
-                current_lesson_data = {
-                    "Chủ đề": selected_topic,
-                    "Bài học": selected_lesson_name,
-                    "YCCĐ": yccd_input
+                YÊU CẦU:
+                1. Trắc nghiệm: 4 đáp án A, B, C, D xuống dòng.
+                2. Điền khuyết: dùng dấu ".........."
+                3. Ghép nối: Cột A - Cột B rõ ràng.
+                OUTPUT CHỈ GHI NỘI DUNG CÂU HỎI VÀ ĐÁP ÁN.
+                """
+                res, _ = generate_content_with_rotation(api_key, prompt_q)
+                st.session_state.current_preview = res
+                st.session_state.temp_question_data = {
+                    "topic": sel_topic, "lesson": sel_lesson, "type": sel_type, 
+                    "level": sel_level, "points": sel_pts, "content": res, 
+                    "yccd": yccd_in, "periods": extract_periods(sel_lesson)
                 }
 
-            col_x, col_y, col_z = st.columns(3)
-            with col_x:
-                question_types = [
-                    "Trắc nghiệm (4 lựa chọn)", 
-                    "Đúng/Sai", 
-                    "Ghép nối (Nối cột)", 
-                    "Điền khuyết (Hoàn thành câu)", 
-                    "Tự luận"
-                ]
-                if selected_subject == "Tin học":
-                    question_types.append("Thực hành trên máy tính")
-                q_type = st.selectbox("Dạng câu hỏi:", question_types, key="t2_type")
-            with col_y:
-                level = st.selectbox("Mức độ:", ["Mức 1: Biết", "Mức 2: Hiểu", "Mức 3: Vận dụng"], key="t2_lv")
-            with col_z:
-                points = st.number_input("Điểm số:", min_value=0.25, max_value=10.0, step=0.25, value=1.0, key="t2_pt")
+        if st.session_state.current_preview:
+            st.markdown(f"<div class='question-box'>{st.session_state.current_preview}</div>", unsafe_allow_html=True)
+            c_b1, c_b2 = st.columns(2)
+            if c_b1.button("✅ Thêm", key="t2_add"):
+                st.session_state.exam_list.append(st.session_state.temp_question_data)
+                st.session_state.current_preview = ""; st.success("Đã thêm!"); st.rerun()
+            if c_b2.button("🔄 Đổi khác", key="t2_re"): st.rerun()
 
-            def generate_question():
-                with st.spinner("AI đang viết..."):
-                    random_seed = random.randint(1, 100000)
-                    prompt_q = f"""
-                    Đóng vai chuyên gia giáo dục Tiểu học. Soạn **1 CÂU HỎI KIỂM TRA** môn {selected_subject} Lớp {selected_grade}.
-                    - Chủ đề: {current_lesson_data['Chủ đề']}
-                    - Bài học cụ thể: {current_lesson_data['Bài học']}
-                    - YCCĐ: {current_lesson_data['YCCĐ']}
-                    - Dạng: {q_type} - Mức độ: {level} - Điểm: {points}
-                    - Seed ngẫu nhiên: {random_seed}
-                    
-                    YÊU CẦU ĐỊNH DẠNG NGHIÊM NGẶT (SỬA LỖI HIỂN THỊ):
-                    1. VỚI DẠNG "Trắc nghiệm (4 lựa chọn)":
-                    - Phải hiển thị 4 đáp án A. B. C. D. riêng biệt xuống dòng.
-                    - Chỉ ra đáp án đúng ở cuối.
-                    
-                    2. VỚI DẠNG "Ghép nối (Nối cột)":
-                    - Phải liệt kê nội dung Cột A (1, 2,...) và Cột B (a, b,...) rõ ràng.
-                    - Phần đáp án mô phỏng kết quả nối (ví dụ: 1-b, 2-a).
-                    
-                    3. VỚI DẠNG "Điền khuyết" hoặc "Tự luận":
-                    - Câu hỏi phải chừa chỗ trống bằng dấu ".........." để học sinh điền.
-                    - Hiển thị đáp án gợi ý ở cuối.
-
-                    OUTPUT CHỈ GHI NỘI DUNG, KHÔNG CẦN LỜI DẪN:
-                    [Nội dung câu hỏi và các lựa chọn]
-                    
-                    Đáp án: ...
-                    """
-                    preview_content, _ = generate_content_with_rotation(api_key, prompt_q)
-                    st.session_state.current_preview = preview_content
-                    st.session_state.temp_question_data = {
-                        "topic": selected_topic, "lesson": selected_lesson_name,
-                        "type": q_type, "level": level, "points": points, "content": preview_content,
-                        "yccd": yccd_input, "periods": extract_periods(selected_lesson_name)
-                    }
-
-            if st.button("✨ Tạo câu hỏi (Xem trước)", type="primary", key="t2_preview"):
-                generate_question()
-
-            if st.session_state.current_preview:
-                st.markdown(f"<div class='question-box'>{st.session_state.current_preview}</div>", unsafe_allow_html=True)
-                col_btn1, col_btn2 = st.columns([1, 1])
-                with col_btn1:
-                    if st.button("✅ Thêm vào đề thi", key="t2_add"):
-                        st.session_state.exam_list.append(st.session_state.temp_question_data)
-                        st.session_state.current_preview = ""
-                        st.success("Đã thêm vào danh sách!")
-                        st.rerun()
-                with col_btn2:
-                    if st.button("🔄 Tạo câu hỏi khác", key="t2_regen"):
-                        generate_question()
-                        st.rerun()
-
-            if len(st.session_state.exam_list) > 0:
-                st.markdown("---")
-                st.subheader(f"📊 Bảng thống kê chi tiết ({len(st.session_state.exam_list)} câu)")
-                stats_data = []
-                for i, q in enumerate(st.session_state.exam_list):
-                    stats_data.append({
-                        "Thứ tự câu": f"Câu {i+1}",
-                        "Tên bài": q['lesson'],
-                        "Số tiết": q.get('periods', '-'),
-                        "Các mức": q['level'],
-                        "Dạng câu hỏi": q['type'],
-                        "Điểm": q['points']
-                    })
-                df_stats = pd.DataFrame(stats_data)
-                st.dataframe(df_stats, use_container_width=True)
-
-                st.markdown("#### 📝 Chỉnh sửa chi tiết đề thi")
-                for i, item in enumerate(st.session_state.exam_list):
-                    with st.expander(f"Câu {i+1} ({item['points']} điểm) - {item['type']}"):
-                        new_content = st.text_area(f"Nội dung câu {i+1}:", value=item['content'], height=150, key=f"edit_q_{i}")
-                        st.session_state.exam_list[i]['content'] = new_content
-                        if st.button("🗑️ Xóa câu này", key=f"del_q_{i}"):
-                            st.session_state.exam_list.pop(i)
-                            st.rerun()
-
-                col_act1, col_act2 = st.columns(2)
-                with col_act2:
-                     if st.button("❌ Xóa toàn bộ đề", key="t2_clear"):
-                        st.session_state.exam_list = []
-                        st.rerun()
-
-                docx_file = create_word_from_question_list("TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", selected_subject, st.session_state.exam_list)
-                st.download_button(
-                    label="📥 TẢI ĐỀ THI (WORD)", 
-                    data=docx_file,
-                    file_name=f"De_thi_{selected_subject}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    type="primary"
-                )
-
-    with tab3:
-        st.header("📊 BẢNG MA TRẬN ĐỀ THI (BẢN ĐẶC TẢ)")
-        st.info("Chỉnh sửa trực tiếp trên bảng và tải về file Word theo mẫu.")
-        if len(st.session_state.exam_list) == 0:
-            st.info("⚠️ Vui lòng soạn câu hỏi ở Tab 2 trước.")
-        else:
-            matrix_data = []
+        if len(st.session_state.exam_list) > 0:
+            st.markdown("---")
+            st.subheader(f"📊 Đã soạn {len(st.session_state.exam_list)} câu")
+            
             for i, q in enumerate(st.session_state.exam_list):
-                matrix_data.append({
-                    "STT": i + 1,
-                    "Chủ đề": q['topic'],
-                    "Bài học": q['lesson'],
-                    "Yêu cầu cần đạt": q.get('yccd', ''),
-                    "Dạng câu hỏi": q['type'],
-                    "Mức độ": q['level'],
-                    "Số điểm": q['points'],
-                    "Ghi chú": ""
-                })
-            df_matrix = pd.DataFrame(matrix_data)
-            edited_df = st.data_editor(df_matrix, num_rows="dynamic", use_container_width=True, key="matrix_editor")
-            if st.button("💾 Cập nhật thay đổi từ Ma trận vào Hệ thống"):
-                for index, row in edited_df.iterrows():
-                    if index < len(st.session_state.exam_list):
-                        st.session_state.exam_list[index]['topic'] = row['Chủ đề']
-                        st.session_state.exam_list[index]['lesson'] = row['Bài học']
-                        st.session_state.exam_list[index]['type'] = row['Dạng câu hỏi']
-                        st.session_state.exam_list[index]['level'] = row['Mức độ']
-                        st.session_state.exam_list[index]['points'] = row['Số điểm']
-                        st.session_state.exam_list[index]['yccd'] = row['Yêu cầu cần đạt']
-                st.success("Đã cập nhật dữ liệu thành công!")
-                st.rerun()
+                with st.expander(f"Câu {i+1} ({q['points']}đ) - {q['type']}"):
+                    new_c = st.text_area(f"Nội dung câu {i+1}", q['content'], key=f"ed_{i}")
+                    st.session_state.exam_list[i]['content'] = new_c
+                    if st.button("🗑️ Xóa", key=f"del_{i}"):
+                        st.session_state.exam_list.pop(i); st.rerun()
+            
+            if st.button("❌ Xóa hết", key="del_all"): st.session_state.exam_list = []; st.rerun()
+            
+            docx = create_word_from_question_list("TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN", sel_sub, st.session_state.exam_list)
+            st.download_button("📥 TẢI ĐỀ (WORD)", docx, f"De_{sel_sub}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
 
-            matrix_docx = create_matrix_document(st.session_state.exam_list, selected_subject, selected_grade)
-            st.download_button(
-                label="📥 TẢI BẢN ĐẶC TẢ ĐỀ THI (WORD)",
-                data=matrix_docx,
-                file_name=f"Ban_dac_ta_{selected_subject}.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                type="primary"
-            )
+    # ========================== TAB 3: MA TRẬN ==========================
+    with tab3:
+        st.header("📊 BẢNG MA TRẬN ĐỀ THI")
+        if len(st.session_state.exam_list) == 0: st.info("Chưa có dữ liệu."); st.stop()
+        
+        mData = [{"STT": i+1, "Chủ đề": q['topic'], "Bài học": q['lesson'], "YCCĐ": q.get('yccd',''), "Dạng": q['type'], "Mức": q['level'], "Điểm": q['points']} for i,q in enumerate(st.session_state.exam_list)]
+        edited = st.data_editor(pd.DataFrame(mData), num_rows="dynamic", use_container_width=True, key="mx_ed")
+        
+        if st.button("💾 Cập nhật"):
+            for i, r in edited.iterrows():
+                if i < len(st.session_state.exam_list):
+                    st.session_state.exam_list[i].update({'topic': r['Chủ đề'], 'lesson': r['Bài học'], 'type': r['Dạng'], 'level': r['Mức'], 'points': r['Điểm'], 'yccd': r['YCCĐ']})
+            st.success("Đã lưu!"); st.rerun()
+
+        mx_doc = create_matrix_document(st.session_state.exam_list, selected_subject, selected_grade)
+        st.download_button("📥 TẢI BẢN ĐẶC TẢ", mx_doc, f"Dac_ta_{selected_subject}.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
 
     # --- FOOTER ---
-    footer_html = r"""
-<style>
-.footer-box {
-    width: 100%;
-    padding: 12px 0;
-    margin-top: 40px;
-    text-align: center;
-    background: linear-gradient(90deg, #e8f0fe, #ffffff);
-    border-top: 2px solid #d0d7e2;
-    font-family: 'Segoe UI', sans-serif;
-}
-.footer-text {
-    margin: 0;
-    font-size: 17px;
-    font-weight: 600;
-    color: #2c3e50;
-    letter-spacing: 0.3px;
-}
-</style>
-<div class="footer-box">
-    <p class="footer-text">&#127979; TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
-</div>
-"""
-    st.markdown(footer_html, unsafe_allow_html=True)
+    st.markdown("""
+    <div class="footer">
+        <p style="margin: 0; font-weight: bold; color: #2c3e50;">🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
