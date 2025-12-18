@@ -1122,13 +1122,31 @@ YÊU CẦU:
             )
 
     # --- FOOTER ---
-    st.markdown("""
-    <div class="footer">
-        st.markdown("""
-    <p style="margin: 0; font-weight: bold; color: #2c3e50;">🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+st.markdown("""
+<style>
+.footer-box {
+    width: 100%;
+    padding: 12px 0;
+    margin-top: 40px;
+    text-align: center;
+    background: linear-gradient(90deg, #e8f0fe, #ffffff);
+    border-top: 2px solid #d0d7e2;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.footer-text {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #2c3e50;
+    letter-spacing: 0.3px;
+}
+</style>
+
+<div class="footer-box">
+    <p class="footer-text">&#127979; TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+</div>
 """, unsafe_allow_html=True)
-    </div>
-    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
