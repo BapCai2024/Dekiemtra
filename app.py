@@ -1124,7 +1124,9 @@ YÊU CẦU:
     # --- FOOTER ---
     st.markdown("""
     <div class="footer">
-        <p style="margin: 0; font-weight: bold; color: #2c3e50;">🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+        st.markdown("""
+    <p style="margin: 0; font-weight: bold; color: #2c3e50;">🏫 TRƯỜNG PTDTBT TIỂU HỌC GIÀNG CHU PHÌN</p>
+""", unsafe_allow_html=True)
     </div>
     """, unsafe_allow_html=True)
 
